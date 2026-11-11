@@ -126,10 +126,11 @@
   .it.on { border-color: #ff7eb6; background: #ffe9f3; }
   .it canvas { width: 76px; height: 76px; display: block; margin: 1px auto; }
   .it b { position: absolute; right: -4px; top: -4px; min-width: 26px; height: 26px; border-radius: 13px; background: #ff5fa2; color: #fff; font-size: 15px; line-height: 26px; }
-  #shopgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; max-height: 56vh; overflow-y: auto; touch-action: pan-y; padding: 4px; }
+  #shopgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; max-height: 46vh; overflow-y: auto; touch-action: pan-y; padding: 4px; }
   #shopgrid button { position: relative; padding: 6px 4px 8px; border-radius: 18px; background: #f4eefb; font-weight: 900; font-size: 17px; color: #e59a00; }
   #shopgrid button canvas { width: 100%; aspect-ratio: 1; display: block; }
-  #shopgrid button[disabled] { opacity: .45; }
+  #shopgrid button.poor { opacity: .5; }
+  #shopgrid button.on { background: #ffe9f3; box-shadow: inset 0 0 0 3px #ff7eb6; opacity: 1; }
   #shopgrid button i { position: absolute; left: 6px; top: 4px; font-style: normal; font-size: 13px; color: #8a78a8; }
   #shopgrid button:active:not([disabled]) { transform: scale(.94); background: #ffe9f3; }
   .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
@@ -180,6 +181,7 @@
     </div>
 
     <button id="demo" class="big alt hidden">Посмотреть без сервера</button>
+    <button id="voicebtn" class="link"></button>
     <div id="err"></div>
   </div>
 </div>
@@ -214,7 +216,8 @@
   <div class="card">
     <div class="lbl" style="margin-top:0">Лавка · у нас <span id="shopbal"></span> ⭐</div>
     <div id="shopgrid"></div>
-    <button id="closeshop" class="big alt">Закрыть</button>
+    <button id="buy" class="big" disabled>Выбери вещь</button>
+    <button id="closeshop" class="link">закрыть</button>
   </div>
 </div>
 
@@ -962,6 +965,32 @@ function beep(freqs, dur, vol, type) {
 }
 
 /* =====================================================================
+   ОЗВУЧКА: подсказки и кнопки читаются вслух голосом самого планшета
+   ===================================================================== */
+var ruVoice = null, lastSaid = '';
+function pickVoice() {
+  if (!window.speechSynthesis) return;
+  var v = speechSynthesis.getVoices().filter(function (x) { return /^ru/i.test(x.lang); });
+  ruVoice = v.filter(function (x) { return /milena|alena|алёна|анна|katya|google|female/i.test(x.name); })[0] || v[0] || null;
+}
+if (window.speechSynthesis) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) { /* не страшно */ } }
+function starsWord(n) { n = Math.abs(n) % 100; var k = n % 10; return n > 10 && n < 20 ? 'звёзд' : k === 1 ? 'звезда' : k >= 2 && k <= 4 ? 'звезды' : 'звёзд'; }
+function speakable(t) {
+  return String(t).replace(/\+\s*(\d+)\s*⭐/g, function (m, n) { return ' плюс ' + n + ' ' + starsWord(+n); })
+    .replace(/(\d+)\s*⭐/g, function (m, n) { return n + ' ' + starsWord(+n); }).replace(/⭐/g, ' звёздочки ')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}·]/gu, ' ').replace(/\s+/g, ' ').trim();
+}
+function say(text) {
+  if (store.voice === false || !window.speechSynthesis || !text) return;
+  var t = speakable(text); if (!t) return; lastSaid = t;
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t); u.lang = 'ru-RU'; if (ruVoice) u.voice = ruVoice; u.rate = 1; u.pitch = 1.15; u.volume = 1;
+    speechSynthesis.speak(u);
+  } catch (e) { /* без голоса */ }
+}
+
+/* =====================================================================
    СЕТЬ
    ===================================================================== */
 var ws = null, wsWant = false, wsTry = 0, wsOpened = false, pendingHello = null, kicked = false;
@@ -984,7 +1013,7 @@ function onWsDown() {
   if (kicked) { kicked = false; leaveGame('Игра открыта на другом устройстве.'); return; }
   if (screenMode === 'lobby') {
     if (!wsOpened) { wsWant = false; busy(false); showErr('Нет связи с сервером. Проверь интернет.'); $('demo').classList.remove('hidden'); return; }
-  } else toast('Связь потерялась, соединяю…', true);
+  } else toast('Связь потерялась, соединяю…', true, true);
   wsTry++;
   setTimeout(function () { if (wsWant && !ws) connect(); }, Math.min(8000, 800 * wsTry));
 }
@@ -1191,7 +1220,7 @@ function unlockAudio() {
 function showErr(s) { $('err').textContent = s || ''; }
 function busy(b) { ['play', 'create', 'enter', 'demo'].forEach(function (id) { $(id).disabled = b; }); }
 var toastT = null;
-function toast(s, sticky) { var e = $('toast'); e.textContent = s; e.classList.remove('hide'); clearTimeout(toastT); if (!sticky) toastT = setTimeout(function () { e.classList.add('hide'); }, 3200); }
+function toast(s, sticky, quiet) { if (!quiet) say(s); var e = $('toast'); e.textContent = s; e.classList.remove('hide'); clearTimeout(toastT); if (!sticky) toastT = setTimeout(function () { e.classList.add('hide'); }, 3200); }
 
 var joinOpen = false;
 function lobbyView() {
@@ -1227,7 +1256,7 @@ function start(room, create) {
     if (ws && ws.readyState === 1) send(pendingHello); else if (!ws) connect();
   });
 }
-$('play').onclick = function () { start(store.room, false); };
+$('play').onclick = function () { say('Играем!'); start(store.room, false); };
 $('create').onclick = function () { start('', true); };
 $('havecode').onclick = function () { joinOpen = true; lobbyView(); showErr(''); };
 $('other').onclick = function () { joinOpen = true; lobbyView(); showErr(''); };
@@ -1238,6 +1267,9 @@ $('enter').onclick = function () {
   start(d, false);
 };
 $('demo').onclick = function () { audioInit(); startDemo(); };
+function voiceLabel() { $('voicebtn').textContent = store.voice === false ? '🔇 подсказки голосом: выключены' : '🔊 подсказки голосом: включены'; }
+$('voicebtn').onclick = function () { store.voice = store.voice === false; saveStore(); voiceLabel(); if (store.voice !== false) say('Подсказки голосом включены'); else if (window.speechSynthesis) speechSynthesis.cancel(); };
+voiceLabel();
 
 function enterGame(code) {
   var first = screenMode !== 'game';
@@ -1248,7 +1280,7 @@ function enterGame(code) {
   setMic(micOn);
   if (first) {
     cam.x = me.x; cam.y = me.y; radarLvl = -1;
-    if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми 🎤 и разреши.');
+    if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми на микрофон 🎤 и разреши.');
     else toast('Ищи клад по компасу 🧭, копи звёздочки и обставляй домик 🏠');
     wakeLock();
     try { if (!demo && document.documentElement.requestFullscreen && window.matchMedia('(pointer: coarse)').matches) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) { /* не страшно */ }
@@ -1263,7 +1295,7 @@ function leaveGame(msg) {
   busy(false); lobbyView(); showErr(msg || '');
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
 }
-$('exit').onclick = function () { leaveGame(''); };
+$('exit').onclick = function () { say('Выходим'); leaveGame(''); };
 $('mic').onclick = function () {
   unlockAudio();
   if (demo) { toast('В демо микрофон не нужен'); return; }
@@ -1282,7 +1314,7 @@ EMOTES.forEach(function (e, i) {
   b.onclick = function () { unlockAudio(); if (!me) return; me.em = e; me.emT = T; send({ t: 'em', e: i }); beep([880], 0.07, 0.07); };
   $('emotes').appendChild(b);
 });
-$('codebtn').onclick = function () { $('modalcode').textContent = fmtCode(store.room); $('modal').classList.remove('hidden'); };
+$('codebtn').onclick = function () { $('modalcode').textContent = fmtCode(store.room); $('modal').classList.remove('hidden'); say('Код нашего острова: ' + String(store.room).split('').join(', ')); };
 $('closemodal').onclick = function () { $('modal').classList.add('hidden'); };
 $('share').onclick = function () {
   var url = location.origin + location.pathname + '?k=' + store.room;
@@ -1292,12 +1324,13 @@ $('share').onclick = function () {
 };
 $('stars').onclick = function () {
   unlockAudio();
-  $('albumn').textContent = album.length + ' из ' + ALBUM.length;
+  $('albumn').textContent = album.length + ' из ' + ALBUM.length; say('Наши сокровища: ' + album.length + ' из ' + ALBUM.length);
   var g = $('albumgrid'); g.innerHTML = '';
   ALBUM.forEach(function (a, i) {
     var d = document.createElement('div'), has = album.indexOf(i) >= 0;
     d.className = has ? 'yes' : 'no'; d.textContent = has ? a[0] : '?';
     if (has) { var s = document.createElement('small'); s.textContent = a[1]; d.appendChild(s); }
+    d.onclick = function () { say(has ? a[1] : 'Это сокровище ещё не нашли'); };
     g.appendChild(d);
   });
   $('album').classList.remove('hidden');
@@ -1310,11 +1343,15 @@ function drawShop() {
     var b = document.createElement('button'); b.appendChild(thumb(i, 150));
     b.appendChild(document.createTextNode(c.p + ' ⭐'));
     var n = owned(i); if (n) { var o = document.createElement('i'); o.textContent = 'есть ' + n; b.appendChild(o); }
-    b.disabled = total < c.p; b.title = c.n;
-    b.onclick = function () { unlockAudio(); send({ t: 'buy', i: i }); };
+    b.className = (shopSel === i ? 'on' : '') + (total < c.p ? ' poor' : '');
+    b.onclick = function () { unlockAudio(); shopSel = i; say(c.n + '. ' + c.p + ' ⭐.' + (total < c.p ? ' Пока не хватает звёздочек.' : ' Нажми кнопку «Купить».')); drawShop(); };
     g.appendChild(b);
   });
+  var bb = $('buy'), c = shopSel >= 0 ? CAT[shopSel] : null;
+  bb.textContent = c ? 'Купить: ' + c.n + ' за ' + c.p + ' ⭐' : 'Выбери вещь';
+  bb.disabled = !c || total < c.p;
 }
+var shopSel = -1;
 function drawTray() {
   var t = $('tray'); t.innerHTML = '';
   var any = false;
@@ -1322,7 +1359,7 @@ function drawTray() {
     if (!inv[i]) return; any = true;
     var b = document.createElement('button'); b.className = 'it' + (sel === i ? ' on' : ''); b.appendChild(thumb(i, 120));
     var n = document.createElement('b'); n.textContent = inv[i]; b.appendChild(n);
-    b.onclick = function () { unlockAudio(); sel = sel === i ? -1 : i; drawTray(); if (sel >= 0) toast(c.t === 'wall' ? 'Нажми на стену, куда повесить' : 'Нажми на пол, куда поставить'); };
+    b.onclick = function () { unlockAudio(); sel = sel === i ? -1 : i; drawTray(); if (sel >= 0) toast(c.n + '. ' + (c.t === 'wall' ? 'Нажми на стену, куда повесить' : 'Нажми на пол, куда поставить')); };
     t.appendChild(b);
   });
   if (sel >= 0 && !inv[sel]) sel = -1;
@@ -1334,13 +1371,14 @@ function setDecor(on) {
   if (on) { drawTray(); toast('Выбери вещь внизу и нажми, куда поставить. Нажми на вещь — уберётся'); }
 }
 $('decor').onclick = function () { unlockAudio(); setDecor(!decor); };
-$('shopbtn').onclick = function () { unlockAudio(); $('shop').classList.remove('hidden'); drawShop(); };
+$('shopbtn').onclick = function () { unlockAudio(); shopSel = -1; $('shop').classList.remove('hidden'); drawShop(); say('Лавка. У нас ' + total + ' ⭐. Выбери вещь.'); };
+$('buy').onclick = function () { unlockAudio(); if (shopSel >= 0) send({ t: 'buy', i: shopSel }); };
 $('closeshop').onclick = function () { $('shop').classList.add('hidden'); };
 $('closealbum').onclick = function () { $('album').classList.add('hidden'); };
 $('dig').onclick = function () {
   unlockAudio(); if (!me || !treasure || me.m !== 0) return;
   me.tx = me.x; me.ty = me.y; sendMove(); send({ t: 'dig' });
-  $('dig').classList.add('hidden'); beep([196, 165, 196, 165], 0.09, 0.12, 'triangle');
+  $('dig').classList.add('hidden'); beep([196, 165, 196, 165], 0.09, 0.12, 'triangle'); say('Копаю!');
 };
 
 var wl = null;
@@ -1469,7 +1507,7 @@ function logic(dt) {
     trans.t += dt;
     if (!trans.done && trans.t > 0.35) {
       trans.done = true; me.m = trans.m; me.x = me.tx = trans.x; me.y = me.ty = trans.y; cam.x = me.x; cam.y = me.y; sendMove();
-      if (me.m === 1) toast('Пещера! Тут темно, держитесь вместе 💎'); else if (me.m === 2) toast('Наш домик! Нажми 🛋, чтобы расставить вещи'); else if (me.y < 900) toast('Тайная бухта! 🏝');
+      if (me.m === 1) toast('Пещера! Тут темно, держитесь вместе 💎'); else if (me.m === 2) toast('Наш домик! Нажми кнопку с диванчиком 🛋, чтобы расставить вещи'); else if (me.y < 900) toast('Тайная бухта! 🏝');
       $('decor').classList.toggle('hidden', me.m !== 2); if (me.m !== 2 && decor) setDecor(false);
     }
     if (trans.t > 0.7) trans = null;
@@ -1483,9 +1521,9 @@ function logic(dt) {
     if (me.mv && T - lastTick > gap) { lastTick = T; beep([500 + lvl * 170], 0.04, 0.035); }
   }
   if (lvl !== radarLvl) {
-    radarLvl = lvl; var r = $('radar');
+    var prevLvl = radarLvl; radarLvl = lvl; var r = $('radar');
     r.classList.toggle('hidden', lvl < 0); r.className = 'chip' + (lvl < 0 ? ' hidden' : ' r' + lvl);
-    if (lvl >= 0) $('radartx').textContent = RADAR[lvl];
+    if (lvl >= 0) { $('radartx').textContent = RADAR[lvl]; if (lvl > prevLvl && lvl >= 1) say(RADAR[lvl]); }
     $('dig').classList.toggle('hidden', lvl !== 4); if (lvl === 4) $('shopbtn').classList.add('hidden'); else if (nearShop) $('shopbtn').classList.remove('hidden');
     if (lvl === 4) beep([880, 1175], 0.08, 0.1);
   }
