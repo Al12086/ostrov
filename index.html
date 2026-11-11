@@ -109,6 +109,29 @@
     font-size: 19px; font-weight: 800; text-align: center; pointer-events: none !important; transition: opacity .3s;
   }
   #toast.hide { opacity: 0; }
+  #decor { top: calc(224px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
+  #decor.on { background: #ffe36b; }
+  #shopbtn {
+    position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    padding: 16px 34px; border-radius: 40px; font-size: 28px; font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(#ff8ec0, #ff5fa2); box-shadow: 0 7px 0 #d9417f, 0 14px 26px rgba(255, 95, 162, .4);
+  }
+  #tray {
+    position: absolute; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    max-width: calc(100% - 20px); display: flex; gap: 8px; padding: 8px; border-radius: 26px; overflow-x: auto; touch-action: pan-x;
+    background: rgba(255, 252, 248, .95); box-shadow: 0 6px 16px rgba(40, 60, 110, .28), inset 0 0 0 3px #fff;
+  }
+  #tray .hint { padding: 16px 14px; font-size: 18px; font-weight: 800; color: #8a78a8; white-space: nowrap; }
+  .it { position: relative; flex: 0 0 auto; width: 84px; height: 84px; padding: 0; border-radius: 18px; background: #f4eefb; border: 3px solid transparent; }
+  .it.on { border-color: #ff7eb6; background: #ffe9f3; }
+  .it canvas { width: 76px; height: 76px; display: block; margin: 1px auto; }
+  .it b { position: absolute; right: -4px; top: -4px; min-width: 26px; height: 26px; border-radius: 13px; background: #ff5fa2; color: #fff; font-size: 15px; line-height: 26px; }
+  #shopgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; max-height: 56vh; overflow-y: auto; touch-action: pan-y; padding: 4px; }
+  #shopgrid button { position: relative; padding: 6px 4px 8px; border-radius: 18px; background: #f4eefb; font-weight: 900; font-size: 17px; color: #e59a00; }
+  #shopgrid button canvas { width: 100%; aspect-ratio: 1; display: block; }
+  #shopgrid button[disabled] { opacity: .45; }
+  #shopgrid button i { position: absolute; left: 6px; top: 4px; font-style: normal; font-size: 13px; color: #8a78a8; }
+  #shopgrid button:active:not([disabled]) { transform: scale(.94); background: #ffe9f3; }
   .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
   #albumgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
   #albumgrid div { aspect-ratio: 1; border-radius: 18px; background: #f4eefb; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 38px; line-height: 1.1; }
@@ -119,7 +142,7 @@
     .card { padding: 14px 18px; } .card h1 { font-size: 32px; } .card .sub { margin-bottom: 8px; }
     #looks button { width: 62px; height: 76px; } #looks canvas { width: 56px; height: 70px; }
     .big { padding: 12px; margin-top: 10px; font-size: 21px; }
-    #albumgrid { grid-template-columns: repeat(6, 1fr); } #albumgrid div { font-size: 28px; }
+    #albumgrid, #shopgrid { grid-template-columns: repeat(6, 1fr); } #albumgrid div { font-size: 28px; }
   }
   @media (max-width: 520px) { #emotes button { width: 56px; height: 56px; font-size: 27px; } #emotes { gap: 7px; } .chip { height: 50px; padding: 0 14px; font-size: 21px; } #radar { font-size: 16px; } }
 </style>
@@ -169,7 +192,10 @@
   <button id="mic" class="round" aria-label="Микрофон">🎤</button>
   <button id="exit" class="round sm" aria-label="Выйти">🚪</button>
   <button id="codebtn" class="round sm" aria-label="Код острова">🔑</button>
+  <button id="decor" class="round sm hidden" aria-label="Обставить домик">🛋</button>
   <button id="dig" class="hidden">⛏ Копать!</button>
+  <button id="shopbtn" class="hidden">🛍 Лавка</button>
+  <div id="tray" class="hidden"></div>
   <div id="emotes"></div>
   <div id="toast" class="hide"></div>
 </div>
@@ -181,6 +207,14 @@
     <div class="sub" style="margin:10px 0 0">Скажи его подруге или отправь ссылку её родителям</div>
     <button id="share" class="big">Отправить ссылку</button>
     <button id="closemodal" class="link">закрыть</button>
+  </div>
+</div>
+
+<div id="shop" class="modalbg hidden">
+  <div class="card">
+    <div class="lbl" style="margin-top:0">Лавка · у нас <span id="shopbal"></span> ⭐</div>
+    <div id="shopgrid"></div>
+    <button id="closeshop" class="big alt">Закрыть</button>
   </div>
 </div>
 
@@ -354,7 +388,28 @@ function fix1(p) {
   }
   p.x = bx; p.y = by; return p;
 }
-function fixM(m, p) { return m ? fix1(p) : fix0(p); }
+/* домик внутри и мебель: название, цена в звёздах, вид (floor — на пол, wall — на стену, rug — ковёр), ширина и высота */
+var HW = 1700, HH = 1150, HWALL = 330, HDOOR = { x: 850, y: 1085 };
+var CAT = [
+  { n: 'Коврик', p: 8, t: 'rug', w: 230, h: 130 }, { n: 'Цветок', p: 8, t: 'floor', w: 80, h: 130 }, { n: 'Стул', p: 12, t: 'floor', w: 80, h: 120 },
+  { n: 'Столик', p: 18, t: 'floor', w: 150, h: 130 }, { n: 'Лампа', p: 15, t: 'floor', w: 80, h: 210 }, { n: 'Кресло', p: 25, t: 'floor', w: 150, h: 140 },
+  { n: 'Кровать', p: 40, t: 'floor', w: 260, h: 170 }, { n: 'Диван', p: 45, t: 'floor', w: 280, h: 150 }, { n: 'Книжный шкаф', p: 35, t: 'floor', w: 170, h: 260 },
+  { n: 'Картина', p: 15, t: 'wall', w: 150, h: 120 }, { n: 'Часы', p: 12, t: 'wall', w: 90, h: 90 }, { n: 'Мишка', p: 20, t: 'floor', w: 90, h: 110 },
+  { n: 'Аквариум', p: 50, t: 'floor', w: 190, h: 190 }, { n: 'Пианино', p: 70, t: 'floor', w: 220, h: 190 }, { n: 'Ёлка', p: 30, t: 'floor', w: 170, h: 260 },
+  { n: 'Большой ковёр', p: 20, t: 'rug', w: 380, h: 220 }
+];
+var COL2 = [];
+function fix2(p) { pushOut(COL2, p); p.x = Math.max(110, Math.min(HW - 110, p.x)); p.y = Math.max(HWALL + 40, Math.min(HH - 70, p.y)); return p; }
+/* куда можно поставить вещь */
+function placeFix(i, p) {
+  var c = CAT[i];
+  p.x = Math.round(Math.max(60 + c.w / 2, Math.min(HW - 60 - c.w / 2, p.x)));
+  if (c.t === 'wall') { p.y = HWALL - 70; return p; }
+  p.y = Math.round(Math.max(HWALL + (c.t === 'rug' ? c.h / 2 + 10 : 50), Math.min(HH - 90 - (c.t === 'rug' ? c.h / 2 : 0), p.y)));
+  if (c.t !== 'rug' && Math.abs(p.x - HDOOR.x) < 90 + c.w / 2 && p.y > HH - 200) p.y = HH - 200;
+  return p;
+}
+function fixM(m, p) { return m === 1 ? fix1(p) : m === 2 ? fix2(p) : fix0(p); }
 /* годится ли точка для звёздочки или клада */
 function spawnOk(m, x, y) {
   var i, c, dx, dy;
@@ -406,14 +461,14 @@ saveStore();
    РИСОВАНИЕ: заготовки
    ===================================================================== */
 var cv = $('game'), ctx = cv.getContext('2d');
-var cw = 0, ch = 0, dpr = 1, scale = 1, cam = { x: HOUSE.x, y: HOUSE.y + 100 };
+var cw = 0, ch = 0, dpr = 1, scale = 1, scaleBase = 1, cam = { x: HOUSE.x, y: HOUSE.y + 100 };
 var dk = document.createElement('canvas'), dctx = dk.getContext('2d');
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   cw = Math.round(window.innerWidth * dpr); ch = Math.round(window.innerHeight * dpr);
   cv.width = cw; cv.height = ch;
   dk.width = Math.ceil(cw / 2); dk.height = Math.ceil(ch / 2);
-  scale = Math.max(cw / 1500, ch / 950);
+  scaleBase = scale = Math.max(cw / 1500, ch / 950);
 }
 window.addEventListener('resize', resize); resize();
 
@@ -674,6 +729,72 @@ function buildSprites() {
   });
 }
 
+/* --- мебель (пока нарисована кодом; потом заменим картинками) --- */
+var FDRAW = [
+  function (g, c) { g.fillStyle = '#ff9fc8'; ell(g, 0, 0, 112, 62); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 7; ell(g, 0, 0, 92, 48); g.stroke(); heart(g, 0, 0, 22, '#fff'); },
+  function (g) { shadow(g, 30, 8); ['#3f9e57', '#59bf6c', '#4fb565', '#86dd8a', '#59bf6c'].forEach(function (cl, k) { g.save(); g.translate(0, -52); g.rotate(-1 + k * 0.5); g.fillStyle = cl; ell(g, 0, -34, 13, 34); g.fill(); g.restore(); }); g.fillStyle = '#e08a5c'; g.beginPath(); g.moveTo(-26, -54); g.lineTo(26, -54); g.lineTo(19, 0); g.lineTo(-19, 0); g.closePath(); g.fill(); g.fillStyle = '#f2a57a'; rr(g, -30, -62, 60, 14, 6); g.fill(); },
+  function (g) { shadow(g, 32, 8); g.fillStyle = '#c98f5a'; rr(g, -30, -112, 60, 62, 12); g.fill(); g.fillStyle = '#ffc2dd'; rr(g, -22, -104, 44, 40, 8); g.fill(); g.fillStyle = '#a66f42'; rr(g, -30, -44, 8, 44, 3); g.fill(); rr(g, 22, -44, 8, 44, 3); g.fill(); g.fillStyle = '#ff8ec0'; rr(g, -34, -56, 68, 18, 8); g.fill(); },
+  function (g) { shadow(g, 60, 12); g.fillStyle = '#a66f42'; rr(g, -9, -62, 18, 62, 5); g.fill(); rr(g, -34, -8, 68, 10, 5); g.fill(); g.fillStyle = '#e0a56c'; ell(g, 0, -66, 70, 24); g.fill(); g.fillStyle = '#f2c48e'; ell(g, 0, -70, 70, 22); g.fill(); g.fillStyle = '#8fd3ff'; rr(g, -12, -100, 24, 30, 8); g.fill(); flower(g, -8, -112, 7, '#ff8ec0', '#ffe36b'); flower(g, 9, -118, 7, '#fff', '#ffe36b'); },
+  function (g) { shadow(g, 30, 8); var gl = g.createRadialGradient(0, -160, 6, 0, -160, 60); gl.addColorStop(0, 'rgba(255,240,150,.8)'); gl.addColorStop(1, 'rgba(255,240,150,0)'); g.fillStyle = gl; ell(g, 0, -160, 60, 60); g.fill(); g.fillStyle = '#8a7fa0'; rr(g, -4, -150, 8, 146, 3); g.fill(); ell(g, 0, -3, 26, 8); g.fill(); g.fillStyle = '#ffd257'; g.beginPath(); g.moveTo(-20, -196); g.lineTo(20, -196); g.lineTo(34, -146); g.lineTo(-34, -146); g.closePath(); g.fill(); g.fillStyle = '#fff3a0'; rr(g, -34, -152, 68, 8, 4); g.fill(); },
+  function (g) { shadow(g, 66, 12); g.fillStyle = '#9d7be8'; rr(g, -62, -126, 124, 110, 30); g.fill(); g.fillStyle = '#b79bf2'; rr(g, -72, -78, 30, 74, 14); g.fill(); rr(g, 42, -78, 30, 74, 14); g.fill(); g.fillStyle = '#c9b4f7'; rr(g, -46, -62, 92, 50, 16); g.fill(); g.fillStyle = '#7d5bd0'; rr(g, -54, -12, 14, 12, 4); g.fill(); rr(g, 40, -12, 14, 12, 4); g.fill(); },
+  function (g) { shadow(g, 118, 14); g.fillStyle = '#c98f5a'; rr(g, -124, -150, 40, 150, 16); g.fill(); heart(g, -104, -118, 11, '#ff8ec0'); g.fillStyle = '#a66f42'; rr(g, -110, -50, 232, 46, 12); g.fill(); g.fillStyle = '#fff'; rr(g, -104, -84, 222, 50, 18); g.fill(); g.fillStyle = '#ff9fc8'; rr(g, -36, -92, 156, 58, 18); g.fill(); g.fillStyle = '#ffc2dd'; rr(g, -36, -92, 156, 18, 9); g.fill(); g.fillStyle = '#fff5fa'; rr(g, -96, -100, 56, 34, 14); g.fill(); },
+  function (g) { shadow(g, 128, 14); g.fillStyle = '#22a7c2'; rr(g, -130, -136, 260, 110, 30); g.fill(); g.fillStyle = '#4fd3e6'; rr(g, -136, -84, 36, 78, 16); g.fill(); rr(g, 100, -84, 36, 78, 16); g.fill(); g.fillStyle = '#7fe3f0'; rr(g, -102, -70, 100, 52, 16); g.fill(); rr(g, 2, -70, 100, 52, 16); g.fill(); g.fillStyle = '#ffd257'; rr(g, -92, -110, 44, 40, 12); g.fill(); g.fillStyle = '#ff8ec0'; rr(g, 50, -110, 44, 40, 12); g.fill(); g.fillStyle = '#1b8aa0'; rr(g, -118, -14, 16, 14, 4); g.fill(); rr(g, 102, -14, 16, 14, 4); g.fill(); },
+  function (g) { shadow(g, 78, 12); g.fillStyle = '#a66f42'; rr(g, -78, -250, 156, 250, 14); g.fill(); g.fillStyle = '#7a4f33'; for (var r = 0; r < 3; r++) { rr(g, -66, -238 + r * 78, 132, 66, 8); g.fill(); } var bc = ['#ff7eb6', '#ffd257', '#4fd3e6', '#b08cff', '#7ed48a', '#ff9a6b']; for (r = 0; r < 3; r++) for (var k = 0; k < 7; k++) { g.fillStyle = bc[(k + r * 2) % 6]; rr(g, -62 + k * 18, -230 + r * 78 + (k % 3) * 5, 14, 56 - (k % 3) * 5, 3); g.fill(); } },
+  function (g) { g.fillStyle = '#ffc928'; rr(g, -70, -110, 140, 106, 12); g.fill(); g.fillStyle = '#bfeeff'; rr(g, -58, -98, 116, 82, 6); g.fill(); g.fillStyle = '#7fd070'; g.beginPath(); g.moveTo(-58, -34); g.quadraticCurveTo(-10, -70, 58, -40); g.lineTo(58, -16); g.lineTo(-58, -16); g.closePath(); g.fill(); g.fillStyle = '#ffe36b'; ell(g, 30, -74, 13, 13); g.fill(); flower(g, -30, -36, 6, '#ff8ec0', '#fff'); },
+  function (g) { g.fillStyle = '#ff8ec0'; ell(g, 0, -45, 42, 42); g.fill(); g.fillStyle = '#fff'; ell(g, 0, -45, 33, 33); g.fill(); g.strokeStyle = '#4a3560'; g.lineWidth = 5; g.beginPath(); g.moveTo(0, -45); g.lineTo(0, -68); g.moveTo(0, -45); g.lineTo(16, -38); g.stroke(); g.fillStyle = '#4a3560'; ell(g, 0, -45, 4, 4); g.fill(); },
+  function (g) { shadow(g, 36, 8); g.fillStyle = '#b07a4d'; ell(g, -22, -84, 13, 13); g.fill(); ell(g, 22, -84, 13, 13); g.fill(); ell(g, 0, -34, 32, 34); g.fill(); ell(g, 0, -68, 26, 24); g.fill(); ell(g, -30, -6, 14, 10); g.fill(); ell(g, 30, -6, 14, 10); g.fill(); ell(g, -34, -40, 11, 16); g.fill(); ell(g, 34, -40, 11, 16); g.fill(); g.fillStyle = '#e8c39a'; ell(g, 0, -28, 18, 20); g.fill(); ell(g, 0, -60, 12, 9); g.fill(); g.fillStyle = '#3d2b33'; ell(g, -9, -72, 3, 3.5); g.fill(); ell(g, 9, -72, 3, 3.5); g.fill(); ell(g, 0, -63, 4, 3); g.fill(); g.fillStyle = '#ff6fa8'; rr(g, -14, -52, 28, 9, 4); g.fill(); },
+  function (g) { shadow(g, 88, 12); g.fillStyle = '#a66f42'; rr(g, -84, -70, 168, 70, 10); g.fill(); g.fillStyle = '#7a4f33'; rr(g, -70, -56, 140, 44, 6); g.fill(); var ag = g.createLinearGradient(0, -180, 0, -70); ag.addColorStop(0, '#bff3ff'); ag.addColorStop(1, '#4fb9e2'); g.fillStyle = ag; rr(g, -88, -182, 176, 114, 14); g.fill(); g.fillStyle = '#4fb565'; ell(g, -60, -92, 8, 26); g.fill(); ell(g, 64, -88, 8, 22); g.fill(); [[-30, -130, '#ff9a6b'], [26, -150, '#ffd257'], [50, -112, '#ff7eb6']].forEach(function (f) { g.fillStyle = f[2]; ell(g, f[0], f[1], 15, 9); g.fill(); g.beginPath(); g.moveTo(f[0] - 13, f[1]); g.lineTo(f[0] - 26, f[1] - 9); g.lineTo(f[0] - 26, f[1] + 9); g.closePath(); g.fill(); g.fillStyle = '#fff'; ell(g, f[0] + 7, f[1] - 2, 2.5, 2.5); g.fill(); }); g.strokeStyle = '#fff'; g.lineWidth = 6; rr(g, -88, -182, 176, 114, 14); g.stroke(); },
+  function (g) { shadow(g, 104, 13); g.fillStyle = '#8563e0'; rr(g, -104, -180, 208, 176, 16); g.fill(); g.fillStyle = '#b08cff'; rr(g, -104, -180, 208, 34, 14); g.fill(); g.fillStyle = '#6a4fd0'; rr(g, -112, -86, 224, 34, 10); g.fill(); g.fillStyle = '#fff'; rr(g, -100, -80, 200, 22, 5); g.fill(); g.fillStyle = '#3d2b33'; for (var k = 0; k < 11; k++) { if (k % 7 !== 2 && k % 7 !== 6) { rr(g, -90 + k * 17.5, -80, 9, 13, 2); g.fill(); } } g.fillStyle = '#fff'; rr(g, -40, -150, 80, 44, 6); g.fill(); g.fillStyle = '#3d2b33'; ell(g, -14, -122, 6, 5); g.fill(); ell(g, 14, -128, 6, 5); g.fill(); rr(g, -9, -144, 3, 22, 1); g.fill(); rr(g, 19, -148, 3, 22, 1); g.fill(); },
+  function (g) { shadow(g, 70, 13); g.fillStyle = '#8a5a3a'; rr(g, -10, -40, 20, 42, 5); g.fill(); [[78, -30, '#2f8a55'], [62, -92, '#379a5e'], [46, -150, '#42ab69']].forEach(function (l) { g.fillStyle = l[2]; g.beginPath(); g.moveTo(0, l[1] - 84); g.quadraticCurveTo(l[0] * 0.5, l[1] - 30, l[0], l[1]); g.quadraticCurveTo(0, l[1] + 16, -l[0], l[1]); g.quadraticCurveTo(-l[0] * 0.5, l[1] - 30, 0, l[1] - 84); g.fill(); }); [[-40, -44, '#ff7eb6'], [30, -52, '#ffd257'], [-6, -74, '#4fd3e6'], [-30, -106, '#ffd257'], [28, -112, '#ff7eb6'], [0, -140, '#b08cff'], [-14, -176, '#ff7eb6'], [16, -186, '#4fd3e6']].forEach(function (o) { g.fillStyle = o[2]; ell(g, o[0], o[1], 9, 9); g.fill(); }); starPath(g, 0, -240, 20, 9, 0); g.fillStyle = '#ffc928'; g.fill(); },
+  function (g) { g.fillStyle = '#b08cff'; rr(g, -186, -106, 372, 212, 26); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 7; rr(g, -164, -86, 328, 172, 16); g.stroke(); g.fillStyle = '#d6c4ff'; rr(g, -140, -64, 280, 128, 12); g.fill(); starPath(g, 0, 0, 44, 20, 0); g.fillStyle = '#fff'; g.fill(); }
+];
+var houseBg = null;
+function buildFurniture() {
+  CAT.forEach(function (c, i) {
+    var rug = c.t === 'rug';
+    sprite('f' + i, c.w + 30, c.h + 30, (c.w + 30) / 2, rug ? (c.h + 30) / 2 : c.h + 18, function (g) { FDRAW[i](g, c); });
+  });
+  houseBg = document.createElement('canvas'); houseBg.width = HW; houseBg.height = HH;
+  var g = houseBg.getContext('2d'), k;
+  g.fillStyle = '#3b2a55'; g.fillRect(0, 0, HW, HH);
+  // стена с обоями
+  g.fillStyle = '#ffe9f1'; rr(g, 40, 30, HW - 80, HWALL, 30); g.fill();
+  g.save(); rr(g, 40, 30, HW - 80, HWALL, 30); g.clip();
+  for (k = 0; k < 40; k++) { g.fillStyle = k % 2 ? 'rgba(255,170,205,.35)' : 'rgba(255,255,255,.5)'; g.fillRect(40 + k * 42, 30, 21, HWALL); }
+  for (k = 0; k < 20; k++) heart(g, 82 + k * 84, 110 + (k % 2) * 90, 9, 'rgba(255,120,170,.45)');
+  g.restore();
+  // окна
+  [330, 1370].forEach(function (x) {
+    g.fillStyle = '#fff'; rr(g, x - 110, 76, 220, 190, 22); g.fill();
+    var sk = g.createLinearGradient(0, 86, 0, 256); sk.addColorStop(0, '#8fd8ff'); sk.addColorStop(1, '#d9f6ff');
+    g.fillStyle = sk; rr(g, x - 98, 88, 196, 166, 14); g.fill();
+    g.fillStyle = '#fff'; ell(g, x - 40, 140, 34, 16); g.fill(); ell(g, x - 10, 130, 28, 18); g.fill(); ell(g, x + 50, 190, 30, 13); g.fill();
+    g.fillStyle = '#7fd070'; g.beginPath(); g.moveTo(x - 98, 254); g.lineTo(x - 98, 226); g.quadraticCurveTo(x, 190, x + 98, 232); g.lineTo(x + 98, 254); g.closePath(); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 9; g.beginPath(); g.moveTo(x, 88); g.lineTo(x, 254); g.moveTo(x - 98, 170); g.lineTo(x + 98, 170); g.stroke();
+    g.fillStyle = '#ff9fc8'; g.beginPath(); g.moveTo(x - 124, 60); g.lineTo(x - 60, 60); g.quadraticCurveTo(x - 70, 170, x - 124, 250); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(x + 124, 60); g.lineTo(x + 60, 60); g.quadraticCurveTo(x + 70, 170, x + 124, 250); g.closePath(); g.fill();
+    g.fillStyle = '#c98f5a'; rr(g, x - 136, 52, 272, 14, 7); g.fill();
+  });
+  // пол
+  g.fillStyle = '#e9b97e'; rr(g, 40, HWALL, HW - 80, HH - HWALL - 30, 30); g.fill();
+  g.save(); rr(g, 40, HWALL, HW - 80, HH - HWALL - 30, 30); g.clip();
+  for (k = 0; k < 14; k++) { g.fillStyle = k % 2 ? '#e2ae70' : '#efc48d'; g.fillRect(40, HWALL + k * 58, HW - 80, 58); g.fillStyle = 'rgba(150,100,50,.25)'; for (var q = 0; q < 6; q++) g.fillRect(40 + ((q * 290 + k * 137) % (HW - 80)), HWALL + k * 58, 4, 58); }
+  g.fillStyle = 'rgba(120,70,30,.18)'; g.fillRect(40, HWALL, HW - 80, 26);
+  g.restore();
+  g.fillStyle = '#fff'; g.fillRect(40, HWALL - 12, HW - 80, 24);
+  // дверь на улицу
+  g.fillStyle = '#3b2a55'; rr(g, HDOOR.x - 96, HH - 44, 192, 44, 6); g.fill();
+  var dl = g.createLinearGradient(0, HH - 150, 0, HH); dl.addColorStop(0, 'rgba(255,250,210,0)'); dl.addColorStop(1, 'rgba(255,250,210,.95)');
+  g.fillStyle = dl; g.beginPath(); g.moveTo(HDOOR.x - 84, HH - 30); g.lineTo(HDOOR.x - 130, HH - 190); g.lineTo(HDOOR.x + 130, HH - 190); g.lineTo(HDOOR.x + 84, HH - 30); g.closePath(); g.fill();
+  g.fillStyle = '#7ed48a'; rr(g, HDOOR.x - 80, HH - 120, 160, 64, 20); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 5; rr(g, HDOOR.x - 68, HH - 110, 136, 44, 12); g.stroke();
+}
+function thumb(i, size) {
+  var c = document.createElement('canvas'); c.width = c.height = size;
+  var p = SPR['f' + i], k = Math.min((size - 8) / p.w, (size - 8) / p.h);
+  c.getContext('2d').drawImage(p.c, (size - p.w * k) / 2, (size - p.h * k) / 2, p.w * k, p.h * k);
+  return c;
+}
+
 /* --- героиня --- */
 var SKIN = '#ffe0c8';
 function drawGirl(c, x, y, s, L, o) {
@@ -792,9 +913,18 @@ function buildMini() {
    ===================================================================== */
 var screenMode = 'lobby', demo = false;
 var players = new Map(), me = null, stars = [], total = 0, parts = [], taps = [], pops = [];
+var furn = [], inv = {}, decor = false, sel = -1, houseObjs = [], nearShop = false;
 var album = [], chestOpen = {}, treasure = null, trShowAt = 0, radarLvl = -1, ev = null, trans = null;
 var T = 0;
 
+function setFurn() { // пересчитать, что стоит в домике
+  COL2.length = 0; houseObjs = [];
+  furn.forEach(function (f) {
+    var c = CAT[f.i]; if (!c || c.t !== 'floor') return;
+    COL2.push(ellCol(f.x, f.y - 8, c.w * 0.36, 18)); houseObjs.push({ x: f.x, y: f.y, k: 'f' + f.i, h: c.h + 40 });
+  });
+}
+function owned(i) { return (inv[i] || 0) + furn.filter(function (f) { return f.i === i; }).length; }
 function mkPlayer(p) {
   return { id: p.id, name: p.name, look: p.look, x: p.x, y: p.y, tx: p.tx, ty: p.ty, m: p.m | 0, ph: 0, face: 1, mv: false, stuck: 0,
     talk: false, em: null, emT: 0, seed: Math.random() * 4, rtc: '' };
@@ -877,6 +1007,7 @@ function onMsg(m) {
     stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, m: s.m | 0, k: s.k | 0, born: T }; });
     total = m.total; $('starn').textContent = total;
     album = m.album || []; chestOpen = {}; (m.chests || []).forEach(function (id) { chestOpen[id] = true; });
+    furn = m.furn || []; inv = m.inv || {}; setFurn(); drawTray();
     treasure = m.tr || null; trShowAt = T + 1; ev = null;
     store.room = m.room; saveStore();
     pendingHello = { t: 'hello', id: store.id, name: store.name, look: store.look, room: m.room };
@@ -917,6 +1048,10 @@ function onMsg(m) {
     toast(nameOf(m.by) + ' открыла сундук!  +' + m.add + ' ⭐');
   }
   else if (m.t === 'cc') { delete chestOpen[m.id]; }
+  else if (m.t === 'by') { total = m.total; bumpStars(); inv[m.i] = m.n; drawTray(); drawShop(); toast(nameOf(m.by) + ' купила: ' + CAT[m.i].n + '. Поставь в домике 🏠'); beep([784, 1047], 0.09, 0.12); }
+  else if (m.t === 'no') { toast('Не хватает звёздочек ⭐'); }
+  else if (m.t === 'pu') { furn.push(m.f); inv[m.f.i] = m.n; setFurn(); drawTray(); if (me.m === 2) beep([440, 660], 0.06, 0.1); }
+  else if (m.t === 'tf') { furn = furn.filter(function (f) { return f.u !== m.u; }); inv[m.i] = m.n; setFurn(); drawTray(); }
   else if (m.t === 'rtc') { onRtc(m.from, m.d); }
 }
 var lastMove = 0;
@@ -1114,7 +1249,7 @@ function enterGame(code) {
   if (first) {
     cam.x = me.x; cam.y = me.y; radarLvl = -1;
     if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми 🎤 и разреши.');
-    else toast('Ищи клад по компасу 🧭 и собирай звёздочки!');
+    else toast('Ищи клад по компасу 🧭, копи звёздочки и обставляй домик 🏠');
     wakeLock();
     try { if (!demo && document.documentElement.requestFullscreen && window.matchMedia('(pointer: coarse)').matches) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) { /* не страшно */ }
   }
@@ -1122,7 +1257,8 @@ function enterGame(code) {
 function leaveGame(msg) {
   disconnect(); demo = false; clearInterval(botTimer);
   screenMode = 'lobby'; me = null; players.clear(); stars = []; treasure = null; ev = null; trans = null;
-  ['hud', 'modal', 'album', 'dig', 'radar'].forEach(function (id) { $(id).classList.add('hidden'); });
+  setDecor(false);
+  ['hud', 'modal', 'album', 'dig', 'radar', 'shop', 'shopbtn', 'decor'].forEach(function (id) { $(id).classList.add('hidden'); });
   $('lobby').classList.remove('hidden');
   busy(false); lobbyView(); showErr(msg || '');
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
@@ -1166,6 +1302,40 @@ $('stars').onclick = function () {
   });
   $('album').classList.remove('hidden');
 };
+function drawShop() {
+  if ($('shop').classList.contains('hidden')) return;
+  $('shopbal').textContent = total;
+  var g = $('shopgrid'); g.innerHTML = '';
+  CAT.forEach(function (c, i) {
+    var b = document.createElement('button'); b.appendChild(thumb(i, 150));
+    b.appendChild(document.createTextNode(c.p + ' ⭐'));
+    var n = owned(i); if (n) { var o = document.createElement('i'); o.textContent = 'есть ' + n; b.appendChild(o); }
+    b.disabled = total < c.p; b.title = c.n;
+    b.onclick = function () { unlockAudio(); send({ t: 'buy', i: i }); };
+    g.appendChild(b);
+  });
+}
+function drawTray() {
+  var t = $('tray'); t.innerHTML = '';
+  var any = false;
+  CAT.forEach(function (c, i) {
+    if (!inv[i]) return; any = true;
+    var b = document.createElement('button'); b.className = 'it' + (sel === i ? ' on' : ''); b.appendChild(thumb(i, 120));
+    var n = document.createElement('b'); n.textContent = inv[i]; b.appendChild(n);
+    b.onclick = function () { unlockAudio(); sel = sel === i ? -1 : i; drawTray(); if (sel >= 0) toast(c.t === 'wall' ? 'Нажми на стену, куда повесить' : 'Нажми на пол, куда поставить'); };
+    t.appendChild(b);
+  });
+  if (sel >= 0 && !inv[sel]) sel = -1;
+  if (!any) { var h = document.createElement('div'); h.className = 'hint'; h.textContent = 'Вещей нет. Купи в лавке 🛍 или нажми на вещь, чтобы убрать'; t.appendChild(h); }
+}
+function setDecor(on) {
+  decor = on; sel = -1; $('decor').classList.toggle('on', on);
+  $('tray').classList.toggle('hidden', !on); $('emotes').classList.toggle('hidden', on);
+  if (on) { drawTray(); toast('Выбери вещь внизу и нажми, куда поставить. Нажми на вещь — уберётся'); }
+}
+$('decor').onclick = function () { unlockAudio(); setDecor(!decor); };
+$('shopbtn').onclick = function () { unlockAudio(); $('shop').classList.remove('hidden'); drawShop(); };
+$('closeshop').onclick = function () { $('shop').classList.add('hidden'); };
 $('closealbum').onclick = function () { $('album').classList.add('hidden'); };
 $('dig').onclick = function () {
   unlockAudio(); if (!me || !treasure || me.m !== 0) return;
@@ -1192,6 +1362,16 @@ function toWorld(e) {
 function goTo(e, isTap) {
   if (!me || screenMode !== 'game' || trans) return;
   var p = toWorld(e);
+  if (me.m === 2 && decor && isTap) {
+    if (sel >= 0 && inv[sel]) { placeFix(sel, p); send({ t: 'put', i: sel, x: p.x, y: p.y }); return; }
+    var hit = null;
+    furn.forEach(function (f) {
+      var c = CAT[f.i], top = c.t === 'rug' ? f.y - c.h / 2 : f.y - c.h, bot = c.t === 'rug' ? f.y + c.h / 2 : f.y + 10;
+      if (Math.abs(p.x - f.x) < c.w / 2 && p.y > top && p.y < bot && (!hit || (c.t !== 'rug' && f.y >= hit.y) || CAT[hit.i].t === 'rug')) hit = f;
+    });
+    if (hit) { send({ t: 'take', u: hit.u }); beep([660, 440], 0.06, 0.1); return; }
+  }
+  if (me.m === 2 && decor && !isTap) return;
   if (me.m === 0 && inBand(p.x, p.y)) { var c = bandC(p.x); p.y = me.y < c ? c - BAND - 2 : c + BAND + 2; } // в гору не идём — остаёмся на своей стороне
   fixM(me.m, p); fixM(me.m, p);
   me.tx = p.x; me.ty = p.y; me.stuck = 0;
@@ -1228,6 +1408,10 @@ function demoServer(o) {
     var miss = []; ALBUM.forEach(function (a, i) { if (album.indexOf(i) < 0) miss.push(i); });
     var item = miss.length ? miss[Math.floor(Math.random() * miss.length)] : -1, add = item < 0 ? 15 : 10, old = treasure;
     onMsg({ t: 'dg', by: store.id, x: old.x, y: old.y, item: item, add: add, total: total + add, tr: randSpot(0, album.length < 2) });
+  } else if (o.t === 'buy') {
+    if (total < CAT[o.i].p) onMsg({ t: 'no' }); else onMsg({ t: 'by', by: store.id, i: o.i, total: total - CAT[o.i].p, n: (inv[o.i] || 0) + 1 });
+  } else if (o.t === 'put') { if (inv[o.i]) onMsg({ t: 'pu', f: { u: demoSid++, i: o.i, x: o.x, y: o.y }, n: inv[o.i] - 1 });
+  } else if (o.t === 'take') { var f = furn.find(function (q) { return q.u === o.u; }); if (f) onMsg({ t: 'tf', u: f.u, i: f.i, n: (inv[f.i] || 0) + 1 });
   } else if (o.t === 'ch') { if (!chestOpen[o.id]) onMsg({ t: 'co', id: o.id, by: store.id, add: 5, total: total + 5 }); }
 }
 function startDemo() {
@@ -1236,7 +1420,7 @@ function startDemo() {
   players.set(me.id, me);
   var bot = mkPlayer({ id: 'bot', name: 'Подружка', look: (store.look + 1) % 6, x: 2660, y: 2210, tx: 2660, ty: 2210 });
   players.set('bot', bot);
-  stars = []; album = []; chestOpen = {}; total = 0; $('starn').textContent = 0; ev = null;
+  stars = []; album = []; chestOpen = {}; total = 40; $('starn').textContent = 40; ev = null; furn = []; inv = { 0: 1, 1: 1 }; setFurn();
   for (var i = 0; i < 26; i++) demoStar(0);
   for (i = 0; i < 9; i++) demoStar(1);
   treasure = randSpot(0, true); trShowAt = T + 1;
@@ -1272,8 +1456,10 @@ function logic(dt) {
     // сундуки
     CHESTS.forEach(function (c) { if (c.m === me.m && !chestOpen[c.id] && !c.sentAt && d2(me.x, me.y, c.x, c.y) < 95 * 95) { c.sentAt = T; send({ t: 'ch', id: c.id }); } if (c.sentAt && T - c.sentAt > 3) c.sentAt = 0; });
     // входы и выходы пещеры
-    if (me.m === 0) {
-      if (d2(me.x, me.y, MOUTH.x, MOUTH.y + 24) < 50 * 50) travel(1, EXIT_S.x, EXIT_S.y - 110);
+    if (me.m === 2) { if (Math.abs(me.x - HDOOR.x) < 70 && me.y > HH - 96) travel(0, HOUSE.x, HOUSE.y + 140); }
+    else if (me.m === 0) {
+      if (Math.abs(me.x - HOUSE.x) < 34 && me.y < HOUSE.y + 46 && me.y > HOUSE.y) travel(2, HDOOR.x + (Math.random() - 0.5) * 240, HH - 200 - Math.random() * 60);
+      else if (d2(me.x, me.y, MOUTH.x, MOUTH.y + 24) < 50 * 50) travel(1, EXIT_S.x, EXIT_S.y - 110);
       else if (d2(me.x, me.y, HOLE.x, HOLE.y) < 44 * 44) travel(1, EXIT_N.x, EXIT_N.y + 100);
     } else {
       if (d2(me.x, me.y, EXIT_S.x, EXIT_S.y) < 46 * 46) travel(0, MOUTH.x, MOUTH.y + 120);
@@ -1283,7 +1469,8 @@ function logic(dt) {
     trans.t += dt;
     if (!trans.done && trans.t > 0.35) {
       trans.done = true; me.m = trans.m; me.x = me.tx = trans.x; me.y = me.ty = trans.y; cam.x = me.x; cam.y = me.y; sendMove();
-      if (me.m === 1) toast('Пещера! Тут темно, держитесь вместе 💎'); else if (me.y < 900) toast('Тайная бухта! 🏝');
+      if (me.m === 1) toast('Пещера! Тут темно, держитесь вместе 💎'); else if (me.m === 2) toast('Наш домик! Нажми 🛋, чтобы расставить вещи'); else if (me.y < 900) toast('Тайная бухта! 🏝');
+      $('decor').classList.toggle('hidden', me.m !== 2); if (me.m !== 2 && decor) setDecor(false);
     }
     if (trans.t > 0.7) trans = null;
   }
@@ -1299,9 +1486,11 @@ function logic(dt) {
     radarLvl = lvl; var r = $('radar');
     r.classList.toggle('hidden', lvl < 0); r.className = 'chip' + (lvl < 0 ? ' hidden' : ' r' + lvl);
     if (lvl >= 0) $('radartx').textContent = RADAR[lvl];
-    $('dig').classList.toggle('hidden', lvl !== 4);
+    $('dig').classList.toggle('hidden', lvl !== 4); if (lvl === 4) $('shopbtn').classList.add('hidden'); else if (nearShop) $('shopbtn').classList.remove('hidden');
     if (lvl === 4) beep([880, 1175], 0.08, 0.1);
   }
+  var ns = me.m === 0 && !trans && Math.abs(me.x - SHOP.x) < 150 && me.y > SHOP.y - 10 && me.y < SHOP.y + 110;
+  if (ns !== nearShop) { nearShop = ns; $('shopbtn').classList.toggle('hidden', !ns || radarLvl === 4); if (!ns) $('shop').classList.add('hidden'); }
   if (ev && T > ev.until) ev = null;
   cam.x += (me.x - cam.x) * Math.min(1, dt * 6); cam.y += (me.y - 40 - cam.y) * Math.min(1, dt * 6);
 }
@@ -1460,6 +1649,14 @@ function drawCave(dt, x0, y0, vw, vh) {
     ctx.quadraticCurveTo(bx + 14, by + 2, bx + 30, by + f * 0.5); ctx.quadraticCurveTo(bx + 16, by - 14 - f, bx, by); ctx.fill();
   });
 }
+function drawHouse(dt, x0, y0, vw, vh) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#3b2a55'; ctx.fillRect(0, 0, cw, ch);
+  ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale);
+  ctx.drawImage(houseBg, 0, 0);
+  furn.forEach(function (f) { var c = CAT[f.i]; if (c && c.t !== 'floor') drawSpr('f' + f.i, f.x, f.y); });
+  if (decor && sel >= 0) { ctx.fillStyle = 'rgba(255,255,255,' + (0.12 + 0.08 * Math.sin(T * 5)) + ')'; if (CAT[sel].t === 'wall') ctx.fillRect(40, 30, HW - 80, HWALL - 12); else ctx.fillRect(40, HWALL + 12, HW - 80, HH - HWALL - 42); }
+  drawSorted(houseObjs, x0, y0, vw, vh, 2);
+}
 function drawDark() { // темнота с кругами света
   var s2 = scale / 2, ox = dk.width / 2 - cam.x * s2, oy = dk.height / 2 - cam.y * s2;
   dctx.setTransform(1, 0, 0, 1, 0, 0); dctx.globalCompositeOperation = 'source-over';
@@ -1493,7 +1690,7 @@ function drawHudCanvas() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   // где подруга, если она на другой карте
   var lines = [];
-  players.forEach(function (p) { if (p !== me && p.m !== me.m) lines.push(p.name + (p.m ? ' в пещере 💎' : (p.y < 900 ? ' в тайной бухте 🏝' : ' на острове 🌳'))); });
+  players.forEach(function (p) { if (p !== me && p.m !== me.m) lines.push(p.name + (p.m === 2 ? ' в домике 🏠' : p.m === 1 ? ' в пещере 💎' : (p.y < 900 ? ' в тайной бухте 🏝' : ' на острове 🌳'))); });
   if (lines.length) {
     ctx.font = '800 ' + Math.round(17 * dpr) + 'px ui-rounded, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     var tx = lines.join('   '), tw = ctx.measureText(tx).width + 28 * dpr, ty = ch - 104 * dpr;
@@ -1525,18 +1722,20 @@ function frame(ts) {
   var inGame = screenMode === 'game' && me, curMap = inGame ? me.m : 0;
   if (inGame) { logic(dt); curMap = me.m; }
   else { lobbyA += dt * 0.1; cam.x = HOUSE.x + Math.cos(lobbyA) * 420; cam.y = HOUSE.y + 150 + Math.sin(lobbyA) * 240; }
-  var vw = cw / scale, vh = ch / scale, mw = curMap ? CW : W, mh = curMap ? CH : H, pad = curMap ? 60 : 150;
+  scale = curMap === 2 && cw > ch ? Math.min(cw / (HW - 30), ch / (HH - 30)) : scaleBase; // домик на планшете виден целиком
+  var vw = cw / scale, vh = ch / scale, mw = [W, CW, HW][curMap], mh = [H, CH, HH][curMap], pad = [150, 60, 40][curMap];
   cam.x = vw >= mw + pad * 2 ? mw / 2 : Math.max(-pad + vw / 2, Math.min(mw + pad - vw / 2, cam.x));
   cam.y = vh >= mh + pad * 2 ? mh / 2 : Math.max(-pad + vh / 2, Math.min(mh + pad - vh / 2, cam.y));
+  if (curMap === 2 && cw > ch) { cam.x = HW / 2; cam.y = HH / 2; }
   var x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
-  if (curMap) drawCave(dt, x0, y0, vw, vh); else drawIsland(dt, x0, y0, vw, vh);
+  if (curMap === 1) drawCave(dt, x0, y0, vw, vh); else if (curMap === 2) drawHouse(dt, x0, y0, vw, vh); else drawIsland(dt, x0, y0, vw, vh);
   drawParts(dt, curMap);
-  if (curMap) { drawDark(); ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale); }
+  if (curMap === 1) { drawDark(); ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale); }
   drawLabels();
   if (inGame) drawHudCanvas();
 }
 
-buildSprites(); buildObjects(); buildCave(); buildMini();
+buildSprites(); buildFurniture(); buildObjects(); buildCave(); buildMini();
 requestAnimationFrame(frame);
 </script>
 </body>
