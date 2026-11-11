@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Остров</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#49bfe6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Остров">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #49bfe6; }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: #4a3560; user-select: none; -webkit-user-select: none; touch-action: none;
+    overscroll-behavior: none;
+  }
+  canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* ---------- вход ---------- */
+  #lobby {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 12px; background: rgba(60, 150, 200, .28); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    overflow: auto; touch-action: pan-y;
+  }
+  .card {
+    width: min(560px, 100%); background: rgba(255, 252, 248, .96); border-radius: 32px;
+    padding: 22px 22px 20px; box-shadow: 0 18px 50px rgba(40, 60, 110, .35), inset 0 0 0 3px #fff;
+    text-align: center; margin: auto;
+  }
+  .card h1 { margin: 0; font-size: 44px; line-height: 1; font-weight: 900; color: #ff5fa2; letter-spacing: 1px;
+    text-shadow: 0 3px 0 #ffd3e6; }
+  .card .sub { margin: 6px 0 16px; font-size: 16px; font-weight: 700; color: #8a78a8; }
+  .lbl { font-size: 14px; font-weight: 800; color: #8a78a8; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: .6px; }
+  input.txt {
+    width: 100%; font: inherit; font-size: 24px; font-weight: 800; text-align: center; color: #4a3560;
+    padding: 12px 14px; border-radius: 18px; border: 3px solid #e7dcf5; background: #fff; outline: none;
+    user-select: text; -webkit-user-select: text;
+  }
+  input.txt:focus { border-color: #ff9cc7; }
+  #looks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  #looks button {
+    width: 76px; height: 92px; padding: 0; border-radius: 18px; background: #f4eefb; border: 3px solid transparent;
+    transition: transform .12s;
+  }
+  #looks button.on { border-color: #ff7eb6; background: #ffe9f3; transform: scale(1.07); }
+  #looks canvas { width: 70px; height: 86px; display: block; }
+  .big {
+    display: block; width: 100%; margin-top: 14px; padding: 16px 18px; border-radius: 22px;
+    font-size: 24px; font-weight: 900; color: #fff; background: linear-gradient(#ff8ec0, #ff5fa2);
+    box-shadow: 0 6px 0 #d9417f, 0 12px 22px rgba(255, 95, 162, .35);
+  }
+  .big:active { transform: translateY(4px); box-shadow: 0 2px 0 #d9417f; }
+  .big.alt { background: linear-gradient(#b9a2ff, #8f73f0); box-shadow: 0 6px 0 #6a4fd0, 0 12px 22px rgba(143, 115, 240, .3); }
+  .big.alt:active { box-shadow: 0 2px 0 #6a4fd0; }
+  .big[disabled] { opacity: .55; }
+  .link { background: none; margin-top: 14px; font-size: 16px; font-weight: 800; color: #8f73f0; text-decoration: underline; padding: 6px; }
+  #err { min-height: 22px; margin-top: 10px; font-size: 16px; font-weight: 800; color: #e2447a; }
+  .codebig { font-size: 30px; font-weight: 900; letter-spacing: 4px; color: #4a3560; }
+
+  /* ---------- игра ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #hud > * { pointer-events: auto; }
+  .chip {
+    position: absolute; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 18px;
+    border-radius: 28px; background: rgba(255, 252, 248, .93); font-weight: 900; font-size: 24px;
+    box-shadow: 0 6px 16px rgba(40, 60, 110, .25), inset 0 0 0 3px #fff;
+  }
+  #stars { top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); color: #e59a00; }
+  #stars.pop { animation: pop .35s; }
+  @keyframes pop { 40% { transform: scale(1.25); } }
+  #codechip { top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); font-size: 17px; height: 44px; color: #8a78a8; }
+  .round {
+    position: absolute; width: 72px; height: 72px; border-radius: 50%; font-size: 34px; line-height: 1;
+    background: rgba(255, 252, 248, .95); box-shadow: 0 6px 16px rgba(40, 60, 110, .28), inset 0 0 0 3px #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .round:active { transform: scale(.93); }
+  #mic { top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
+  #mic.off { background: #ffd9df; }
+  #mic.off::after { content: ""; position: absolute; width: 60px; height: 6px; border-radius: 3px; background: #e2447a; transform: rotate(-45deg); }
+  #mic.talk { box-shadow: 0 0 0 6px rgba(120, 220, 140, .75), 0 6px 16px rgba(40, 60, 110, .28); }
+  #exit { top: calc(96px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); width: 56px; height: 56px; font-size: 24px; margin-right: 8px; }
+  #emotes { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 10px; }
+  #emotes button { position: static; width: 66px; height: 66px; font-size: 32px; }
+  #toast {
+    position: absolute; left: 50%; top: calc(72px + env(safe-area-inset-top)); transform: translateX(-50%);
+    max-width: 92%; padding: 12px 20px; border-radius: 20px; background: rgba(74, 53, 96, .92); color: #fff;
+    font-size: 18px; font-weight: 800; text-align: center; pointer-events: none; transition: opacity .3s;
+  }
+  #toast.hide { opacity: 0; }
+  #modal { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; }
+  @media (max-height: 520px) {
+    .card { padding: 14px 18px; } .card h1 { font-size: 32px; } .card .sub { margin-bottom: 8px; }
+    #looks button { width: 62px; height: 76px; } #looks canvas { width: 56px; height: 70px; }
+    .big { padding: 12px; margin-top: 10px; font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="lobby">
+  <div class="card">
+    <h1>Остров</h1>
+    <div class="sub">гуляем и болтаем вместе</div>
+
+    <div class="lbl">Как тебя зовут?</div>
+    <input id="name" class="txt" maxlength="14" autocomplete="off" placeholder="Имя">
+
+    <div class="lbl">Выбери героиню</div>
+    <div id="looks"></div>
+
+    <div id="saved" class="hidden">
+      <button id="play" class="big">▶ Играть</button>
+      <div class="sub" style="margin:12px 0 0">наш остров: <span id="savedcode" class="codebig"></span></div>
+      <button id="other" class="link">другой остров</button>
+    </div>
+
+    <div id="fresh">
+      <button id="create" class="big">Создать наш остров</button>
+      <button id="havecode" class="big alt">У меня есть код</button>
+    </div>
+
+    <div id="join" class="hidden">
+      <div class="lbl">Код острова — 6 цифр</div>
+      <input id="code" class="txt" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" placeholder="000 000">
+      <button id="enter" class="big alt">Войти на остров</button>
+      <button id="back" class="link">назад</button>
+    </div>
+
+    <button id="demo" class="big alt hidden">Посмотреть без сервера</button>
+    <div id="err"></div>
+  </div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="stars" class="chip">⭐ <span id="starn">0</span></div>
+  <button id="codechip" class="chip"></button>
+  <button id="mic" class="round" aria-label="Микрофон">🎤</button>
+  <button id="exit" class="round" aria-label="Выйти">🚪</button>
+  <div id="emotes"></div>
+  <div id="toast" class="hide"></div>
+</div>
+
+<div id="modal" class="hidden">
+  <div class="card">
+    <div class="lbl" style="margin-top:0">Код нашего острова</div>
+    <div id="modalcode" class="codebig" style="font-size:44px"></div>
+    <div class="sub" style="margin:10px 0 0">Скажи его подруге или отправь ссылку её родителям</div>
+    <button id="share" class="big">Отправить ссылку</button>
+    <button id="closemodal" class="link">закрыть</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   МИР: размеры острова, где можно ходить, что где стоит
+   ===================================================================== */
+var W = 2400, H = 1750, CX = 1200, CY = 800, RX = 1020, RY = 660;
+var WALK = 0.95, GRASS = 0.87;
+function islR(a) { return 1 + 0.06 * Math.sin(3 * a + 0.5) + 0.045 * Math.sin(5 * a + 2.1) + 0.03 * Math.sin(7 * a + 4.0); }
+function inIsl(x, y, m) { var dx = (x - CX) / RX, dy = (y - CY) / RY; return Math.sqrt(dx * dx + dy * dy) < islR(Math.atan2(dy, dx)) * m; }
+var SAND_BOTTOM = CY + RY * islR(Math.PI / 2);
+var PIER = { x0: 1150, x1: 1250, y0: CY + RY * islR(Math.PI / 2) * WALK - 60, y1: SAND_BOTTOM + 200 };
+function inPier(x, y) { return x > PIER.x0 && x < PIER.x1 && y > PIER.y0 && y < PIER.y1; }
+
+var TREES = [
+  [520, 560, 0], [640, 470, 1], [820, 380, 2], [1000, 300, 0], [1420, 290, 1], [1640, 370, 2], [1860, 500, 0],
+  [1990, 700, 1], [1960, 960, 0], [1800, 1180, 2], [1420, 1260, 1], [960, 1270, 0], [600, 1180, 2], [400, 860, 1],
+  [860, 560, 2], [1540, 540, 0], [900, 820, 1]
+];
+var BUSHES = [[1060, 500], [1345, 505], [560, 780], [1540, 860], [1100, 1120], [1780, 820], [760, 620], [1300, 1010]];
+var ROCKS = [[430, 1010], [1930, 1100], [1560, 330], [840, 1230]];
+var HOUSE = { x: 1200, y: 600 }, SHOP = { x: 1700, y: 650 }, SWING = { x: 1620, y: 1090 }, POND = { x: 700, y: 960, rx: 150, ry: 96 }, BENCH = { x: 905, y: 1040 };
+
+var COL = [
+  { x: HOUSE.x, y: HOUSE.y - 50, rx: 160, ry: 78 },
+  { x: SHOP.x, y: SHOP.y - 28, rx: 104, ry: 46 },
+  { x: SWING.x, y: SWING.y - 12, rx: 96, ry: 30 },
+  { x: POND.x, y: POND.y, rx: POND.rx + 14, ry: POND.ry + 12 },
+  { x: BENCH.x, y: BENCH.y - 10, rx: 52, ry: 22 }
+];
+TREES.forEach(function (t) { COL.push({ x: t[0], y: t[1] - 8, rx: 30, ry: 20 }); });
+BUSHES.forEach(function (b) { COL.push({ x: b[0], y: b[1] - 8, rx: 34, ry: 20 }); });
+ROCKS.forEach(function (r) { COL.push({ x: r[0], y: r[1] - 8, rx: 34, ry: 20 }); });
+
+/* подвинуть точку туда, где можно стоять */
+function fix(p) {
+  for (var i = 0; i < COL.length; i++) {
+    var c = COL[i], dx = (p.x - c.x) / c.rx, dy = (p.y - c.y) / c.ry, d = dx * dx + dy * dy;
+    if (d < 1) { var k = Math.sqrt(d) || 0.001; p.x = c.x + dx / k * c.rx; p.y = c.y + dy / k * c.ry; }
+  }
+  if (inIsl(p.x, p.y, WALK) || inPier(p.x, p.y)) return p;
+  if (p.y > PIER.y0 && Math.abs(p.x - 1200) < 120) {
+    p.x = Math.max(PIER.x0 + 4, Math.min(PIER.x1 - 4, p.x));
+    p.y = Math.max(PIER.y0 + 4, Math.min(PIER.y1 - 4, p.y));
+    return p;
+  }
+  var ax = (p.x - CX) / RX, ay = (p.y - CY) / RY, a = Math.atan2(ay, ax), r = islR(a) * (WALK - 0.004);
+  p.x = CX + Math.cos(a) * r * RX; p.y = CY + Math.sin(a) * r * RY;
+  return p;
+}
+function spawnOk(x, y) {
+  if (!(inIsl(x, y, 0.9) || (inPier(x, y) && x > PIER.x0 + 25 && x < PIER.x1 - 25 && y < PIER.y1 - 30))) return false;
+  for (var i = 0; i < COL.length; i++) {
+    var c = COL[i], dx = (x - c.x) / (c.rx + 45), dy = (y - c.y) / (c.ry + 45);
+    if (dx * dx + dy * dy < 1) return false;
+  }
+  return true;
+}
+/* ===== конец описания мира ===== */
+
+var LOOKS = [
+  { dress: '#ff7eb6', dress2: '#e2508f', hair: '#f4c95d', acc: 'crown' },
+  { dress: '#b08cff', dress2: '#8563e0', hair: '#6b4226', acc: 'bow' },
+  { dress: '#4fd3e6', dress2: '#22a7c2', hair: '#33261f', acc: 'flower' },
+  { dress: '#ffd257', dress2: '#f0a92b', hair: '#c7622b', acc: 'crown' },
+  { dress: '#7ed48a', dress2: '#4aae5e', hair: '#f4c95d', acc: 'bow' },
+  { dress: '#ff9a6b', dress2: '#ea6c3d', hair: '#6b4226', acc: 'flower' }
+];
+var EMOTES = ['❤️', '👋', '😂', '👍', '🌟'];
+var SPEED = 330;
+
+/* =====================================================================
+   МЕЛОЧИ
+   ===================================================================== */
+function $(id) { return document.getElementById(id); }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); }
+function fmtCode(s) { s = String(s || ''); return s.slice(0, 3) + ' ' + s.slice(3); }
+
+var store = { id: '', name: '', look: 0, room: '' };
+try { var sv = JSON.parse(localStorage.getItem('ostrov.v1') || 'null'); if (sv) store = sv; } catch (e) { /* хранилище недоступно */ }
+if (!/^[a-z0-9]{8,32}$/.test(store.id || '')) {
+  store.id = ''; for (var i0 = 0; i0 < 16; i0++) store.id += 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)];
+}
+function saveStore() { try { localStorage.setItem('ostrov.v1', JSON.stringify(store)); } catch (e) { /* ничего */ } }
+saveStore();
+
+/* =====================================================================
+   РИСОВАНИЕ
+   ===================================================================== */
+var cv = $('game'), ctx = cv.getContext('2d');
+var cw = 0, ch = 0, dpr = 1, scale = 1, cam = { x: CX, y: CY };
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cw = Math.round(window.innerWidth * dpr); ch = Math.round(window.innerHeight * dpr);
+  cv.width = cw; cv.height = ch;
+  scale = Math.max(cw / 1500, ch / 950);
+}
+window.addEventListener('resize', resize); resize();
+
+function pathIsland(c, m, grow) {
+  c.beginPath();
+  for (var i = 0; i <= 180; i++) {
+    var a = i / 180 * Math.PI * 2, r = islR(a) * m;
+    var x = CX + Math.cos(a) * (r * RX + (grow || 0)), y = CY + Math.sin(a) * (r * RY + (grow || 0));
+    if (i) c.lineTo(x, y); else c.moveTo(x, y);
+  }
+  c.closePath();
+}
+
+/* --- земля: рисуется один раз --- */
+var GS = 1.5, ground = document.createElement('canvas');
+function buildGround() {
+  ground.width = W * GS; ground.height = H * GS;
+  var g = ground.getContext('2d'); g.scale(GS, GS);
+  var R = rng(7);
+  // мелководье
+  g.fillStyle = 'rgba(170,240,250,.35)'; pathIsland(g, 1, 70); g.fill();
+  g.fillStyle = 'rgba(200,248,252,.5)'; pathIsland(g, 1, 34); g.fill();
+  // пирс (под песком начало)
+  g.fillStyle = 'rgba(40,90,120,.25)'; rr(g, PIER.x0 - 6, SAND_BOTTOM - 20, 112, PIER.y1 - SAND_BOTTOM + 34, 10); g.fill();
+  // песок
+  var sg = g.createRadialGradient(CX, CY, 300, CX, CY, 1050);
+  sg.addColorStop(0, '#fbeecb'); sg.addColorStop(1, '#f3d99d');
+  g.fillStyle = sg; pathIsland(g, 1, 0); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 8; g.stroke();
+  // трава
+  var gg = g.createLinearGradient(0, 150, 0, 1450);
+  gg.addColorStop(0, '#9be07a'); gg.addColorStop(1, '#6cc56a');
+  g.fillStyle = '#58b060'; pathIsland(g, GRASS, 8); g.fill();
+  g.fillStyle = gg; pathIsland(g, GRASS, 0); g.fill();
+  // пятна травы
+  g.save(); pathIsland(g, GRASS, 0); g.clip();
+  for (var i = 0; i < 90; i++) {
+    var x = 200 + R() * 2000, y = 150 + R() * 1300;
+    g.fillStyle = R() < 0.5 ? 'rgba(190,240,140,.28)' : 'rgba(60,150,80,.13)';
+    ell(g, x, y, 40 + R() * 110, 18 + R() * 46); g.fill();
+  }
+  g.restore();
+  // тропинки
+  function pathTo(pts, w) {
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(pts[0], pts[1]);
+    for (var k = 2; k < pts.length; k += 4) g.quadraticCurveTo(pts[k], pts[k + 1], pts[k + 2], pts[k + 3]);
+    g.strokeStyle = '#d9b877'; g.lineWidth = w + 10; g.stroke();
+    g.strokeStyle = '#f2dcab'; g.lineWidth = w; g.stroke();
+  }
+  pathTo([1200, 640, 1190, 1000, 1200, PIER.y0 + 30], 58);
+  pathTo([1200, 760, 1480, 700, 1690, 720], 46);
+  pathTo([1200, 860, 1000, 900, 880, 1075, 860, 1100, 800, 1090], 44);
+  pathTo([1200, 960, 1420, 1010, 1600, 1130], 44);
+  // камушки на тропинке
+  for (i = 0; i < 60; i++) {
+    g.fillStyle = 'rgba(190,150,90,.35)';
+    ell(g, 1180 + R() * 40, 660 + R() * 720, 3 + R() * 4, 2 + R() * 3); g.fill();
+  }
+  // пруд
+  g.fillStyle = '#58b060'; ell(g, POND.x, POND.y + 6, POND.rx + 12, POND.ry + 10); g.fill();
+  g.fillStyle = '#e9d6a3'; ell(g, POND.x, POND.y, POND.rx + 8, POND.ry + 6); g.fill();
+  var pg = g.createRadialGradient(POND.x - 30, POND.y - 30, 10, POND.x, POND.y, POND.rx);
+  pg.addColorStop(0, '#aeeaf7'); pg.addColorStop(1, '#4fb9e2');
+  g.fillStyle = pg; ell(g, POND.x, POND.y, POND.rx, POND.ry); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 4; g.beginPath(); g.ellipse(POND.x - 30, POND.y - 20, 70, 36, -0.2, 3.4, 4.6); g.stroke();
+  [[-60, 30], [50, 40], [20, -40], [90, -5]].forEach(function (l, n) {
+    g.fillStyle = '#4fb565'; g.beginPath(); g.moveTo(POND.x + l[0], POND.y + l[1]);
+    g.arc(POND.x + l[0], POND.y + l[1], 20, 0.4, Math.PI * 2 - 0.1); g.closePath(); g.fill();
+    if (n % 2 === 0) flower(g, POND.x + l[0] + 3, POND.y + l[1] - 3, 7, '#ffd0e6', '#ffe36b');
+  });
+  // цветы
+  var fc = ['#ff8ec0', '#ffffff', '#ffd257', '#c9a4ff', '#ff9a6b'];
+  for (i = 0; i < 230; i++) {
+    x = 220 + R() * 1960; y = 170 + R() * 1260;
+    if (!inIsl(x, y, GRASS - 0.04)) continue;
+    var dxp = (x - POND.x) / (POND.rx + 20), dyp = (y - POND.y) / (POND.ry + 20);
+    if (dxp * dxp + dyp * dyp < 1) continue;
+    if (R() < 0.35) { // травинки
+      g.strokeStyle = 'rgba(50,140,70,.5)'; g.lineWidth = 2.5; g.beginPath();
+      g.moveTo(x, y); g.lineTo(x - 4, y - 11); g.moveTo(x + 4, y); g.lineTo(x + 5, y - 13); g.moveTo(x + 8, y); g.lineTo(x + 12, y - 10); g.stroke();
+    } else flower(g, x, y, 4.5 + R() * 3, fc[Math.floor(R() * fc.length)], '#ffe36b');
+  }
+  // ракушки и морские звёзды на песке
+  for (i = 0; i < 46; i++) {
+    var a = R() * Math.PI * 2, rr2 = islR(a) * (0.905 + R() * 0.075);
+    x = CX + Math.cos(a) * rr2 * RX; y = CY + Math.sin(a) * rr2 * RY;
+    if (R() < 0.6) { g.fillStyle = R() < 0.5 ? '#ffd9c2' : '#fff5e6'; ell(g, x, y, 7, 5); g.fill(); g.strokeStyle = 'rgba(200,140,110,.6)'; g.lineWidth = 1.5; g.stroke(); }
+    else { starPath(g, x, y, 9, 4.5, R() * 3); g.fillStyle = '#ff9a7a'; g.fill(); }
+  }
+  // пирс
+  var py0 = SAND_BOTTOM - 46;
+  g.fillStyle = '#8a5a3a';
+  for (var yy = py0 + 60; yy < PIER.y1; yy += 78) { rr(g, PIER.x0 - 10, yy, 14, 30, 5); g.fill(); rr(g, PIER.x1 - 4, yy, 14, 30, 5); g.fill(); }
+  g.fillStyle = '#c98f5a'; rr(g, PIER.x0, py0, PIER.x1 - PIER.x0, PIER.y1 - py0, 12); g.fill();
+  g.strokeStyle = '#a66f42'; g.lineWidth = 3;
+  for (yy = py0 + 22; yy < PIER.y1 - 6; yy += 22) { g.beginPath(); g.moveTo(PIER.x0 + 3, yy); g.lineTo(PIER.x1 - 3, yy); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 4; g.beginPath(); g.moveTo(PIER.x0 + 8, py0 + 8); g.lineTo(PIER.x0 + 8, PIER.y1 - 10); g.stroke();
+}
+function flower(g, x, y, r, col, mid) {
+  g.fillStyle = col;
+  for (var k = 0; k < 5; k++) { var a = k / 5 * Math.PI * 2; ell(g, x + Math.cos(a) * r, y + Math.sin(a) * r, r * 0.8, r * 0.8); g.fill(); }
+  g.fillStyle = mid; ell(g, x, y, r * 0.65, r * 0.65); g.fill();
+}
+function starPath(g, x, y, R1, R2, rot) {
+  g.beginPath();
+  for (var k = 0; k < 10; k++) {
+    var a = (rot || 0) - Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? R2 : R1;
+    if (k) g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); else g.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+  }
+  g.closePath();
+}
+
+/* --- заготовки предметов (рисуются один раз, потом просто копируются) --- */
+var SPR = {};
+function sprite(name, w, h, ax, ay, fn) {
+  var c = document.createElement('canvas'); c.width = w * GS; c.height = h * GS;
+  var g = c.getContext('2d'); g.scale(GS, GS); g.translate(ax, ay); fn(g);
+  SPR[name] = { c: c, w: w, h: h, ax: ax, ay: ay };
+}
+function buildSprites() {
+  var crowns = [['#3f9e57', '#59bf6c', '#86dd8a'], ['#56b04f', '#7fd066', '#b3ec8c'], ['#ef7fb1', '#ff9fc8', '#ffd0e6']];
+  crowns.forEach(function (cl, n) {
+    sprite('tree' + n, 220, 260, 110, 244, function (g) {
+      g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, 0, 62, 16); g.fill();
+      var tg = g.createLinearGradient(-14, 0, 14, 0); tg.addColorStop(0, '#8a5a3a'); tg.addColorStop(1, '#b07a4d');
+      g.fillStyle = tg; g.beginPath(); g.moveTo(-17, 2); g.quadraticCurveTo(-9, -50, -11, -104); g.lineTo(11, -104); g.quadraticCurveTo(9, -50, 17, 2); g.closePath(); g.fill();
+      g.fillStyle = cl[0]; ell(g, -42, -122, 58, 52); g.fill(); ell(g, 44, -118, 56, 50); g.fill(); ell(g, 0, -168, 68, 58); g.fill();
+      g.fillStyle = cl[1]; ell(g, -32, -132, 48, 42); g.fill(); ell(g, 36, -128, 46, 40); g.fill(); ell(g, 0, -176, 58, 48); g.fill();
+      g.fillStyle = cl[2]; ell(g, -18, -186, 30, 20); g.fill(); ell(g, -44, -146, 20, 13); g.fill(); ell(g, 30, -144, 18, 12); g.fill();
+      if (n === 2) { g.fillStyle = '#fff'; [[-50, -110], [10, -150], [46, -120], [-10, -200], [30, -180]].forEach(function (p) { ell(g, p[0], p[1], 5, 5); g.fill(); }); }
+      else { g.fillStyle = '#ff6b6b'; [[-46, -112], [22, -138], [50, -108], [-6, -160]].forEach(function (p) { ell(g, p[0], p[1], 7, 7); g.fill(); g.fillStyle = '#ff6b6b'; }); }
+    });
+  });
+  sprite('house', 400, 380, 200, 350, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, -2, 180, 26); g.fill();
+    // труба
+    g.fillStyle = '#d98c6a'; rr(g, 70, -300, 34, 70, 6); g.fill(); g.fillStyle = '#f0b497'; rr(g, 64, -306, 46, 16, 6); g.fill();
+    // стены
+    var wg = g.createLinearGradient(0, -190, 0, 0); wg.addColorStop(0, '#fff6ea'); wg.addColorStop(1, '#ffe5cc');
+    g.fillStyle = wg; rr(g, -150, -190, 300, 190, 22); g.fill();
+    g.fillStyle = '#f3cfae'; rr(g, -150, -30, 300, 30, 14); g.fill();
+    // крыша
+    var rg = g.createLinearGradient(0, -320, 0, -170); rg.addColorStop(0, '#ff8ec0'); rg.addColorStop(1, '#f0589a');
+    g.fillStyle = rg; g.beginPath(); g.moveTo(-186, -176); g.quadraticCurveTo(-90, -230, 0, -326); g.quadraticCurveTo(90, -230, 186, -176);
+    g.quadraticCurveTo(190, -160, 172, -158); g.lineTo(-172, -158); g.quadraticCurveTo(-190, -160, -186, -176); g.closePath(); g.fill();
+    g.fillStyle = '#ffc2dd';
+    for (var k = -4; k <= 4; k++) { ell(g, k * 40, -158, 20, 13); g.fill(); }
+    g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-120, -200); g.quadraticCurveTo(-60, -238, -14, -292); g.stroke();
+    // сердечко на крыше
+    heart(g, 0, -238, 20, '#fff');
+    // дверь
+    g.fillStyle = '#9d7be8'; g.beginPath(); g.moveTo(-36, 0); g.lineTo(-36, -74); g.arc(0, -74, 36, Math.PI, 0); g.lineTo(36, 0); g.closePath(); g.fill();
+    g.strokeStyle = '#7d5bd0'; g.lineWidth = 5; g.stroke();
+    heart(g, 0, -78, 12, '#ffe36b'); g.fillStyle = '#ffe36b'; ell(g, 22, -40, 5, 5); g.fill();
+    // окна
+    [-98, 98].forEach(function (x) {
+      g.fillStyle = '#fff'; rr(g, x - 36, -128, 72, 66, 14); g.fill();
+      var gl = g.createLinearGradient(0, -124, 0, -66); gl.addColorStop(0, '#bfeeff'); gl.addColorStop(1, '#fff2b8');
+      g.fillStyle = gl; rr(g, x - 29, -121, 58, 52, 9); g.fill();
+      g.strokeStyle = '#fff'; g.lineWidth = 5; g.beginPath(); g.moveTo(x, -121); g.lineTo(x, -69); g.moveTo(x - 29, -95); g.lineTo(x + 29, -95); g.stroke();
+      g.fillStyle = '#c98f5a'; rr(g, x - 40, -64, 80, 14, 6); g.fill();
+      flower(g, x - 22, -70, 6, '#ff8ec0', '#ffe36b'); flower(g, x, -72, 6, '#fff', '#ffe36b'); flower(g, x + 22, -70, 6, '#c9a4ff', '#ffe36b');
+    });
+  });
+  sprite('shop', 280, 250, 140, 228, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, -2, 120, 20); g.fill();
+    g.fillStyle = '#a66f42'; rr(g, -104, -150, 12, 150, 5); g.fill(); rr(g, 92, -150, 12, 150, 5); g.fill();
+    var cg = g.createLinearGradient(0, -78, 0, 0); cg.addColorStop(0, '#e0a56c'); cg.addColorStop(1, '#c98f5a');
+    g.fillStyle = cg; rr(g, -110, -78, 220, 78, 12); g.fill();
+    g.fillStyle = '#f2c48e'; rr(g, -118, -88, 236, 20, 9); g.fill();
+    // товары
+    [['#ff7eb6', -70], ['#ffd257', -24], ['#4fd3e6', 22], ['#b08cff', 68]].forEach(function (p) { g.fillStyle = p[0]; ell(g, p[1], -104, 15, 15); g.fill(); g.fillStyle = 'rgba(255,255,255,.55)'; ell(g, p[1] - 5, -110, 5, 4); g.fill(); });
+    // навес в полоску
+    g.save(); g.beginPath(); g.moveTo(-128, -150); g.lineTo(-112, -206); g.lineTo(112, -206); g.lineTo(128, -150); g.closePath(); g.clip();
+    for (var k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; g.fillRect(-128 + k * 32, -210, 32, 64); }
+    g.restore();
+    for (k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; ell(g, -112 + k * 32, -150, 16, 11); g.fill(); }
+    // вывеска со звездой
+    g.fillStyle = '#fff'; ell(g, 0, -214, 26, 26); g.fill(); starPath(g, 0, -214, 18, 8, 0); g.fillStyle = '#ffc928'; g.fill();
+  });
+  sprite('swing', 260, 240, 130, 222, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 110, 16); g.fill();
+    g.strokeStyle = '#c98f5a'; g.lineWidth = 13; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-98, 0); g.lineTo(-74, -196); g.moveTo(-50, 0); g.lineTo(-74, -196); g.moveTo(98, 0); g.lineTo(74, -196); g.moveTo(50, 0); g.lineTo(74, -196); g.stroke();
+    g.strokeStyle = '#e0a56c'; g.lineWidth = 15; g.beginPath(); g.moveTo(-86, -196); g.lineTo(86, -196); g.stroke();
+    g.strokeStyle = '#8f73f0'; g.lineWidth = 4; g.beginPath(); g.moveTo(-28, -192); g.lineTo(-30, -60); g.moveTo(28, -192); g.lineTo(30, -60); g.stroke();
+    g.fillStyle = '#ff7eb6'; rr(g, -40, -64, 80, 14, 7); g.fill();
+  });
+  sprite('bush', 120, 90, 60, 80, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 46, 10); g.fill();
+    g.fillStyle = '#3f9e57'; ell(g, -20, -22, 28, 24); g.fill(); ell(g, 22, -20, 26, 22); g.fill(); ell(g, 0, -38, 30, 26); g.fill();
+    g.fillStyle = '#62c474'; ell(g, -16, -28, 20, 16); g.fill(); ell(g, 18, -26, 18, 14); g.fill(); ell(g, 0, -44, 22, 16); g.fill();
+    g.fillStyle = '#ff5f87'; [[-22, -18], [8, -30], [24, -14], [-4, -50]].forEach(function (p) { ell(g, p[0], p[1], 5, 5); g.fill(); });
+  });
+  sprite('rock', 120, 90, 60, 78, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 46, 10); g.fill();
+    g.fillStyle = '#a9b3c4'; g.beginPath(); g.moveTo(-40, -2); g.quadraticCurveTo(-46, -40, -14, -52); g.quadraticCurveTo(20, -64, 38, -32); g.quadraticCurveTo(48, -8, 34, -2); g.closePath(); g.fill();
+    g.fillStyle = '#c9d1de'; g.beginPath(); g.moveTo(-28, -30); g.quadraticCurveTo(-18, -48, 6, -50); g.quadraticCurveTo(-6, -36, -10, -22); g.closePath(); g.fill();
+  });
+  sprite('bench', 150, 90, 75, 78, function (g) {
+    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 62, 10); g.fill();
+    g.fillStyle = '#a66f42'; rr(g, -50, -30, 10, 30, 4); g.fill(); rr(g, 40, -30, 10, 30, 4); g.fill();
+    g.fillStyle = '#e0a56c'; rr(g, -60, -40, 120, 14, 6); g.fill();
+    g.fillStyle = '#c98f5a'; rr(g, -56, -68, 112, 12, 6); g.fill(); rr(g, -56, -54, 112, 10, 5); g.fill();
+  });
+  // звёздочка с сиянием
+  sprite('star', 120, 120, 60, 60, function (g) {
+    var gl = g.createRadialGradient(0, 0, 4, 0, 0, 56); gl.addColorStop(0, 'rgba(255,240,150,.85)'); gl.addColorStop(1, 'rgba(255,240,150,0)');
+    g.fillStyle = gl; ell(g, 0, 0, 56, 56); g.fill();
+    starPath(g, 0, 0, 30, 14, 0); var sg = g.createLinearGradient(0, -30, 0, 30); sg.addColorStop(0, '#fff3a0'); sg.addColorStop(1, '#ffb800');
+    g.fillStyle = sg; g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 4; g.lineJoin = 'round'; g.stroke();
+    g.fillStyle = '#7a4a00'; ell(g, -8, -2, 2.6, 3.4); g.fill(); ell(g, 8, -2, 2.6, 3.4); g.fill();
+    g.strokeStyle = '#7a4a00'; g.lineWidth = 2.4; g.lineCap = 'round'; g.beginPath(); g.arc(0, 3, 6, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+  });
+}
+function heart(g, x, y, s, col) {
+  g.fillStyle = col; g.beginPath(); g.moveTo(x, y + s * 0.9);
+  g.bezierCurveTo(x - s * 1.5, y - s * 0.2, x - s * 0.7, y - s * 1.2, x, y - s * 0.4);
+  g.bezierCurveTo(x + s * 0.7, y - s * 1.2, x + s * 1.5, y - s * 0.2, x, y + s * 0.9); g.fill();
+}
+function drawSpr(name, x, y, s) {
+  var p = SPR[name]; s = s || 1;
+  ctx.drawImage(p.c, x - p.ax * s, y - p.ay * s, p.w * s, p.h * s);
+}
+
+/* --- героиня --- */
+var SKIN = '#ffe0c8';
+function drawGirl(c, x, y, s, L, o) {
+  var mv = o.mv, ph = o.ph || 0, t = o.t || 0;
+  var bob = mv ? Math.abs(Math.sin(ph)) * 6 : Math.sin(t * 2.2) * 1.4;
+  var sw = mv ? Math.sin(ph) * 10 : 0;
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = 'rgba(30,60,40,.24)'; ell(c, 0, 0, 30 - bob * 0.6, 10 - bob * 0.2); c.fill();
+  c.scale(o.face || 1, 1); c.translate(0, -bob);
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  // волосы сзади
+  c.fillStyle = L.hair; c.beginPath(); c.moveTo(-27, -104); c.quadraticCurveTo(-34, -66, -22, -52 + sw * 0.2); c.lineTo(22, -52 - sw * 0.2); c.quadraticCurveTo(34, -66, 27, -104); c.closePath(); c.fill();
+  // ноги и туфельки
+  c.strokeStyle = SKIN; c.lineWidth = 9;
+  c.beginPath(); c.moveTo(-9, -30); c.lineTo(-9 + sw, -7); c.moveTo(9, -30); c.lineTo(9 - sw, -7); c.stroke();
+  c.fillStyle = L.dress2; ell(c, -8 + sw, -4, 9, 5.5); c.fill(); ell(c, 10 - sw, -4, 9, 5.5); c.fill();
+  // руки
+  c.strokeStyle = SKIN; c.lineWidth = 7.5;
+  c.beginPath(); c.moveTo(-15, -72); c.lineTo(-27 - sw * 0.5, -48); c.moveTo(15, -72); c.lineTo(27 + sw * 0.5, -48); c.stroke();
+  // платье
+  var dg = c.createLinearGradient(0, -80, 0, -24); dg.addColorStop(0, L.dress); dg.addColorStop(1, L.dress2);
+  c.fillStyle = dg; c.beginPath(); c.moveTo(-15, -80); c.lineTo(15, -80); c.quadraticCurveTo(22, -52, 37, -27);
+  c.quadraticCurveTo(0, -17, -37, -27); c.quadraticCurveTo(-22, -52, -15, -80); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 4; c.beginPath(); c.moveTo(-34, -28); c.quadraticCurveTo(0, -19, 34, -28); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, -15, -66, 30, 6, 3); c.fill();
+  c.fillStyle = L.dress; ell(c, -15, -76, 8, 7); c.fill(); ell(c, 15, -76, 8, 7); c.fill();
+  // голова
+  c.fillStyle = SKIN; ell(c, 0, -102, 23, 22); c.fill();
+  // чёлка
+  c.fillStyle = L.hair; c.beginPath(); c.moveTo(-24, -100); c.quadraticCurveTo(-27, -128, 0, -127); c.quadraticCurveTo(27, -128, 24, -100);
+  c.quadraticCurveTo(17, -116, 5, -113); c.quadraticCurveTo(-8, -110, -15, -104); c.quadraticCurveTo(-20, -106, -24, -100); c.closePath(); c.fill();
+  // лицо
+  var blink = (t * 0.9 + (o.seed || 0)) % 4 < 0.12;
+  c.fillStyle = '#3d2b33'; ell(c, -8, -99, 3.1, blink ? 0.7 : 4.2); c.fill(); ell(c, 9, -99, 3.1, blink ? 0.7 : 4.2); c.fill();
+  if (!blink) { c.fillStyle = '#fff'; ell(c, -7, -100.6, 1.2, 1.2); c.fill(); ell(c, 10, -100.6, 1.2, 1.2); c.fill(); }
+  c.fillStyle = 'rgba(255,120,150,.4)'; ell(c, -15, -92, 4.6, 3.2); c.fill(); ell(c, 16, -92, 4.6, 3.2); c.fill();
+  if (o.talk) { c.fillStyle = '#c2476a'; ell(c, 0.5, -89, 4, 2 + Math.abs(Math.sin(t * 14)) * 3); c.fill(); }
+  else { c.strokeStyle = '#c2476a'; c.lineWidth = 2.2; c.beginPath(); c.arc(0.5, -92, 6, 0.18 * Math.PI, 0.82 * Math.PI); c.stroke(); }
+  // украшение
+  if (L.acc === 'crown') {
+    c.fillStyle = '#ffd23c'; c.beginPath(); c.moveTo(-14, -124); c.lineTo(-17, -141); c.lineTo(-8, -133); c.lineTo(0, -146); c.lineTo(8, -133); c.lineTo(17, -141); c.lineTo(14, -124); c.closePath(); c.fill();
+    c.fillStyle = '#ff6fa8'; ell(c, 0, -130, 2.6, 2.6); c.fill();
+  } else if (L.acc === 'bow') {
+    c.fillStyle = '#ff6fa8'; c.beginPath(); c.moveTo(13, -123); c.lineTo(0, -133); c.lineTo(1, -114); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(13, -123); c.lineTo(27, -131); c.lineTo(25, -112); c.closePath(); c.fill();
+    c.fillStyle = '#ffa9cb'; ell(c, 13, -123, 4.5, 4.5); c.fill();
+  } else flower(c, -16, -120, 5, '#fff', '#ffd23c');
+  c.restore();
+}
+
+/* =====================================================================
+   СОСТОЯНИЕ ИГРЫ
+   ===================================================================== */
+var screenMode = 'lobby', demo = false;
+var players = new Map(), me = null, stars = [], total = 0, parts = [], taps = [];
+var T = 0;
+
+function mkPlayer(p) {
+  return { id: p.id, name: p.name, look: p.look, x: p.x, y: p.y, tx: p.tx, ty: p.ty, ph: 0, face: 1, mv: false, stuck: 0,
+    talk: false, em: null, emT: 0, seed: Math.random() * 4, rtc: '' };
+}
+function stepPlayer(e, dt) {
+  var dx = e.tx - e.x, dy = e.ty - e.y, d = Math.sqrt(dx * dx + dy * dy);
+  if (d < 2) { e.mv = false; return; }
+  var st = Math.min(d, SPEED * dt), ox = e.x, oy = e.y;
+  e.x += dx / d * st; e.y += dy / d * st; fix(e);
+  var moved = Math.sqrt((e.x - ox) * (e.x - ox) + (e.y - oy) * (e.y - oy));
+  if (Math.abs(dx) > 3) e.face = dx > 0 ? 1 : -1;
+  e.mv = true; e.ph += dt * 11;
+  if (moved < st * 0.25) { e.stuck += dt; if (e.stuck > 0.45) { e.tx = e.x; e.ty = e.y; e.mv = false; e.stuck = 0; if (e === me) sendMove(); } }
+  else e.stuck = 0;
+}
+
+/* =====================================================================
+   ЗВУКИ
+   ===================================================================== */
+var AC = null;
+function audioInit() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+}
+function beep(freqs, dur, vol) {
+  if (!AC) return;
+  var t0 = AC.currentTime;
+  freqs.forEach(function (f, i) {
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t0 + i * dur); g.gain.linearRampToValueAtTime(vol || 0.12, t0 + i * dur + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + i * dur + dur * 1.6);
+    o.connect(g); g.connect(AC.destination); o.start(t0 + i * dur); o.stop(t0 + i * dur + dur * 1.7);
+  });
+}
+
+/* =====================================================================
+   СЕТЬ
+   ===================================================================== */
+var ws = null, wsWant = false, wsTry = 0, wsOpened = false, pendingHello = null, kicked = false;
+var NOSERVER = !/^https?:$/.test(location.protocol) || !location.host;
+
+function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function connect() {
+  wsWant = true;
+  var url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+  try { ws = new WebSocket(url); } catch (e) { onWsDown(); return; }
+  var sock = ws;
+  sock.onopen = function () { wsTry = 0; wsOpened = true; if (pendingHello) send(pendingHello); };
+  sock.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } onMsg(m); };
+  sock.onclose = function (ev) { if (ws !== sock) return; ws = null; if (ev.code === 4001) kicked = true; onWsDown(); };
+  sock.onerror = function () { /* дальше придёт onclose */ };
+}
+function onWsDown() {
+  closeAllPeers();
+  if (!wsWant) return;
+  if (kicked) { kicked = false; leaveGame('Игра открыта на другом устройстве.'); return; }
+  if (screenMode === 'lobby') {
+    if (!wsOpened) { wsWant = false; busy(false); showErr('Нет связи с сервером. Проверь интернет.'); $('demo').classList.remove('hidden'); return; }
+  } else toast('Связь потерялась, соединяю…', true);
+  wsTry++;
+  setTimeout(function () { if (wsWant && !ws) connect(); }, Math.min(8000, 800 * wsTry));
+}
+function disconnect() { wsWant = false; pendingHello = null; if (ws) { var s = ws; ws = null; try { s.close(); } catch (e) { /* закрыт */ } } closeAllPeers(); }
+
+var ERR = { noroom: 'Такого острова нет. Проверь код.', full: 'На острове уже четверо, мест нет.', slow: 'Слишком много попыток. Подожди пару минут.', bad: 'Что-то пошло не так. Попробуй ещё раз.' };
+var ICE = [];
+
+function onMsg(m) {
+  var p;
+  if (m.t === 'err') { disconnect(); busy(false); if (screenMode === 'game') leaveGame(ERR[m.code] || ERR.bad); else showErr(ERR[m.code] || ERR.bad); return; }
+  if (m.t === 'in') {
+    ICE = m.ice || [];
+    players.clear(); closeAllPeers();
+    var keep = me && screenMode === 'game' ? { x: me.x, y: me.y } : null;
+    me = mkPlayer(m.you); if (keep) { me.x = me.tx = keep.x; me.y = me.ty = keep.y; }
+    players.set(me.id, me);
+    m.players.forEach(function (q) { players.set(q.id, mkPlayer(q)); });
+    stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, born: T }; });
+    total = m.total; $('starn').textContent = total;
+    store.room = m.room; saveStore();
+    pendingHello = { t: 'hello', id: store.id, name: store.name, look: store.look, room: m.room };
+    enterGame(m.room);
+    if (keep) sendMove();
+    m.players.forEach(function (q) { peerUp(q.id); });
+    return;
+  }
+  if (screenMode !== 'game') return;
+  if (m.t === 'pj') { players.set(m.p.id, mkPlayer(m.p)); peerUp(m.p.id); toast(m.p.name + ' пришла на остров!'); beep([523, 659, 784], 0.09); }
+  else if (m.t === 'pl') { p = players.get(m.id); if (p) { toast(p.name + ' ушла'); players.delete(m.id); } closePeer(m.id); }
+  else if (m.t === 'mv') {
+    p = players.get(m.id); if (!p) return;
+    var dx = m.x - p.x, dy = m.y - p.y;
+    if (dx * dx + dy * dy > 160 * 160) { p.x = m.x; p.y = m.y; }
+    p.tx = m.tx; p.ty = m.ty; p.stuck = 0;
+  }
+  else if (m.t === 'em') { p = players.get(m.id); if (p) { p.em = EMOTES[m.e]; p.emT = T; beep([880], 0.07, 0.07); } }
+  else if (m.t === 'tk') { p = players.get(m.id); if (p) p.talk = m.on; }
+  else if (m.t === 'sg') { starGone(m.id, m.by === store.id); total = m.total; bumpStars(); }
+  else if (m.t === 'sn') { stars.push({ id: m.s.id, x: m.s.x, y: m.s.y, born: T }); }
+  else if (m.t === 'rtc') { onRtc(m.from, m.d); }
+}
+var lastMove = 0;
+function sendMove() { if (!me) return; lastMove = T; send({ t: 'mv', x: Math.round(me.x), y: Math.round(me.y), tx: Math.round(me.tx), ty: Math.round(me.ty) }); }
+
+function starGone(id, mine) {
+  var i = stars.findIndex(function (s) { return s.id === id; });
+  if (i < 0) return;
+  var s = stars[i]; stars.splice(i, 1);
+  for (var k = 0; k < 14; k++) { var a = Math.random() * 6.28, v = 80 + Math.random() * 220; parts.push({ x: s.x, y: s.y - 34, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, t: 0, life: 0.6 + Math.random() * 0.4, c: k % 2 ? '#ffd23c' : '#fff' }); }
+  if (mine) beep([784, 988, 1319], 0.08, 0.13); else beep([988], 0.08, 0.06);
+}
+function bumpStars() { $('starn').textContent = total; var e = $('stars'); e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
+
+/* =====================================================================
+   ГОЛОС (планшеты соединяются напрямую друг с другом)
+   ===================================================================== */
+var mic = null, micOn = true, peers = new Map(), vad = null;
+function getMic() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve(null);
+  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+    .then(function (s) { mic = s; setMic(micOn); startVad(); return s; })
+    .catch(function () { mic = null; return null; });
+}
+function setMic(on) {
+  micOn = on;
+  if (mic) mic.getAudioTracks().forEach(function (t) { t.enabled = on; });
+  $('mic').classList.toggle('off', !mic || !on);
+  if (!on && me && me.talk) { me.talk = false; send({ t: 'tk', on: false }); $('mic').classList.remove('talk'); }
+}
+function startVad() {
+  if (!AC || !mic || vad) return;
+  try {
+    var src = AC.createMediaStreamSource(mic), an = AC.createAnalyser(); an.fftSize = 512; src.connect(an);
+    var buf = new Uint8Array(an.fftSize), last = 0;
+    vad = setInterval(function () {
+      if (!me || !mic) return;
+      an.getByteTimeDomainData(buf);
+      var s = 0; for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; s += v * v; }
+      var loud = micOn && Math.sqrt(s / buf.length) > 0.035, now = Date.now();
+      if (loud) last = now;
+      var talk = now - last < 450;
+      if (talk !== me.talk) { me.talk = talk; send({ t: 'tk', on: talk }); $('mic').classList.toggle('talk', talk); }
+    }, 110);
+  } catch (e) { /* без индикатора речи */ }
+}
+function iAmCaller(id) { return store.id < id; }
+function mkPeer(id, gen) {
+  var pc;
+  try { pc = new RTCPeerConnection({ iceServers: ICE }); } catch (e) { return null; }
+  var P = { id: id, pc: pc, gen: gen || 0, cand: [], remote: false, audio: null, q: Promise.resolve(), born: Date.now(), dtimer: null };
+  if (mic) mic.getTracks().forEach(function (t) { pc.addTrack(t, mic); });
+  else if (iAmCaller(id)) pc.addTransceiver('audio', { direction: 'recvonly' });
+  pc.onicecandidate = function (e) { if (e.candidate) send({ t: 'rtc', to: id, d: { g: P.gen, c: e.candidate } }); };
+  pc.ontrack = function (e) {
+    if (!P.audio) { P.audio = document.createElement('audio'); P.audio.autoplay = true; P.audio.playsInline = true; P.audio.setAttribute('playsinline', ''); document.body.appendChild(P.audio); }
+    P.audio.srcObject = e.streams[0] || new MediaStream([e.track]);
+    var pr = P.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; });
+  };
+  pc.onconnectionstatechange = function () {
+    if (peers.get(id) !== P) return;
+    var st = pc.connectionState, pl = players.get(id);
+    if (pl) pl.rtc = st;
+    clearTimeout(P.dtimer);
+    if (st === 'failed') redoPeer(id);
+    else if (st === 'disconnected') P.dtimer = setTimeout(function () { if (peers.get(id) === P && pc.connectionState !== 'connected') redoPeer(id); }, 6000);
+  };
+  peers.set(id, P);
+  var pl = players.get(id); if (pl) pl.rtc = 'new';
+  return P;
+}
+function offer(P) {
+  P.q = P.q.then(function () { return P.pc.createOffer(); })
+    .then(function (o) { return P.pc.setLocalDescription(o); })
+    .then(function () { send({ t: 'rtc', to: P.id, d: { g: P.gen, sdp: P.pc.localDescription } }); })
+    .catch(function (e) { console.warn('offer', e); });
+}
+function peerUp(id) {
+  if (!window.RTCPeerConnection || demo) return;
+  closePeer(id);
+  var P = mkPeer(id, 0);
+  if (P && iAmCaller(id)) offer(P);
+}
+/* пересоздать соединение: решает всегда «звонящий», чтобы двое не делали это одновременно */
+function redoPeer(id, force) {
+  var old = peers.get(id);
+  if (!iAmCaller(id)) { send({ t: 'rtc', to: id, d: { want: true } }); return; }
+  if (old && !force && Date.now() - old.born < 3000) return;
+  var gen = (old ? old.gen : 0) + 1;
+  closePeer(id);
+  var P = mkPeer(id, gen);
+  if (!P) return;
+  send({ t: 'rtc', to: id, d: { g: gen, reset: true } });
+  offer(P);
+}
+function onRtc(from, d) {
+  if (!window.RTCPeerConnection || !players.has(from)) return;
+  if (d.want) { if (iAmCaller(from)) redoPeer(from, true); return; }
+  var P = peers.get(from);
+  if (d.reset) { if (iAmCaller(from)) return; closePeer(from); mkPeer(from, d.g | 0); return; }
+  if (!P) P = mkPeer(from, d.g | 0);
+  if (!P || (d.g | 0) !== P.gen) return;
+  var pc = P.pc;
+  P.q = P.q.then(function () {
+    if (d.sdp) {
+      return pc.setRemoteDescription(d.sdp).then(function () {
+        P.remote = true;
+        P.cand.splice(0).forEach(function (c) { pc.addIceCandidate(c).catch(function () {}); });
+        if (d.sdp.type !== 'offer') return;
+        return pc.createAnswer().then(function (a) { return pc.setLocalDescription(a); })
+          .then(function () { send({ t: 'rtc', to: from, d: { g: P.gen, sdp: pc.localDescription } }); });
+      });
+    }
+    if (d.c) { if (P.remote) return pc.addIceCandidate(d.c).catch(function () {}); P.cand.push(d.c); }
+  }).catch(function (e) { console.warn('rtc', e); });
+}
+function closePeer(id) {
+  var P = peers.get(id); if (!P) return;
+  peers.delete(id); clearTimeout(P.dtimer);
+  try { P.pc.onconnectionstatechange = null; P.pc.close(); } catch (e) { /* закрыт */ }
+  if (P.audio) { P.audio.srcObject = null; P.audio.remove(); }
+  var pl = players.get(id); if (pl) pl.rtc = '';
+}
+function closeAllPeers() { Array.from(peers.keys()).forEach(closePeer); }
+var needTap = false;
+function unlockAudio() {
+  audioInit();
+  if (!needTap) return; needTap = false;
+  peers.forEach(function (P) { if (P.audio) { var pr = P.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; }); } });
+}
+
+/* =====================================================================
+   ЭКРАНЫ И КНОПКИ
+   ===================================================================== */
+function showErr(s) { $('err').textContent = s || ''; }
+function busy(b) { ['play', 'create', 'enter', 'demo'].forEach(function (id) { $(id).disabled = b; }); }
+var toastT = null;
+function toast(s, sticky) { var e = $('toast'); e.textContent = s; e.classList.remove('hide'); clearTimeout(toastT); if (!sticky) toastT = setTimeout(function () { e.classList.add('hide'); }, 2600); }
+
+function lobbyView() {
+  var has = /^\d{6}$/.test(store.room || '') && !NOSERVER;
+  $('saved').classList.toggle('hidden', !has || joinOpen);
+  $('fresh').classList.toggle('hidden', has || joinOpen || NOSERVER);
+  $('join').classList.toggle('hidden', !joinOpen);
+  $('demo').classList.toggle('hidden', !NOSERVER);
+  $('savedcode').textContent = fmtCode(store.room);
+}
+var joinOpen = false;
+
+// выбор героини
+LOOKS.forEach(function (L, i) {
+  var b = document.createElement('button'), c = document.createElement('canvas');
+  c.width = 140; c.height = 172; b.appendChild(c);
+  var g = c.getContext('2d'); drawGirl(g, 70, 160, 1.02, L, { mv: false, t: 0.5, face: 1, seed: 2 });
+  b.onclick = function () { store.look = i; saveStore(); markLook(); };
+  $('looks').appendChild(b);
+});
+function markLook() { Array.prototype.forEach.call($('looks').children, function (b, i) { b.classList.toggle('on', i === store.look); }); }
+markLook();
+$('name').value = store.name || '';
+$('name').addEventListener('input', function () { store.name = $('name').value.trim(); saveStore(); });
+$('code').addEventListener('input', function () { var d = $('code').value.replace(/\D/g, '').slice(0, 6); $('code').value = d.length > 3 ? d.slice(0, 3) + ' ' + d.slice(3) : d; });
+
+function start(room, create) {
+  showErr(''); busy(true); audioInit();
+  if (!store.name) { store.name = 'Гостья'; }
+  saveStore();
+  getMic().then(function (s) {
+    if (!s) micDenied = true;
+    pendingHello = { t: 'hello', id: store.id, name: store.name, look: store.look, room: room, create: !!create };
+    wsOpened = false; wsTry = 0;
+    if (ws && ws.readyState === 1) send(pendingHello); else if (!ws) connect();
+  });
+}
+var micDenied = false;
+$('play').onclick = function () { start(store.room, false); };
+$('create').onclick = function () { start('', true); };
+$('havecode').onclick = function () { joinOpen = true; lobbyView(); showErr(''); };
+$('other').onclick = function () { joinOpen = true; lobbyView(); showErr(''); };
+$('back').onclick = function () { joinOpen = false; lobbyView(); showErr(''); };
+$('enter').onclick = function () {
+  var d = $('code').value.replace(/\D/g, '');
+  if (d.length !== 6) { showErr('В коде должно быть 6 цифр.'); return; }
+  start(d, false);
+};
+$('demo').onclick = function () { audioInit(); startDemo(); };
+
+function enterGame(code) {
+  var first = screenMode !== 'game';
+  screenMode = 'game'; joinOpen = false; busy(false);
+  $('lobby').classList.add('hidden'); $('hud').classList.remove('hidden');
+  $('codechip').textContent = demo ? 'демо без сервера' : 'остров ' + fmtCode(code);
+  $('toast').classList.add('hide');
+  setMic(micOn);
+  if (first) {
+    cam.x = me.x; cam.y = me.y;
+    if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми 🎤 и разреши.', false);
+    wakeLock();
+    try { if (!demo && document.documentElement.requestFullscreen && window.matchMedia('(pointer: coarse)').matches) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) { /* не страшно */ }
+  }
+}
+function leaveGame(msg) {
+  disconnect(); demo = false; clearInterval(botTimer);
+  screenMode = 'lobby'; me = null; players.clear(); stars = [];
+  $('hud').classList.add('hidden'); $('modal').classList.add('hidden'); $('lobby').classList.remove('hidden');
+  busy(false); lobbyView(); showErr(msg || '');
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
+}
+$('exit').onclick = function () { leaveGame(''); };
+$('mic').onclick = function () {
+  unlockAudio();
+  if (demo) { toast('В демо микрофон не нужен'); return; }
+  if (!mic) {
+    getMic().then(function (s) {
+      if (!s) { toast('Микрофон запрещён. Разреши его в настройках сайта (значок замка возле адреса).'); return; }
+      micDenied = false; setMic(true); toast('Микрофон включён');
+      Array.from(peers.keys()).forEach(function (id) { redoPeer(id, true); });
+    });
+    return;
+  }
+  setMic(!micOn); toast(micOn ? 'Микрофон включён' : 'Микрофон выключен');
+};
+EMOTES.forEach(function (e, i) {
+  var b = document.createElement('button'); b.className = 'round'; b.textContent = e;
+  b.onclick = function () { unlockAudio(); if (!me) return; me.em = e; me.emT = T; send({ t: 'em', e: i }); beep([880], 0.07, 0.07); };
+  $('emotes').appendChild(b);
+});
+$('codechip').onclick = function () { if (demo) return; $('modalcode').textContent = fmtCode(store.room); $('modal').classList.remove('hidden'); };
+$('closemodal').onclick = function () { $('modal').classList.add('hidden'); };
+$('share').onclick = function () {
+  var url = location.origin + location.pathname + '?k=' + store.room;
+  var text = 'Заходи к нам на остров! Код: ' + fmtCode(store.room);
+  if (navigator.share) navigator.share({ title: 'Остров', text: text, url: url }).catch(function () {});
+  else if (navigator.clipboard) navigator.clipboard.writeText(text + '\n' + url).then(function () { toast('Ссылка скопирована'); $('modal').classList.add('hidden'); });
+};
+
+var wl = null;
+function wakeLock() { try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { wl = l; }).catch(function () {}); } catch (e) { /* нет поддержки */ } }
+document.addEventListener('visibilitychange', function () { if (!document.hidden && screenMode === 'game') { wakeLock(); if (AC && AC.state === 'suspended') AC.resume(); } });
+
+/* ссылка-приглашение вида ?k=123456 */
+(function () {
+  var m = /[?&]k=(\d{6})/.exec(location.search);
+  if (m && m[1] !== store.room) { joinOpen = true; $('code').value = m[1].slice(0, 3) + ' ' + m[1].slice(3); }
+  lobbyView();
+})();
+
+/* --- управление: ткнула — пошла; можно вести пальцем --- */
+var held = false, lastDragSend = 0;
+function toWorld(ev) {
+  var r = cv.getBoundingClientRect();
+  return { x: ((ev.clientX - r.left) * dpr - cw / 2) / scale + cam.x, y: ((ev.clientY - r.top) * dpr - ch / 2) / scale + cam.y };
+}
+function goTo(ev, isTap) {
+  if (!me || screenMode !== 'game') return;
+  var p = fix(toWorld(ev)); fix(p);
+  me.tx = p.x; me.ty = p.y; me.stuck = 0;
+  if (isTap) { taps.push({ x: p.x, y: p.y, t: 0 }); sendMove(); }
+  else if (T - lastDragSend > 0.15) { lastDragSend = T; sendMove(); }
+}
+cv.addEventListener('pointerdown', function (ev) { unlockAudio(); held = true; try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* не страшно */ } goTo(ev, true); });
+cv.addEventListener('pointermove', function (ev) { if (held) goTo(ev, false); });
+function up() { if (held) { held = false; sendMove(); } }
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+/* =====================================================================
+   ДЕМО БЕЗ СЕРВЕРА (посмотреть, как выглядит)
+   ===================================================================== */
+var botTimer = null;
+function randSpot() { for (var i = 0; i < 200; i++) { var x = 250 + Math.random() * 1900, y = 200 + Math.random() * 1250; if (spawnOk(x, y)) return { x: x, y: y }; } return { x: 1200, y: 800 }; }
+function startDemo() {
+  demo = true; players.clear();
+  me = mkPlayer({ id: store.id, name: store.name || 'Я', look: store.look, x: 1160, y: 740, tx: 1160, ty: 740 });
+  players.set(me.id, me);
+  var bot = mkPlayer({ id: 'bot', name: 'Подружка', look: (store.look + 1) % 6, x: 1260, y: 760, tx: 1260, ty: 760 });
+  players.set('bot', bot);
+  stars = []; var sid = 1;
+  for (var i = 0; i < 12; i++) { var s = randSpot(); stars.push({ id: sid++, x: s.x, y: s.y, born: T }); }
+  total = 0; $('starn').textContent = 0;
+  clearInterval(botTimer);
+  botTimer = setInterval(function () {
+    if (!demo) return;
+    var r = Math.random();
+    if (r < 0.6) { var t = stars.length && Math.random() < 0.6 ? stars[Math.floor(Math.random() * stars.length)] : randSpot(); bot.tx = t.x; bot.ty = t.y; bot.stuck = 0; }
+    else if (r < 0.8) { bot.em = EMOTES[Math.floor(Math.random() * EMOTES.length)]; bot.emT = T; }
+    bot.talk = Math.random() < 0.3;
+    if (stars.length < 12) { var n = randSpot(); stars.push({ id: sid++, x: n.x, y: n.y, born: T }); }
+  }, 2200);
+  enterGame('');
+}
+
+/* =====================================================================
+   КАДР
+   ===================================================================== */
+var lastT = 0, lobbyA = 0;
+function frame(ts) {
+  requestAnimationFrame(frame);
+  var dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts; T += dt;
+
+  if (screenMode === 'game' && me) {
+    players.forEach(function (p) { stepPlayer(p, dt); });
+    if (me.mv && T - lastMove > 1) sendMove();
+    // сбор звёздочек
+    for (var i = stars.length - 1; i >= 0; i--) {
+      var s = stars[i];
+      if (demo) {
+        var got = null;
+        players.forEach(function (p) { var dx = p.x - s.x, dy = p.y - s.y; if (dx * dx + dy * dy < 55 * 55) got = p; });
+        if (got) { starGone(s.id, got === me); total++; bumpStars(); }
+      } else if (!s.sent) {
+        var ddx = me.x - s.x, ddy = me.y - s.y;
+        if (ddx * ddx + ddy * ddy < 55 * 55) { s.sent = true; send({ t: 'st', id: s.id }); }
+      }
+    }
+    cam.x += (me.x - cam.x) * Math.min(1, dt * 6); cam.y += (me.y - 40 - cam.y) * Math.min(1, dt * 6);
+  } else {
+    lobbyA += dt * 0.12; cam.x = CX + Math.cos(lobbyA) * 260; cam.y = CY + Math.sin(lobbyA) * 150;
+  }
+  var vw = cw / scale, vh = ch / scale;
+  cam.x = vw >= W + 300 ? W / 2 : Math.max(-150 + vw / 2, Math.min(W + 150 - vw / 2, cam.x));
+  cam.y = vh >= H + 300 ? H / 2 : Math.max(-150 + vh / 2, Math.min(H + 150 - vh / 2, cam.y));
+
+  // море
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  var sea = ctx.createLinearGradient(0, 0, 0, ch); sea.addColorStop(0, '#5fd0ee'); sea.addColorStop(1, '#3bb0de');
+  ctx.fillStyle = sea; ctx.fillRect(0, 0, cw, ch);
+  ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale);
+  var x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
+  // волны
+  ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  var gy0 = Math.floor(y0 / 110) * 110, gx0 = Math.floor(x0 / 230) * 230;
+  for (var wy = gy0; wy < y0 + vh + 110; wy += 110) {
+    for (var wx = gx0; wx < x0 + vw + 230; wx += 230) {
+      var hsh = Math.sin(wx * 12.9898 + wy * 78.233) * 43758.5453; hsh -= Math.floor(hsh);
+      var px = wx + hsh * 150 + Math.sin(T * 0.7 + hsh * 6) * 16, py = wy + hsh * 70;
+      if (inIsl(px + 20, py, 1.06)) continue;
+      ctx.globalAlpha = 0.45 + 0.4 * Math.sin(T * 1.3 + hsh * 9);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + 11, py - 9, px + 22, py); ctx.quadraticCurveTo(px + 33, py - 9, px + 44, py); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  // пена у берега
+  ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 + 0.25 * Math.sin(T * 1.6)) + ')'; ctx.lineWidth = 7;
+  pathIsland(ctx, 1, 16 + Math.sin(T * 1.6) * 9); ctx.stroke();
+  ctx.drawImage(ground, 0, 0, W, H);
+
+  // точка, куда идём
+  for (var ti = taps.length - 1; ti >= 0; ti--) {
+    var tp = taps[ti]; tp.t += dt; if (tp.t > 0.5) { taps.splice(ti, 1); continue; }
+    ctx.strokeStyle = 'rgba(255,255,255,' + (1 - tp.t * 2) + ')'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.ellipse(tp.x, tp.y, 14 + tp.t * 70, (14 + tp.t * 70) * 0.45, 0, 0, 6.29); ctx.stroke();
+  }
+
+  // всё, что стоит на земле, рисуем по порядку «дальше — ближе»
+  var list = [];
+  TREES.forEach(function (t) { list.push({ y: t[1], k: 'tree' + t[2], x: t[0] }); });
+  BUSHES.forEach(function (b) { list.push({ y: b[1], k: 'bush', x: b[0] }); });
+  ROCKS.forEach(function (r) { list.push({ y: r[1], k: 'rock', x: r[0] }); });
+  list.push({ y: HOUSE.y, k: 'house', x: HOUSE.x }, { y: SHOP.y, k: 'shop', x: SHOP.x }, { y: SWING.y, k: 'swing', x: SWING.x }, { y: BENCH.y, k: 'bench', x: BENCH.x });
+  stars.forEach(function (s) { list.push({ y: s.y, star: s }); });
+  players.forEach(function (p) { list.push({ y: p.y, pl: p }); });
+  list.sort(function (a, b) { return a.y - b.y; });
+  for (var li = 0; li < list.length; li++) {
+    var o = list[li];
+    if (o.x !== undefined && (o.x < x0 - 220 || o.x > x0 + vw + 220 || o.y < y0 - 60 || o.y > y0 + vh + 400)) continue;
+    if (o.k) drawSpr(o.k, o.x, o.y);
+    else if (o.star) {
+      var st = o.star, age = Math.min(1, (T - st.born) * 2.5), bobS = Math.sin(T * 3 + st.id) * 6;
+      ctx.fillStyle = 'rgba(30,60,40,.18)'; ell(ctx, st.x, st.y, 20 * age, 6 * age); ctx.fill();
+      drawSpr('star', st.x, st.y - 38 + bobS, age * (0.62 + 0.04 * Math.sin(T * 5 + st.id)));
+    } else {
+      var p = o.pl;
+      drawGirl(ctx, p.x, p.y, 1, LOOKS[p.look] || LOOKS[0], { mv: p.mv, ph: p.ph, t: T, face: p.face, seed: p.seed, talk: p.talk });
+    }
+  }
+  // искры
+  for (var pi = parts.length - 1; pi >= 0; pi--) {
+    var q = parts[pi]; q.t += dt; if (q.t > q.life) { parts.splice(pi, 1); continue; }
+    q.vy += 500 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
+    ctx.globalAlpha = 1 - q.t / q.life; starPath(ctx, q.x, q.y, 9, 4, q.t * 8); ctx.fillStyle = q.c; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // подписи, речь, смайлики — поверх всего
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  players.forEach(function (p) {
+    ctx.font = '800 21px ui-rounded, system-ui, sans-serif';
+    var tw = ctx.measureText(p.name).width, bw = tw + 30 + (p !== me ? 18 : 0), by = p.y - 172;
+    ctx.fillStyle = p === me ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.82)'; rr(ctx, p.x - bw / 2, by - 16, bw, 32, 16); ctx.fill();
+    ctx.fillStyle = '#4a3560'; ctx.fillText(p.name, p.x + (p !== me ? 9 : 0), by + 1);
+    if (p !== me && !demo) { // огонёк голосовой связи
+      ctx.fillStyle = p.rtc === 'connected' ? '#43c463' : (p.rtc === 'failed' ? '#e2447a' : '#f0a92b');
+      ell(ctx, p.x - bw / 2 + 16, by, 6, 6); ctx.fill();
+    }
+    if (p.talk) {
+      ctx.strokeStyle = '#43c463'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      for (var k = 0; k < 3; k++) { var a = 0.5 + 0.5 * Math.sin(T * 9 - k * 1.1); ctx.globalAlpha = 0.35 + 0.65 * a; ctx.beginPath(); ctx.arc(p.x + 30, p.y - 104, 12 + k * 9, -0.6, 0.6); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+    if (p.em) {
+      var et = T - p.emT; if (et > 2.6) { p.em = null; return; }
+      var es = Math.min(1, et * 7) * (et > 2.2 ? Math.max(0, (2.6 - et) / 0.4) : 1), ey = by - 54 - Math.min(et, 0.4) * 24;
+      ctx.save(); ctx.translate(p.x, ey); ctx.scale(es, es);
+      ctx.fillStyle = '#fff'; ell(ctx, 0, 0, 38, 34); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-10, 28); ctx.lineTo(0, 46); ctx.lineTo(12, 28); ctx.closePath(); ctx.fill();
+      ctx.font = '40px system-ui, sans-serif'; ctx.fillText(p.em, 0, 3); ctx.restore();
+    }
+  });
+}
+
+buildGround(); buildSprites();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

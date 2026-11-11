@@ -1,0 +1,16 @@
+{
+  "name": "Остров",
+  "short_name": "Остров",
+  "description": "Гуляем и болтаем вместе",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#49bfe6",
+  "theme_color": "#49bfe6",
+  "lang": "ru",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
