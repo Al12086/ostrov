@@ -18,12 +18,21 @@ const TURN_SECRET = process.env.TURN_SECRET || '';
 
 const MAX_PLAYERS = 4;
 const MAX_MSG = 64 * 1024;
-const STARS_ON_MAP = 12;
+const STARS_ISLAND = 26;          // звёздочек на острове
+const GEMS_CAVE = 9;              // самоцветов в пещере
 const STAR_RESPAWN_MS = 7000;
 const ROOM_KEEP_DAYS = 365;
+const N_CHESTS = 6, N_ALBUM = 12;
+const CHEST_REFILL_MS = 2 * 3600000;   // сундуки снова полные через 2 часа
+const EVENT_FIRST_MS = parseInt(process.env.EVENT_FIRST_MS, 10) || 100000;
+const EVENT_EVERY_MS = parseInt(process.env.EVENT_EVERY_MS, 10) || 240000;  // звездопад раз в 4 минуты
+const EVENT_SEC = 45;
+const WORLD_W = 5200, WORLD_H = 3900;
 
-/* Точки, где могут появляться звёздочки (заранее проверены: суша, не в пруду и не в домике). */
-const SPAWN = [[897,234],[1082,238],[1226,236],[1313,207],[1418,210],[1542,233],[693,319],[876,306],[1092,330],[1228,303],[1329,318],[675,396],[898,430],[991,420],[1097,392],[1184,423],[1334,422],[1398,405],[1509,410],[1642,427],[1715,403],[457,500],[911,486],[983,507],[1623,516],[1754,487],[377,616],[600,619],[1410,604],[1498,586],[1948,604],[2038,608],[373,705],[474,686],[557,684],[660,689],[782,706],[897,708],[985,703],[1096,689],[1217,696],[1323,702],[1404,707],[1543,707],[1845,675],[2144,714],[346,790],[474,807],[798,775],[1013,805],[1118,774],[1214,807],[1316,793],[1435,800],[1639,780],[1936,776],[2060,797],[2136,779],[901,877],[982,903],[1113,867],[1223,872],[1300,878],[1436,897],[1639,882],[1845,869],[1952,876],[2033,899],[352,989],[1003,1000],[1087,975],[1224,983],[1438,986],[1527,1000],[1617,968],[1743,982],[1814,963],[2052,991],[359,1075],[459,1064],[997,1090],[1188,1076],[1295,1074],[1403,1095],[1830,1091],[2047,1067],[380,1190],[473,1177],[675,1164],[899,1162],[1001,1156],[1217,1158],[1325,1169],[1422,1178],[1501,1152],[1628,1179],[478,1260],[553,1247],[699,1266],[783,1281],[885,1279],[1099,1253],[1225,1257],[1335,1259],[1498,1277],[1606,1280],[1211,1363],[1406,1343],[1207,1555]];
+/* Точки, где могут появляться звёздочки и клады (заранее проверены по карте). */
+const SPAWN0 = [[2187,501],[2348,483],[2459,492],[2801,472],[2946,494],[3084,496],[3187,490],[2175,616],[2354,595],[2446,581],[2963,590],[3347,584],[3438,591],[3600,615],[841,1316],[1087,1307],[1302,1340],[1591,1337],[1712,1333],[1835,1308],[2441,1315],[2727,1344],[2943,1310],[3177,1328],[3564,1324],[3846,1330],[4048,1330],[4191,1345],[4479,1307],[675,1462],[949,1447],[1551,1417],[1715,1430],[1840,1428],[1928,1435],[2058,1455],[2204,1426],[2326,1452],[2426,1440],[2729,1462],[2849,1458],[3070,1439],[3199,1445],[3307,1436],[3433,1430],[3589,1463],[3703,1424],[3802,1457],[4190,1439],[4328,1447],[4439,1463],[843,1548],[958,1542],[1316,1564],[1447,1557],[1587,1555],[1676,1574],[2097,1556],[2187,1566],[2454,1556],[2563,1554],[2702,1558],[2829,1580],[2955,1556],[3308,1565],[3453,1556],[3707,1538],[4047,1569],[4194,1549],[4347,1565],[4546,1565],[690,1690],[1429,1705],[1603,1677],[1813,1666],[2208,1687],[2351,1694],[2443,1682],[2599,1678],[2965,1704],[3058,1697],[3174,1687],[3305,1664],[3448,1694],[3704,1696],[3845,1662],[4088,1696],[4230,1673],[4430,1669],[4552,1673],[4708,1661],[604,1797],[1084,1808],[1452,1811],[1927,1818],[2203,1781],[2330,1815],[2477,1780],[2572,1817],[2711,1825],[2816,1815],[2924,1824],[3430,1818],[3556,1798],[3824,1808],[4187,1810],[4445,1814],[4689,1797],[4808,1793],[716,1930],[811,1917],[934,1926],[1222,1899],[1328,1939],[1473,1919],[1707,1933],[1977,1918],[2085,1897],[2226,1940],[2337,1926],[2425,1933],[2846,1910],[2921,1923],[3061,1912],[3191,1920],[3302,1910],[3431,1935],[3603,1899],[3674,1925],[3829,1920],[3973,1925],[4197,1916],[4420,1932],[1056,2063],[1310,2054],[1566,2037],[1812,2058],[2229,2016],[2327,2052],[2821,2053],[3342,2045],[3461,2018],[3726,2059],[3821,2028],[3944,2037],[4050,2018],[4193,2022],[4334,2028],[4435,2051],[4558,2047],[4720,2032],[809,2176],[1070,2141],[1225,2167],[1337,2172],[1477,2165],[1572,2167],[1678,2173],[1842,2145],[1970,2168],[2205,2154],[2317,2136],[2458,2148],[2573,2164],[2729,2136],[2842,2171],[2974,2154],[3054,2182],[3309,2183],[3450,2145],[3574,2151],[3675,2182],[3816,2183],[3980,2145],[4096,2170],[4175,2162],[4673,2142],[713,2263],[812,2298],[1103,2290],[1216,2293],[1311,2268],[2174,2272],[2332,2277],[2464,2270],[2563,2258],[2692,2279],[2817,2270],[2949,2289],[3101,2270],[3174,2290],[3334,2264],[3446,2298],[3573,2267],[3698,2255],[4084,2275],[4205,2287],[4318,2269],[4473,2264],[4566,2272],[841,2410],[1324,2405],[1581,2385],[1812,2403],[2343,2423],[2458,2420],[2595,2383],[2685,2380],[2854,2398],[2976,2399],[3068,2389],[3220,2409],[3425,2391],[3593,2376],[3722,2391],[3838,2413],[3922,2412],[4086,2402],[4465,2416],[4567,2389],[721,2545],[1220,2519],[1461,2521],[2353,2499],[2426,2531],[2576,2515],[2711,2502],[2839,2506],[2962,2500],[3307,2530],[3446,2496],[3705,2500],[3795,2508],[3966,2496],[4094,2532],[4183,2516],[4345,2514],[4548,2518],[923,2654],[1055,2649],[1220,2620],[1346,2647],[1430,2648],[1549,2629],[1705,2641],[2061,2618],[2354,2653],[2480,2648],[2581,2625],[2728,2631],[2937,2653],[3080,2664],[3214,2617],[3605,2622],[4198,2652],[4298,2639],[818,2780],[979,2740],[1063,2776],[1208,2755],[1463,2773],[1681,2760],[1810,2751],[1952,2783],[2079,2761],[2314,2761],[2574,2740],[2724,2770],[2944,2759],[3077,2739],[3207,2776],[3297,2751],[3597,2747],[3851,2772],[3961,2762],[4083,2761],[4328,2768],[836,2872],[949,2864],[1321,2873],[1467,2887],[1588,2888],[1842,2893],[1927,2879],[2103,2899],[2194,2883],[2302,2864],[2559,2876],[2678,2871],[2844,2868],[3050,2863],[3302,2881],[3436,2876],[3557,2868],[3672,2884],[3807,2905],[3922,2890],[1069,2996],[1205,2998],[1318,3008],[1574,2993],[1671,3015],[1852,2999],[1928,3009],[2095,2976],[2192,2992],[2336,2993],[2601,3017],[2963,3014],[3069,3017],[3311,2979],[3478,2984],[3552,3022],[3711,2978],[1215,3102],[1301,3131],[1422,3110],[1560,3130],[1693,3122],[1853,3117],[1960,3144],[2063,3139],[2203,3131],[2334,3142],[2466,3110],[2553,3131],[2701,3142],[3099,3096],[3179,3118],[3298,3108],[3602,3106],[2198,3225],[2592,3251],[2701,3256],[2956,3262],[3081,3221],[3218,3251],[3306,3249]];
+const SPAWN1 = [[2478,371],[2732,372],[1362,437],[1430,431],[1483,434],[2470,437],[2549,430],[2591,436],[2660,424],[2722,434],[1536,491],[2423,481],[2470,482],[2539,504],[2591,490],[2662,491],[1360,556],[1474,555],[1556,543],[1601,554],[2353,551],[2414,553],[1356,624],[1428,611],[1481,604],[1544,607],[1609,605],[1680,612],[1729,615],[1788,608],[1856,626],[2094,618],[2158,613],[2232,625],[2294,620],[2342,613],[1787,681],[1867,672],[1907,686],[1990,675],[2041,677],[2093,683],[2176,687],[2221,685],[2299,671],[1986,750],[2046,741],[2100,735],[2154,752],[2227,751],[2296,747],[2032,809],[2109,811],[2174,793],[2219,807],[2300,812],[1978,868],[2037,871],[2115,871],[2161,867],[2236,868],[1909,920],[1975,917],[796,978],[1542,993],[1617,985],[1662,983],[1720,999],[1795,996],[1853,992],[1929,982],[615,1045],[804,1058],[1482,1056],[1553,1044],[1600,1044],[1721,1039],[1790,1040],[614,1110],[673,1119],[744,1117],[798,1120],[1493,1106],[1798,1110],[731,1165],[810,1184],[869,1173],[1491,1176],[1802,1163],[863,1245],[918,1246],[1487,1231],[1550,1235],[1805,1232],[1849,1233],[936,1305],[993,1300],[1055,1300],[1122,1297],[1173,1293],[1305,1304],[1349,1304],[1424,1296],[1546,1299],[1618,1304],[1668,1294],[1740,1293],[1803,1291],[1846,1297],[1909,1305],[1977,1306],[995,1359],[1041,1357],[1119,1349],[1184,1359],[1246,1369],[1298,1371],[1917,1356],[1982,1358],[2050,1351],[936,1423],[994,1413],[1061,1432],[1106,1429],[1180,1426],[1228,1421],[2051,1433],[2102,1414],[2235,1411],[2291,1429],[2364,1428],[929,1480],[981,1488],[1055,1481],[1111,1492],[1179,1496],[1229,1479],[2105,1482],[2157,1493],[2364,1494],[808,1558],[857,1551],[935,1544],[996,1542],[1039,1556],[1101,1536],[1180,1540],[1226,1548],[2164,1544],[486,1599],[549,1614],[622,1597],[687,1602],[734,1614],[793,1610],[862,1613],[1054,1617],[1111,1609],[1177,1608],[2174,1607],[2228,1618],[2280,1598],[2352,1607],[484,1668],[553,1680],[626,1661],[675,1659],[734,1679],[481,1730],[739,1740]];
+const SPAWN0_MAIN = SPAWN0.filter(function (p) { return p[1] > 1250; }); // без тайной бухты
 
 /* ---------- раздача файлов ---------- */
 const FILES = {
@@ -114,28 +123,83 @@ function newCode() {
   return null;
 }
 
+function rec(code) {
+  const r = store.rooms[code];
+  if (!r.album) r.album = [];
+  if (!r.chests) r.chests = {};
+  if (!r.digs) r.digs = 0;
+  return r;
+}
+
 function liveRoom(code) {
   let r = rooms.get(code);
   if (r) return r;
-  r = { code: code, players: new Map(), stars: [], nextStar: 1, timers: new Set() };
-  for (let i = 0; i < STARS_ON_MAP; i++) addStar(r, true);
+  r = { code: code, players: new Map(), stars: [], nextStar: 1, timers: new Set(), tr: null };
+  for (let i = 0; i < STARS_ISLAND; i++) addStar(r, 0, true);
+  for (let i = 0; i < GEMS_CAVE; i++) addStar(r, 1, true);
+  r.tr = pickTreasure(r, null);
+  later(r, EVENT_FIRST_MS, function () { starfall(r); });
   rooms.set(code, r);
   return r;
 }
 
-function addStar(r, silent) {
-  if (!SPAWN.length || r.stars.length >= STARS_ON_MAP) return;
-  let pt = null;
-  for (let i = 0; i < 30 && !pt; i++) {
-    const c = SPAWN[crypto.randomInt(0, SPAWN.length)];
+function later(r, ms, fn) {
+  const tm = setTimeout(function () { r.timers.delete(tm); if (rooms.get(r.code) === r) fn(); }, ms);
+  r.timers.add(tm);
+}
+
+function freeSpot(r, list) {
+  for (let i = 0; i < 40; i++) {
+    const c = list[crypto.randomInt(0, list.length)];
     let busy = false;
     for (let j = 0; j < r.stars.length; j++) if (r.stars[j].x === c[0] && r.stars[j].y === c[1]) busy = true;
-    if (!busy) pt = c;
+    if (!busy) return c;
   }
+  return null;
+}
+
+function addStar(r, m, silent) {
+  const list = m ? SPAWN1 : SPAWN0;
+  if (!list.length) return;
+  const pt = freeSpot(r, list);
   if (!pt) return;
-  const s = { id: r.nextStar++, x: pt[0], y: pt[1] };
+  const s = { id: r.nextStar++, x: pt[0], y: pt[1], m: m, k: m };
   r.stars.push(s);
   if (!silent) broadcast(r, { t: 'sn', s: s });
+}
+
+/* клад: первые три — на главной части острова, потом где угодно, в том числе в тайной бухте */
+function pickTreasure(r, from) {
+  const list = rec(r.code).digs < 3 ? SPAWN0_MAIN : SPAWN0;
+  let best = list[crypto.randomInt(0, list.length)];
+  for (let i = 0; i < 30 && from; i++) {
+    const dx = best[0] - from.x, dy = best[1] - from.y;
+    if (dx * dx + dy * dy > 900 * 900) break;
+    best = list[crypto.randomInt(0, list.length)];
+  }
+  return { x: best[0], y: best[1] };
+}
+
+/* звездопад: на 45 секунд в одном месте высыпается куча звёзд */
+function starfall(r) {
+  later(r, EVENT_EVERY_MS, function () { starfall(r); });
+  if (!r.players.size || !SPAWN0_MAIN.length) return;
+  const c = SPAWN0_MAIN[crypto.randomInt(0, SPAWN0_MAIN.length)];
+  const near = SPAWN0.filter(function (p) { const dx = p[0] - c[0], dy = p[1] - c[1]; return dx * dx + dy * dy < 430 * 430; });
+  const ids = [];
+  for (let i = 0; i < 14 && near.length; i++) {
+    const p = near.splice(crypto.randomInt(0, near.length), 1)[0];
+    if (r.stars.some(function (s) { return s.x === p[0] && s.y === p[1]; })) continue;
+    const s = { id: r.nextStar++, x: p[0], y: p[1], m: 0, k: 0, e: 1 };
+    r.stars.push(s); ids.push(s.id);
+    broadcast(r, { t: 'sn', s: s });
+  }
+  broadcast(r, { t: 'ev', x: c[0], y: c[1], d: EVENT_SEC });
+  later(r, EVENT_SEC * 1000, function () {
+    const gone = [];
+    r.stars = r.stars.filter(function (s) { if (ids.indexOf(s.id) >= 0) { gone.push(s.id); return false; } return true; });
+    if (gone.length) broadcast(r, { t: 'sx', ids: gone });
+  });
 }
 
 function broadcast(r, msg, except) {
@@ -144,7 +208,7 @@ function broadcast(r, msg, except) {
 }
 
 function pubPlayer(c) {
-  return { id: c.pid, name: c.name, look: c.look, x: c.x, y: c.y, tx: c.tx, ty: c.ty };
+  return { id: c.pid, name: c.name, look: c.look, m: c.m, x: c.x, y: c.y, tx: c.tx, ty: c.ty };
 }
 
 function iceServers(pid) {
@@ -193,7 +257,7 @@ function onMessage(c, m) {
       code = newCode();
       if (!code) return c.fail('bad');
       st.creates++;
-      store.rooms[code] = { created: Date.now(), last: Date.now(), total: 0 };
+      store.rooms[code] = { created: Date.now(), last: Date.now(), total: 0, album: [], chests: {}, digs: 0 };
       saveSoon();
     } else {
       if (st.fails >= 8) return c.fail('slow');
@@ -211,17 +275,21 @@ function onMessage(c, m) {
     c.name = cleanName(m.name);
     c.look = Math.floor(num(m.look, 0, 5, 0));
     const k = r.players.size;
-    c.x = c.tx = 1200 + (k - 1.5) * 70;
-    c.y = c.ty = 720 + (k % 2) * 40;
+    c.m = 0;
+    c.x = c.tx = 2600 + (k - 1.5) * 70;
+    c.y = c.ty = 2190 + (k % 2) * 40;
     c.room = r;
     const others = [];
     r.players.forEach(function (p) { others.push(pubPlayer(p)); });
     r.players.set(c.pid, c);
-    store.rooms[code].last = Date.now();
+    const rc = rec(code);
+    rc.last = Date.now();
     saveSoon();
+    const now = Date.now();
+    const open = Object.keys(rc.chests).filter(function (id) { return now - rc.chests[id] < CHEST_REFILL_MS; }).map(Number);
     c.send({
       t: 'in', room: code, you: pubPlayer(c), players: others,
-      stars: r.stars, total: store.rooms[code].total || 0, ice: iceServers(c.pid)
+      stars: r.stars, total: rc.total || 0, album: rc.album, chests: open, tr: r.tr, ice: iceServers(c.pid)
     });
     broadcast(r, { t: 'pj', p: pubPlayer(c) }, c);
     return;
@@ -231,9 +299,10 @@ function onMessage(c, m) {
   if (!r) return;
 
   if (m.t === 'mv') {
-    c.x = num(m.x, 0, 2400, c.x); c.y = num(m.y, 0, 1750, c.y);
-    c.tx = num(m.tx, 0, 2400, c.x); c.ty = num(m.ty, 0, 1750, c.y);
-    broadcast(r, { t: 'mv', id: c.pid, x: c.x, y: c.y, tx: c.tx, ty: c.ty }, c);
+    c.m = m.m === 1 ? 1 : 0;
+    c.x = num(m.x, 0, WORLD_W, c.x); c.y = num(m.y, 0, WORLD_H, c.y);
+    c.tx = num(m.tx, 0, WORLD_W, c.x); c.ty = num(m.ty, 0, WORLD_H, c.y);
+    broadcast(r, { t: 'mv', id: c.pid, m: c.m, x: c.x, y: c.y, tx: c.tx, ty: c.ty }, c);
   } else if (m.t === 'em') {
     if (typeof m.e === 'number' && m.e >= 0 && m.e < 16) broadcast(r, { t: 'em', id: c.pid, e: Math.floor(m.e) }, c);
   } else if (m.t === 'tk') {
@@ -241,14 +310,39 @@ function onMessage(c, m) {
   } else if (m.t === 'st') {
     const i = r.stars.findIndex(function (s) { return s.id === m.id; });
     if (i < 0) return;
-    r.stars.splice(i, 1);
-    const rec = store.rooms[r.code];
-    rec.total = (rec.total || 0) + 1;
-    rec.last = Date.now();
+    const s = r.stars.splice(i, 1)[0];
+    const rc = rec(r.code);
+    rc.total = (rc.total || 0) + (s.k ? 3 : 1);
+    rc.last = Date.now();
     saveSoon();
-    broadcast(r, { t: 'sg', id: m.id, by: c.pid, total: rec.total });
-    const tm = setTimeout(function () { r.timers.delete(tm); if (rooms.get(r.code) === r) addStar(r, false); }, STAR_RESPAWN_MS);
-    r.timers.add(tm);
+    broadcast(r, { t: 'sg', id: s.id, by: c.pid, total: rc.total });
+    if (!s.e) later(r, STAR_RESPAWN_MS, function () { addStar(r, s.m, false); });
+  } else if (m.t === 'dig') {
+    if (!r.tr || c.m !== 0) return;
+    const dx = c.x - r.tr.x, dy = c.y - r.tr.y;
+    if (dx * dx + dy * dy > 220 * 220) return;
+    const rc = rec(r.code);
+    const miss = [];
+    for (let i = 0; i < N_ALBUM; i++) if (rc.album.indexOf(i) < 0) miss.push(i);
+    const item = miss.length ? miss[crypto.randomInt(0, miss.length)] : -1;
+    const add = item < 0 ? 15 : 10;
+    if (item >= 0) rc.album.push(item);
+    rc.total = (rc.total || 0) + add;
+    rc.digs++;
+    rc.last = Date.now();
+    saveSoon();
+    const old = r.tr;
+    r.tr = pickTreasure(r, c);
+    broadcast(r, { t: 'dg', by: c.pid, x: old.x, y: old.y, item: item, add: add, total: rc.total, tr: r.tr });
+  } else if (m.t === 'ch') {
+    const id = Math.floor(num(m.id, 0, N_CHESTS - 1, -1));
+    if (id < 0) return;
+    const rc = rec(r.code);
+    if (rc.chests[id] && Date.now() - rc.chests[id] < CHEST_REFILL_MS) return;
+    rc.chests[id] = Date.now();
+    rc.total = (rc.total || 0) + 5;
+    saveSoon();
+    broadcast(r, { t: 'co', id: id, by: c.pid, add: 5, total: rc.total });
   } else if (m.t === 'rtc') {
     const to = r.players.get(m.to);
     if (to && m.d && typeof m.d === 'object') to.send({ t: 'rtc', from: c.pid, d: m.d });
@@ -259,7 +353,7 @@ function onMessage(c, m) {
 function Conn(socket, ip) {
   this.s = socket; this.ip = ip; this.buf = Buffer.alloc(0);
   this.parts = []; this.partsLen = 0; this.alive = true; this.closed = false;
-  this.room = null; this.pid = null; this.tokens = 120; this.tokTime = Date.now();
+  this.room = null; this.pid = null; this.m = 0; this.tokens = 120; this.tokTime = Date.now();
   const self = this;
   socket.setNoDelay(true);
   socket.on('data', function (d) { self.onData(d); });
@@ -363,6 +457,15 @@ setInterval(function () {
     c.frame(9, Buffer.alloc(0));
   });
 }, 25000);
+setInterval(function () { // сундуки наполняются заново
+  const now = Date.now();
+  rooms.forEach(function (r) {
+    const rc = rec(r.code);
+    Object.keys(rc.chests).forEach(function (id) {
+      if (now - rc.chests[id] >= CHEST_REFILL_MS) { delete rc.chests[id]; saveSoon(); broadcast(r, { t: 'cc', id: Number(id) }); }
+    });
+  });
+}, 60000);
 setInterval(function () {
   const now = Date.now();
   strikes.forEach(function (s, ip) { if (s.reset < now) strikes.delete(ip); });

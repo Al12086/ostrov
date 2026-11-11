@@ -67,40 +67,61 @@
   /* ---------- игра ---------- */
   #hud { position: fixed; inset: 0; pointer-events: none; }
   #hud > * { pointer-events: auto; }
+  #tl { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); display: flex; gap: 10px; pointer-events: none !important; }
+  #tl > * { pointer-events: auto; }
   .chip {
-    position: absolute; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 18px;
+    display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 18px;
     border-radius: 28px; background: rgba(255, 252, 248, .93); font-weight: 900; font-size: 24px;
-    box-shadow: 0 6px 16px rgba(40, 60, 110, .25), inset 0 0 0 3px #fff;
+    box-shadow: 0 6px 16px rgba(40, 60, 110, .25), inset 0 0 0 3px #fff; white-space: nowrap;
   }
-  #stars { top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); color: #e59a00; }
+  #stars { color: #e59a00; }
   #stars.pop { animation: pop .35s; }
   @keyframes pop { 40% { transform: scale(1.25); } }
-  #codechip { top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); font-size: 17px; height: 44px; color: #8a78a8; }
+  #radar { font-size: 19px; color: #fff; box-shadow: 0 6px 16px rgba(40, 60, 110, .25); transition: background .3s; }
+  #radar.r0 { background: #6fa8e8; } #radar.r1 { background: #58c0b0; } #radar.r2 { background: #f0b02b; }
+  #radar.r3 { background: #f2702f; animation: pulse .7s infinite; } #radar.r4 { background: #e2305f; animation: pulse .35s infinite; }
+  @keyframes pulse { 50% { transform: scale(1.09); } }
   .round {
     position: absolute; width: 72px; height: 72px; border-radius: 50%; font-size: 34px; line-height: 1;
     background: rgba(255, 252, 248, .95); box-shadow: 0 6px 16px rgba(40, 60, 110, .28), inset 0 0 0 3px #fff;
     display: flex; align-items: center; justify-content: center;
   }
   .round:active { transform: scale(.93); }
+  .round.sm { width: 54px; height: 54px; font-size: 24px; margin-right: 9px; }
   #mic { top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
   #mic.off { background: #ffd9df; }
   #mic.off::after { content: ""; position: absolute; width: 60px; height: 6px; border-radius: 3px; background: #e2447a; transform: rotate(-45deg); }
   #mic.talk { box-shadow: 0 0 0 6px rgba(120, 220, 140, .75), 0 6px 16px rgba(40, 60, 110, .28); }
-  #exit { top: calc(96px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); width: 56px; height: 56px; font-size: 24px; margin-right: 8px; }
+  #exit { top: calc(96px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
+  #codebtn { top: calc(160px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
   #emotes { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 10px; }
   #emotes button { position: static; width: 66px; height: 66px; font-size: 32px; }
+  #dig {
+    position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    padding: 16px 34px; border-radius: 40px; font-size: 30px; font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(#ffcf4a, #f59a12); box-shadow: 0 7px 0 #c97200, 0 14px 26px rgba(200, 120, 0, .4);
+    animation: digp .6s infinite;
+  }
+  @keyframes digp { 50% { transform: translateX(-50%) scale(1.08); } }
   #toast {
-    position: absolute; left: 50%; top: calc(72px + env(safe-area-inset-top)); transform: translateX(-50%);
+    position: absolute; left: 50%; top: calc(84px + env(safe-area-inset-top)); transform: translateX(-50%);
     max-width: 92%; padding: 12px 20px; border-radius: 20px; background: rgba(74, 53, 96, .92); color: #fff;
-    font-size: 18px; font-weight: 800; text-align: center; pointer-events: none; transition: opacity .3s;
+    font-size: 19px; font-weight: 800; text-align: center; pointer-events: none !important; transition: opacity .3s;
   }
   #toast.hide { opacity: 0; }
-  #modal { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
+  #albumgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  #albumgrid div { aspect-ratio: 1; border-radius: 18px; background: #f4eefb; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 38px; line-height: 1.1; }
+  #albumgrid div small { font-size: 11px; font-weight: 800; color: #8a78a8; margin-top: 2px; }
+  #albumgrid div.no { color: #cdbfe2; font-weight: 900; }
+  #albumgrid div.yes { background: #fff3c4; box-shadow: inset 0 0 0 3px #ffd257; }
   @media (max-height: 520px) {
     .card { padding: 14px 18px; } .card h1 { font-size: 32px; } .card .sub { margin-bottom: 8px; }
     #looks button { width: 62px; height: 76px; } #looks canvas { width: 56px; height: 70px; }
     .big { padding: 12px; margin-top: 10px; font-size: 21px; }
+    #albumgrid { grid-template-columns: repeat(6, 1fr); } #albumgrid div { font-size: 28px; }
   }
+  @media (max-width: 520px) { #emotes button { width: 56px; height: 56px; font-size: 27px; } #emotes { gap: 7px; } .chip { height: 50px; padding: 0 14px; font-size: 21px; } #radar { font-size: 16px; } }
 </style>
 </head>
 <body>
@@ -109,7 +130,7 @@
 <div id="lobby">
   <div class="card">
     <h1>Остров</h1>
-    <div class="sub">гуляем и болтаем вместе</div>
+    <div class="sub">гуляем, болтаем и ищем сокровища</div>
 
     <div class="lbl">Как тебя зовут?</div>
     <input id="name" class="txt" maxlength="14" autocomplete="off" placeholder="Имя">
@@ -141,15 +162,19 @@
 </div>
 
 <div id="hud" class="hidden">
-  <div id="stars" class="chip">⭐ <span id="starn">0</span></div>
-  <button id="codechip" class="chip"></button>
+  <div id="tl">
+    <button id="stars" class="chip">⭐ <span id="starn">0</span></button>
+    <div id="radar" class="chip hidden"><span>🧭</span><span id="radartx"></span></div>
+  </div>
   <button id="mic" class="round" aria-label="Микрофон">🎤</button>
-  <button id="exit" class="round" aria-label="Выйти">🚪</button>
+  <button id="exit" class="round sm" aria-label="Выйти">🚪</button>
+  <button id="codebtn" class="round sm" aria-label="Код острова">🔑</button>
+  <button id="dig" class="hidden">⛏ Копать!</button>
   <div id="emotes"></div>
   <div id="toast" class="hide"></div>
 </div>
 
-<div id="modal" class="hidden">
+<div id="modal" class="modalbg hidden">
   <div class="card">
     <div class="lbl" style="margin-top:0">Код нашего острова</div>
     <div id="modalcode" class="codebig" style="font-size:44px"></div>
@@ -159,62 +184,193 @@
   </div>
 </div>
 
+<div id="album" class="modalbg hidden">
+  <div class="card">
+    <div class="lbl" style="margin-top:0">Наши сокровища</div>
+    <div id="albumn" class="codebig"></div>
+    <div id="albumgrid"></div>
+    <button id="closealbum" class="big alt">Закрыть</button>
+  </div>
+</div>
+
 <script>
 'use strict';
 /* =====================================================================
-   МИР: размеры острова, где можно ходить, что где стоит
+   МИР: остров, горы, тайная бухта и пещера. Здесь только расчёты, без рисования.
    ===================================================================== */
-var W = 2400, H = 1750, CX = 1200, CY = 800, RX = 1020, RY = 660;
-var WALK = 0.95, GRASS = 0.87;
-function islR(a) { return 1 + 0.06 * Math.sin(3 * a + 0.5) + 0.045 * Math.sin(5 * a + 2.1) + 0.03 * Math.sin(7 * a + 4.0); }
-function inIsl(x, y, m) { var dx = (x - CX) / RX, dy = (y - CY) / RY; return Math.sqrt(dx * dx + dy * dy) < islR(Math.atan2(dy, dx)) * m; }
+var W = 5200, H = 3900, CX = 2600, CY = 1900, RX = 2350, RY = 1600, WALK = 0.955;
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function islR(a) { return 1 + 0.05 * Math.sin(3 * a + 0.5) + 0.04 * Math.sin(5 * a + 2.1) + 0.025 * Math.sin(7 * a + 4.0) + 0.02 * Math.sin(11 * a + 1.0); }
+/* 0 — в центре острова, 1 — у самой воды, больше 1 — море */
+function isl(x, y) { var dx = (x - CX) / RX, dy = (y - CY) / RY; return Math.sqrt(dx * dx + dy * dy) / islR(Math.atan2(dy, dx)); }
+function grassM(a) { return 0.9 - 0.17 * Math.exp(-a * a / 0.5); } /* на востоке широкий пляж */
+function inGrass(x, y) { var dx = (x - CX) / RX, dy = (y - CY) / RY, a = Math.atan2(dy, dx); return Math.sqrt(dx * dx + dy * dy) < islR(a) * grassM(a); }
+/* горная гряда поперёк острова: через неё не пройти, только сквозь пещеру */
+var BAND = 220;
+function bandC(x) { return 980 + 40 * Math.sin(x / 420); }
+function inBand(x, y) { return Math.abs(y - bandC(x)) < BAND; }
 var SAND_BOTTOM = CY + RY * islR(Math.PI / 2);
-var PIER = { x0: 1150, x1: 1250, y0: CY + RY * islR(Math.PI / 2) * WALK - 60, y1: SAND_BOTTOM + 200 };
+var PIER = { x0: 2550, x1: 2650, y0: CY + RY * islR(Math.PI / 2) * WALK - 60, y1: SAND_BOTTOM + 220 };
 function inPier(x, y) { return x > PIER.x0 && x < PIER.x1 && y > PIER.y0 && y < PIER.y1; }
 
-var TREES = [
-  [520, 560, 0], [640, 470, 1], [820, 380, 2], [1000, 300, 0], [1420, 290, 1], [1640, 370, 2], [1860, 500, 0],
-  [1990, 700, 1], [1960, 960, 0], [1800, 1180, 2], [1420, 1260, 1], [960, 1270, 0], [600, 1180, 2], [400, 860, 1],
-  [860, 560, 2], [1540, 540, 0], [900, 820, 1]
+var HOUSE = { x: 2600, y: 2050 }, SHOP = { x: 3180, y: 2130 }, SWING = { x: 3060, y: 2570 }, POND = { x: 2040, y: 2450, rx: 170, ry: 105 }, BENCH = { x: 2290, y: 2570 };
+var CLEAR = { x: 1150, y: 2100, r: 190 };
+var MOUTH = { x: 2050, y: bandC(2050) + BAND };          /* вход в пещеру с юга */
+var HOLE = { x: 3150, y: bandC(3150) - BAND - 80 };      /* лаз в тайной бухте */
+var WRECK = { x: 2380, y: 318 };
+var CHESTS = [
+  { id: 0, m: 0, x: 1150, y: 2060 }, { id: 1, m: 0, x: 2620, y: 470 }, { id: 2, m: 0, x: 3700, y: 640 },
+  { id: 3, m: 1, x: 700, y: 1010 }, { id: 4, m: 1, x: 2290, y: 1540 }, { id: 5, m: 1, x: 1420, y: 510 }
 ];
-var BUSHES = [[1060, 500], [1345, 505], [560, 780], [1540, 860], [1100, 1120], [1780, 820], [760, 620], [1300, 1010]];
-var ROCKS = [[430, 1010], [1930, 1100], [1560, 330], [840, 1230]];
-var HOUSE = { x: 1200, y: 600 }, SHOP = { x: 1700, y: 650 }, SWING = { x: 1620, y: 1090 }, POND = { x: 700, y: 960, rx: 150, ry: 96 }, BENCH = { x: 905, y: 1040 };
-
-var COL = [
-  { x: HOUSE.x, y: HOUSE.y - 50, rx: 160, ry: 78 },
-  { x: SHOP.x, y: SHOP.y - 28, rx: 104, ry: 46 },
-  { x: SWING.x, y: SWING.y - 12, rx: 96, ry: 30 },
-  { x: POND.x, y: POND.y, rx: POND.rx + 14, ry: POND.ry + 12 },
-  { x: BENCH.x, y: BENCH.y - 10, rx: 52, ry: 22 }
+function quad(p) {
+  var out = [[p[0], p[1]]], x0 = p[0], y0 = p[1];
+  for (var k = 2; k < p.length; k += 4) {
+    for (var i = 1; i <= 16; i++) { var t = i / 16, u = 1 - t; out.push([u * u * x0 + 2 * u * t * p[k] + t * t * p[k + 2], u * u * y0 + 2 * u * t * p[k + 1] + t * t * p[k + 3]]); }
+    x0 = p[k + 2]; y0 = p[k + 3];
+  }
+  return out;
+}
+var TRAILS = [
+  { w: 60, p: quad([2600, 2090, 2590, 2800, 2600, PIER.y0 + 30]) },
+  { w: 46, p: quad([2600, 2230, 2900, 2170, 3170, 2210]) },
+  { w: 44, p: quad([2600, 2340, 2400, 2380, 2270, 2610]) },
+  { w: 44, p: quad([2600, 2440, 2830, 2490, 3040, 2620]) },
+  { w: 46, p: quad([2590, 2200, 1900, 2080, 1330, 2150]) },
+  { w: 46, p: quad([2560, 2180, 2120, 1850, 2052, MOUTH.y + 60]) },
+  { w: 44, p: quad([3260, 2210, 3800, 2260, 4350, 1960]) },
+  { w: 40, p: quad([3150, HOLE.y - 60, 2950, 430, 2660, 500]) }
 ];
-TREES.forEach(function (t) { COL.push({ x: t[0], y: t[1] - 8, rx: 30, ry: 20 }); });
-BUSHES.forEach(function (b) { COL.push({ x: b[0], y: b[1] - 8, rx: 34, ry: 20 }); });
-ROCKS.forEach(function (r) { COL.push({ x: r[0], y: r[1] - 8, rx: 34, ry: 20 }); });
+function nearTrail(x, y, d) {
+  for (var i = 0; i < TRAILS.length; i++) { var p = TRAILS[i].p; for (var k = 0; k < p.length; k++) { var dx = p[k][0] - x, dy = p[k][1] - y; if (dx * dx + dy * dy < d * d) return true; } }
+  return false;
+}
+function d2(x, y, a, b) { return (x - a) * (x - a) + (y - b) * (y - b); }
+function landmark(x, y) {
+  if (Math.abs(x - HOUSE.x) < 270 && y > HOUSE.y - 340 && y < HOUSE.y + 270) return true;
+  if (d2(x, y, SHOP.x, SHOP.y - 60) < 210 * 210 || d2(x, y, SWING.x, SWING.y - 60) < 200 * 200) return true;
+  var px = (x - POND.x) / (POND.rx + 90), py = (y - POND.y) / (POND.ry + 90); if (px * px + py * py < 1) return true;
+  if (d2(x, y, BENCH.x, BENCH.y) < 120 * 120 || d2(x, y, CLEAR.x, CLEAR.y) < CLEAR.r * CLEAR.r) return true;
+  if (d2(x, y, MOUTH.x, MOUTH.y + 90) < 280 * 280 || d2(x, y, HOLE.x, HOLE.y) < 210 * 210 || d2(x, y, WRECK.x, WRECK.y) < 280 * 280) return true;
+  for (var i = 0; i < 3; i++) if (d2(x, y, CHESTS[i].x, CHESTS[i].y) < 130 * 130) return true;
+  if (Math.abs(y - bandC(x)) < BAND + 50) return true;
+  return nearTrail(x, y, 100);
+}
+/* деревья: 0,1 — зелёные, 2 — цветущее, 3 — ёлка, 4 — пальма */
+var TREES = [], BUSHES = [], ROCKS = [], DECOR = [];
+(function () {
+  var R = rng(11), occ = [], n, x, y, c;
+  function free(x, y, sp) { for (var i = 0; i < occ.length; i++) if (d2(x, y, occ[i][0], occ[i][1]) < sp * sp) return false; return true; }
+  function put(arr, x, y, t) { x = Math.round(x); y = Math.round(y); arr.push([x, y, t]); occ.push([x, y]); }
+  for (n = 0, c = 0; n < 1400 && c < 85; n++) { // лес на западе
+    x = 420 + R() * 1650; y = 1250 + R() * 1750;
+    var ex = (x - 1250) / 820, ey = (y - 2100) / 900;
+    if (ex * ex + ey * ey < 1 && inGrass(x, y) && isl(x, y) < 0.86 && !landmark(x, y) && free(x, y, 140)) { put(TREES, x, y, R() < 0.55 ? 3 : (R() < 0.5 ? 0 : 1)); c++; }
+  }
+  for (n = 0, c = 0; n < 900 && c < 34; n++) { // луга
+    x = 300 + R() * 4600; y = 1260 + R() * 2100;
+    if (inGrass(x, y) && isl(x, y) < 0.86 && !landmark(x, y) && free(x, y, 330)) { put(TREES, x, y, R() < 0.3 ? 2 : (R() < 0.5 ? 0 : 1)); c++; }
+  }
+  for (n = 0, c = 0; n < 500 && c < 11; n++) { // тайная бухта
+    x = 800 + R() * 3600; y = 300 + R() * 440;
+    if (inGrass(x, y) && isl(x, y) < 0.84 && !landmark(x, y) && free(x, y, 240)) { put(TREES, x, y, R() < 0.5 ? 2 : 4); c++; }
+  }
+  for (n = 0, c = 0; n < 1500 && c < 22; n++) { // пальмы на песке
+    x = 200 + R() * 4800; y = 250 + R() * 3200;
+    if (!inGrass(x, y) && isl(x, y) < 0.9 && isl(x, y) > 0.74 && !landmark(x, y) && Math.abs(x - 2600) > 200 && free(x, y, 200)) { put(TREES, x, y, 4); c++; }
+  }
+  for (n = 0, c = 0; n < 900 && c < 34; n++) {
+    x = 300 + R() * 4600; y = 300 + R() * 3000;
+    if (inGrass(x, y) && isl(x, y) < 0.87 && !landmark(x, y) && free(x, y, 120)) { put(BUSHES, x, y, 0); c++; }
+  }
+  for (n = 0, c = 0; n < 900 && c < 24; n++) {
+    x = 300 + R() * 4600; y = n % 2 ? bandC(x) + (R() < 0.5 ? -1 : 1) * (BAND + 60 + R() * 110) : 300 + R() * 3000;
+    if (isl(x, y) < 0.9 && !landmark(x, y) && free(x, y, 130)) { put(ROCKS, x, y, 0); c++; }
+  }
+  // мелочи без столкновений: 0–4 цветы, 5 травинки, 6 гриб, 7 ракушка
+  for (n = 0; n < 1500; n++) {
+    x = 200 + R() * 4800; y = 230 + R() * 3250;
+    if (inBand(x, y) || isl(x, y) > 0.985) continue;
+    var px = (x - POND.x) / (POND.rx + 22), py = (y - POND.y) / (POND.ry + 22); if (px * px + py * py < 1) continue;
+    if (inGrass(x, y)) {
+      if (isl(x, y) > 0.88) continue;
+      var fx = (x - 1250) / 820, fy = (y - 2100) / 900, forest = fx * fx + fy * fy < 1;
+      DECOR.push([Math.round(x), Math.round(y), forest && R() < 0.4 ? 6 : (R() < 0.35 ? 5 : Math.floor(R() * 5))]);
+    } else if (R() < 0.45) DECOR.push([Math.round(x), Math.round(y), 7]);
+  }
+})();
 
-/* подвинуть точку туда, где можно стоять */
-function fix(p) {
-  for (var i = 0; i < COL.length; i++) {
-    var c = COL[i], dx = (p.x - c.x) / c.rx, dy = (p.y - c.y) / c.ry, d = dx * dx + dy * dy;
+function ellCol(x, y, rx, ry) { return { x: x, y: y, rx: rx, ry: ry }; }
+var COL0 = [
+  ellCol(HOUSE.x, HOUSE.y - 50, 160, 78), ellCol(SHOP.x, SHOP.y - 28, 104, 46), ellCol(SWING.x, SWING.y - 12, 96, 30),
+  ellCol(POND.x, POND.y, POND.rx + 14, POND.ry + 12), ellCol(BENCH.x, BENCH.y - 10, 52, 22), ellCol(WRECK.x, WRECK.y - 10, 170, 56)
+];
+TREES.forEach(function (t) { COL0.push(ellCol(t[0], t[1] - 8, 30, 20)); });
+BUSHES.forEach(function (b) { COL0.push(ellCol(b[0], b[1] - 8, 34, 20)); });
+ROCKS.forEach(function (r) { COL0.push(ellCol(r[0], r[1] - 8, 34, 20)); });
+
+/* пещера */
+var CW = 3000, CH = 2000, TR = 64;
+var ROOMS = [[600, 1700, 175], [1100, 1450, 205], [700, 1050, 150], [1650, 1150, 230], [2260, 1520, 160], [2150, 750, 190], [1440, 540, 155], [2600, 380, 165]];
+var TUN = [[0, 1], [1, 2], [1, 3], [3, 4], [3, 5], [5, 6], [5, 7]];
+var LAKE = { x: 1650, y: 1150, rx: 96, ry: 62 };
+var EXIT_S = { x: 600, y: 1838 }, EXIT_N = { x: 2600, y: 252 };
+var COL1 = [ellCol(LAKE.x, LAKE.y, LAKE.rx + 12, LAKE.ry + 10)];
+CHESTS.forEach(function (c) { (c.m ? COL1 : COL0).push(ellCol(c.x, c.y - 8, 40, 22)); });
+
+function pushOut(col, p) {
+  for (var i = 0; i < col.length; i++) {
+    var c = col[i], dx = (p.x - c.x) / c.rx, dy = (p.y - c.y) / c.ry, d = dx * dx + dy * dy;
     if (d < 1) { var k = Math.sqrt(d) || 0.001; p.x = c.x + dx / k * c.rx; p.y = c.y + dy / k * c.ry; }
   }
-  if (inIsl(p.x, p.y, WALK) || inPier(p.x, p.y)) return p;
-  if (p.y > PIER.y0 && Math.abs(p.x - 1200) < 120) {
-    p.x = Math.max(PIER.x0 + 4, Math.min(PIER.x1 - 4, p.x));
-    p.y = Math.max(PIER.y0 + 4, Math.min(PIER.y1 - 4, p.y));
-    return p;
+}
+function toShore(p) { var ax = (p.x - CX) / RX, ay = (p.y - CY) / RY, a = Math.atan2(ay, ax), r = islR(a) * (WALK - 0.004); p.x = CX + Math.cos(a) * r * RX; p.y = CY + Math.sin(a) * r * RY; }
+/* подвинуть точку туда, где можно стоять (остров) */
+function fix0(p) {
+  pushOut(COL0, p);
+  if (inPier(p.x, p.y)) return p;
+  var out = isl(p.x, p.y) >= WALK;
+  if (out && p.y > PIER.y0 && Math.abs(p.x - 2600) < 120) {
+    p.x = Math.max(PIER.x0 + 4, Math.min(PIER.x1 - 4, p.x)); p.y = Math.max(PIER.y0 + 4, Math.min(PIER.y1 - 4, p.y)); return p;
   }
-  var ax = (p.x - CX) / RX, ay = (p.y - CY) / RY, a = Math.atan2(ay, ax), r = islR(a) * (WALK - 0.004);
-  p.x = CX + Math.cos(a) * r * RX; p.y = CY + Math.sin(a) * r * RY;
+  if (out) toShore(p);
+  if (inBand(p.x, p.y)) { var c = bandC(p.x); p.y = p.y < c ? c - BAND - 1 : c + BAND + 1; if (isl(p.x, p.y) >= WALK) toShore(p); }
   return p;
 }
-function spawnOk(x, y) {
-  if (!(inIsl(x, y, 0.9) || (inPier(x, y) && x > PIER.x0 + 25 && x < PIER.x1 - 25 && y < PIER.y1 - 30))) return false;
-  for (var i = 0; i < COL.length; i++) {
-    var c = COL[i], dx = (x - c.x) / (c.rx + 45), dy = (y - c.y) / (c.ry + 45);
-    if (dx * dx + dy * dy < 1) return false;
+/* то же для пещеры: залы-круги и коридоры между ними */
+function fix1(p) {
+  pushOut(COL1, p);
+  var bx = 0, by = 0, bd = 1e9, i, dx, dy, d;
+  for (i = 0; i < ROOMS.length; i++) {
+    var r = ROOMS[i]; dx = p.x - r[0]; dy = p.y - r[1]; d = Math.sqrt(dx * dx + dy * dy);
+    if (d <= r[2]) return p;
+    if (d - r[2] < bd) { bd = d - r[2]; bx = r[0] + dx / d * (r[2] - 1); by = r[1] + dy / d * (r[2] - 1); }
   }
-  return true;
+  for (i = 0; i < TUN.length; i++) {
+    var a = ROOMS[TUN[i][0]], b = ROOMS[TUN[i][1]], vx = b[0] - a[0], vy = b[1] - a[1];
+    var t = Math.max(0, Math.min(1, ((p.x - a[0]) * vx + (p.y - a[1]) * vy) / (vx * vx + vy * vy))), qx = a[0] + vx * t, qy = a[1] + vy * t;
+    dx = p.x - qx; dy = p.y - qy; d = Math.sqrt(dx * dx + dy * dy);
+    if (d <= TR) return p;
+    if (d - TR < bd) { bd = d - TR; bx = qx + dx / d * (TR - 1); by = qy + dy / d * (TR - 1); }
+  }
+  p.x = bx; p.y = by; return p;
+}
+function fixM(m, p) { return m ? fix1(p) : fix0(p); }
+/* годится ли точка для звёздочки или клада */
+function spawnOk(m, x, y) {
+  var i, c, dx, dy;
+  if (m === 0) {
+    var pier = inPier(x, y) && x > PIER.x0 + 25 && x < PIER.x1 - 25 && y < PIER.y1 - 30 && y > SAND_BOTTOM;
+    if (!pier && (isl(x, y) > 0.9 || Math.abs(y - bandC(x)) < BAND + 70)) return false;
+    if (d2(x, y, MOUTH.x, MOUTH.y + 40) < 170 * 170 || d2(x, y, HOLE.x, HOLE.y) < 170 * 170) return false;
+    for (i = 0; i < COL0.length; i++) { c = COL0[i]; dx = (x - c.x) / (c.rx + 45); dy = (y - c.y) / (c.ry + 45); if (dx * dx + dy * dy < 1) return false; }
+    return true;
+  }
+  if (d2(x, y, EXIT_S.x, EXIT_S.y) < 140 * 140 || d2(x, y, EXIT_N.x, EXIT_N.y) < 140 * 140) return false;
+  for (i = 0; i < COL1.length; i++) { c = COL1[i]; dx = (x - c.x) / (c.rx + 40); dy = (y - c.y) / (c.ry + 40); if (dx * dx + dy * dy < 1) return false; }
+  for (i = 0; i < ROOMS.length; i++) if (d2(x, y, ROOMS[i][0], ROOMS[i][1]) < (ROOMS[i][2] - 50) * (ROOMS[i][2] - 50)) return true;
+  var q = fix1({ x: x, y: y }); if (q.x !== x || q.y !== y) return false;
+  var q2 = { x: x + 26, y: y }, q3 = { x: x - 26, y: y }, q4 = { x: x, y: y + 26 }, q5 = { x: x, y: y - 26 };
+  return fix1(q2).x === x + 26 && fix1(q3).x === x - 26 && fix1(q4).y === y + 26 && fix1(q5).y === y - 26;
 }
 /* ===== конец описания мира ===== */
 
@@ -227,13 +383,13 @@ var LOOKS = [
   { dress: '#ff9a6b', dress2: '#ea6c3d', hair: '#6b4226', acc: 'flower' }
 ];
 var EMOTES = ['❤️', '👋', '😂', '👍', '🌟'];
-var SPEED = 330;
+var ALBUM = [['👑', 'Корона'], ['💍', 'Кольцо'], ['💎', 'Алмаз'], ['🗝️', 'Ключ'], ['🏺', 'Ваза'], ['📿', 'Бусы'], ['🐚', 'Ракушка'], ['🔱', 'Трезубец'], ['🪙', 'Монета'], ['🧭', 'Компас'], ['🏆', 'Кубок'], ['🦄', 'Единорог']];
+var SPEED = 400;
 
 /* =====================================================================
    МЕЛОЧИ
    ===================================================================== */
 function $(id) { return document.getElementById(id); }
-function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); }
 function fmtCode(s) { s = String(s || ''); return s.slice(0, 3) + ' ' + s.slice(3); }
@@ -247,114 +403,48 @@ function saveStore() { try { localStorage.setItem('ostrov.v1', JSON.stringify(st
 saveStore();
 
 /* =====================================================================
-   РИСОВАНИЕ
+   РИСОВАНИЕ: заготовки
    ===================================================================== */
 var cv = $('game'), ctx = cv.getContext('2d');
-var cw = 0, ch = 0, dpr = 1, scale = 1, cam = { x: CX, y: CY };
+var cw = 0, ch = 0, dpr = 1, scale = 1, cam = { x: HOUSE.x, y: HOUSE.y + 100 };
+var dk = document.createElement('canvas'), dctx = dk.getContext('2d');
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   cw = Math.round(window.innerWidth * dpr); ch = Math.round(window.innerHeight * dpr);
   cv.width = cw; cv.height = ch;
+  dk.width = Math.ceil(cw / 2); dk.height = Math.ceil(ch / 2);
   scale = Math.max(cw / 1500, ch / 950);
 }
 window.addEventListener('resize', resize); resize();
 
-function pathIsland(c, m, grow) {
-  c.beginPath();
-  for (var i = 0; i <= 180; i++) {
-    var a = i / 180 * Math.PI * 2, r = islR(a) * m;
-    var x = CX + Math.cos(a) * (r * RX + (grow || 0)), y = CY + Math.sin(a) * (r * RY + (grow || 0));
-    if (i) c.lineTo(x, y); else c.moveTo(x, y);
+function islandPath(mfn, grow) {
+  var p = new Path2D();
+  for (var i = 0; i <= 220; i++) {
+    var a = i / 220 * Math.PI * 2 - Math.PI, r = islR(a) * mfn(a);
+    var x = CX + Math.cos(a) * (r * RX + grow), y = CY + Math.sin(a) * (r * RY + grow);
+    if (i) p.lineTo(x, y); else p.moveTo(x, y);
   }
-  c.closePath();
+  p.closePath(); return p;
 }
+function one() { return 1; }
+var P = {
+  sh2: islandPath(one, 80), sh1: islandPath(one, 38), sand: islandPath(one, 0),
+  grassE: islandPath(grassM, 9), grass: islandPath(grassM, 0), band: new Path2D(), trails: []
+};
+(function () {
+  // горная гряда, обрезанная по берегам (считаем один раз, чтобы не обрезать в каждом кадре)
+  function edge(x, dir) { var lo = bandC(x), hi = lo + dir * 2200; for (var k = 0; k < 18; k++) { var mid = (lo + hi) / 2; if (isl(x, mid) < 0.985) lo = mid; else hi = mid; } return lo; }
+  var top = [], bot = [], x;
+  for (x = 100; x <= 5100; x += 25) {
+    if (isl(x, bandC(x)) >= 0.985) continue;
+    top.push([x, Math.max(bandC(x) - BAND - 30, edge(x, -1))]); bot.push([x, Math.min(bandC(x) + BAND + 30, edge(x, 1))]);
+  }
+  top.forEach(function (q, i) { if (i) P.band.lineTo(q[0], q[1]); else P.band.moveTo(q[0], q[1]); });
+  bot.reverse().forEach(function (q) { P.band.lineTo(q[0], q[1]); });
+  P.band.closePath();
+  TRAILS.forEach(function (t) { var p = new Path2D(); t.p.forEach(function (q, i) { if (i) p.lineTo(q[0], q[1]); else p.moveTo(q[0], q[1]); }); P.trails.push({ w: t.w, p: p }); });
+})();
 
-/* --- земля: рисуется один раз --- */
-var GS = 1.5, ground = document.createElement('canvas');
-function buildGround() {
-  ground.width = W * GS; ground.height = H * GS;
-  var g = ground.getContext('2d'); g.scale(GS, GS);
-  var R = rng(7);
-  // мелководье
-  g.fillStyle = 'rgba(170,240,250,.35)'; pathIsland(g, 1, 70); g.fill();
-  g.fillStyle = 'rgba(200,248,252,.5)'; pathIsland(g, 1, 34); g.fill();
-  // пирс (под песком начало)
-  g.fillStyle = 'rgba(40,90,120,.25)'; rr(g, PIER.x0 - 6, SAND_BOTTOM - 20, 112, PIER.y1 - SAND_BOTTOM + 34, 10); g.fill();
-  // песок
-  var sg = g.createRadialGradient(CX, CY, 300, CX, CY, 1050);
-  sg.addColorStop(0, '#fbeecb'); sg.addColorStop(1, '#f3d99d');
-  g.fillStyle = sg; pathIsland(g, 1, 0); g.fill();
-  g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 8; g.stroke();
-  // трава
-  var gg = g.createLinearGradient(0, 150, 0, 1450);
-  gg.addColorStop(0, '#9be07a'); gg.addColorStop(1, '#6cc56a');
-  g.fillStyle = '#58b060'; pathIsland(g, GRASS, 8); g.fill();
-  g.fillStyle = gg; pathIsland(g, GRASS, 0); g.fill();
-  // пятна травы
-  g.save(); pathIsland(g, GRASS, 0); g.clip();
-  for (var i = 0; i < 90; i++) {
-    var x = 200 + R() * 2000, y = 150 + R() * 1300;
-    g.fillStyle = R() < 0.5 ? 'rgba(190,240,140,.28)' : 'rgba(60,150,80,.13)';
-    ell(g, x, y, 40 + R() * 110, 18 + R() * 46); g.fill();
-  }
-  g.restore();
-  // тропинки
-  function pathTo(pts, w) {
-    g.lineCap = 'round'; g.lineJoin = 'round';
-    g.beginPath(); g.moveTo(pts[0], pts[1]);
-    for (var k = 2; k < pts.length; k += 4) g.quadraticCurveTo(pts[k], pts[k + 1], pts[k + 2], pts[k + 3]);
-    g.strokeStyle = '#d9b877'; g.lineWidth = w + 10; g.stroke();
-    g.strokeStyle = '#f2dcab'; g.lineWidth = w; g.stroke();
-  }
-  pathTo([1200, 640, 1190, 1000, 1200, PIER.y0 + 30], 58);
-  pathTo([1200, 760, 1480, 700, 1690, 720], 46);
-  pathTo([1200, 860, 1000, 900, 880, 1075, 860, 1100, 800, 1090], 44);
-  pathTo([1200, 960, 1420, 1010, 1600, 1130], 44);
-  // камушки на тропинке
-  for (i = 0; i < 60; i++) {
-    g.fillStyle = 'rgba(190,150,90,.35)';
-    ell(g, 1180 + R() * 40, 660 + R() * 720, 3 + R() * 4, 2 + R() * 3); g.fill();
-  }
-  // пруд
-  g.fillStyle = '#58b060'; ell(g, POND.x, POND.y + 6, POND.rx + 12, POND.ry + 10); g.fill();
-  g.fillStyle = '#e9d6a3'; ell(g, POND.x, POND.y, POND.rx + 8, POND.ry + 6); g.fill();
-  var pg = g.createRadialGradient(POND.x - 30, POND.y - 30, 10, POND.x, POND.y, POND.rx);
-  pg.addColorStop(0, '#aeeaf7'); pg.addColorStop(1, '#4fb9e2');
-  g.fillStyle = pg; ell(g, POND.x, POND.y, POND.rx, POND.ry); g.fill();
-  g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 4; g.beginPath(); g.ellipse(POND.x - 30, POND.y - 20, 70, 36, -0.2, 3.4, 4.6); g.stroke();
-  [[-60, 30], [50, 40], [20, -40], [90, -5]].forEach(function (l, n) {
-    g.fillStyle = '#4fb565'; g.beginPath(); g.moveTo(POND.x + l[0], POND.y + l[1]);
-    g.arc(POND.x + l[0], POND.y + l[1], 20, 0.4, Math.PI * 2 - 0.1); g.closePath(); g.fill();
-    if (n % 2 === 0) flower(g, POND.x + l[0] + 3, POND.y + l[1] - 3, 7, '#ffd0e6', '#ffe36b');
-  });
-  // цветы
-  var fc = ['#ff8ec0', '#ffffff', '#ffd257', '#c9a4ff', '#ff9a6b'];
-  for (i = 0; i < 230; i++) {
-    x = 220 + R() * 1960; y = 170 + R() * 1260;
-    if (!inIsl(x, y, GRASS - 0.04)) continue;
-    var dxp = (x - POND.x) / (POND.rx + 20), dyp = (y - POND.y) / (POND.ry + 20);
-    if (dxp * dxp + dyp * dyp < 1) continue;
-    if (R() < 0.35) { // травинки
-      g.strokeStyle = 'rgba(50,140,70,.5)'; g.lineWidth = 2.5; g.beginPath();
-      g.moveTo(x, y); g.lineTo(x - 4, y - 11); g.moveTo(x + 4, y); g.lineTo(x + 5, y - 13); g.moveTo(x + 8, y); g.lineTo(x + 12, y - 10); g.stroke();
-    } else flower(g, x, y, 4.5 + R() * 3, fc[Math.floor(R() * fc.length)], '#ffe36b');
-  }
-  // ракушки и морские звёзды на песке
-  for (i = 0; i < 46; i++) {
-    var a = R() * Math.PI * 2, rr2 = islR(a) * (0.905 + R() * 0.075);
-    x = CX + Math.cos(a) * rr2 * RX; y = CY + Math.sin(a) * rr2 * RY;
-    if (R() < 0.6) { g.fillStyle = R() < 0.5 ? '#ffd9c2' : '#fff5e6'; ell(g, x, y, 7, 5); g.fill(); g.strokeStyle = 'rgba(200,140,110,.6)'; g.lineWidth = 1.5; g.stroke(); }
-    else { starPath(g, x, y, 9, 4.5, R() * 3); g.fillStyle = '#ff9a7a'; g.fill(); }
-  }
-  // пирс
-  var py0 = SAND_BOTTOM - 46;
-  g.fillStyle = '#8a5a3a';
-  for (var yy = py0 + 60; yy < PIER.y1; yy += 78) { rr(g, PIER.x0 - 10, yy, 14, 30, 5); g.fill(); rr(g, PIER.x1 - 4, yy, 14, 30, 5); g.fill(); }
-  g.fillStyle = '#c98f5a'; rr(g, PIER.x0, py0, PIER.x1 - PIER.x0, PIER.y1 - py0, 12); g.fill();
-  g.strokeStyle = '#a66f42'; g.lineWidth = 3;
-  for (yy = py0 + 22; yy < PIER.y1 - 6; yy += 22) { g.beginPath(); g.moveTo(PIER.x0 + 3, yy); g.lineTo(PIER.x1 - 3, yy); g.stroke(); }
-  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 4; g.beginPath(); g.moveTo(PIER.x0 + 8, py0 + 8); g.lineTo(PIER.x0 + 8, PIER.y1 - 10); g.stroke();
-}
 function flower(g, x, y, r, col, mid) {
   g.fillStyle = col;
   for (var k = 0; k < 5; k++) { var a = k / 5 * Math.PI * 2; ell(g, x + Math.cos(a) * r, y + Math.sin(a) * r, r * 0.8, r * 0.8); g.fill(); }
@@ -368,51 +458,75 @@ function starPath(g, x, y, R1, R2, rot) {
   }
   g.closePath();
 }
+function heart(g, x, y, s, col) {
+  g.fillStyle = col; g.beginPath(); g.moveTo(x, y + s * 0.9);
+  g.bezierCurveTo(x - s * 1.5, y - s * 0.2, x - s * 0.7, y - s * 1.2, x, y - s * 0.4);
+  g.bezierCurveTo(x + s * 0.7, y - s * 1.2, x + s * 1.5, y - s * 0.2, x, y + s * 0.9); g.fill();
+}
 
-/* --- заготовки предметов (рисуются один раз, потом просто копируются) --- */
-var SPR = {};
+var GS = 1.5, SPR = {};
 function sprite(name, w, h, ax, ay, fn) {
   var c = document.createElement('canvas'); c.width = w * GS; c.height = h * GS;
-  var g = c.getContext('2d'); g.scale(GS, GS); g.translate(ax, ay); fn(g);
+  var g = c.getContext('2d'); g.scale(GS, GS); g.translate(ax, ay); g.lineCap = 'round'; g.lineJoin = 'round'; fn(g);
   SPR[name] = { c: c, w: w, h: h, ax: ax, ay: ay };
 }
+function drawSpr(name, x, y, s, c) {
+  var p = SPR[name]; s = s || 1;
+  (c || ctx).drawImage(p.c, x - p.ax * s, y - p.ay * s, p.w * s, p.h * s);
+}
+function shadow(g, rx, ry) { g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, -2, rx, ry); g.fill(); }
+
 function buildSprites() {
   var crowns = [['#3f9e57', '#59bf6c', '#86dd8a'], ['#56b04f', '#7fd066', '#b3ec8c'], ['#ef7fb1', '#ff9fc8', '#ffd0e6']];
   crowns.forEach(function (cl, n) {
     sprite('tree' + n, 220, 260, 110, 244, function (g) {
-      g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, 0, 62, 16); g.fill();
+      shadow(g, 62, 16);
       var tg = g.createLinearGradient(-14, 0, 14, 0); tg.addColorStop(0, '#8a5a3a'); tg.addColorStop(1, '#b07a4d');
       g.fillStyle = tg; g.beginPath(); g.moveTo(-17, 2); g.quadraticCurveTo(-9, -50, -11, -104); g.lineTo(11, -104); g.quadraticCurveTo(9, -50, 17, 2); g.closePath(); g.fill();
       g.fillStyle = cl[0]; ell(g, -42, -122, 58, 52); g.fill(); ell(g, 44, -118, 56, 50); g.fill(); ell(g, 0, -168, 68, 58); g.fill();
       g.fillStyle = cl[1]; ell(g, -32, -132, 48, 42); g.fill(); ell(g, 36, -128, 46, 40); g.fill(); ell(g, 0, -176, 58, 48); g.fill();
       g.fillStyle = cl[2]; ell(g, -18, -186, 30, 20); g.fill(); ell(g, -44, -146, 20, 13); g.fill(); ell(g, 30, -144, 18, 12); g.fill();
-      if (n === 2) { g.fillStyle = '#fff'; [[-50, -110], [10, -150], [46, -120], [-10, -200], [30, -180]].forEach(function (p) { ell(g, p[0], p[1], 5, 5); g.fill(); }); }
-      else { g.fillStyle = '#ff6b6b'; [[-46, -112], [22, -138], [50, -108], [-6, -160]].forEach(function (p) { ell(g, p[0], p[1], 7, 7); g.fill(); g.fillStyle = '#ff6b6b'; }); }
+      g.fillStyle = n === 2 ? '#fff' : '#ff6b6b';
+      [[-46, -112], [22, -138], [50, -108], [-6, -160], [30, -182]].forEach(function (p) { ell(g, p[0], p[1], n === 2 ? 5 : 7, n === 2 ? 5 : 7); g.fill(); });
     });
   });
+  sprite('tree3', 200, 290, 100, 274, function (g) { // ёлка
+    shadow(g, 56, 15);
+    g.fillStyle = '#8a5a3a'; rr(g, -11, -44, 22, 46, 6); g.fill();
+    [[84, -30, '#2f8a55'], [70, -92, '#379a5e'], [54, -150, '#42ab69'], [38, -204, '#52bd78']].forEach(function (l, i) {
+      g.fillStyle = l[2]; g.beginPath(); g.moveTo(0, l[1] - 78); g.quadraticCurveTo(l[0] * 0.5, l[1] - 30, l[0], l[1]);
+      g.quadraticCurveTo(0, l[1] + 16, -l[0], l[1]); g.quadraticCurveTo(-l[0] * 0.5, l[1] - 30, 0, l[1] - 78); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.16)'; g.beginPath(); g.moveTo(0, l[1] - 72); g.quadraticCurveTo(-l[0] * 0.5, l[1] - 30, -l[0] * 0.8, l[1] - 4); g.quadraticCurveTo(-l[0] * 0.3, l[1] - 30, 0, l[1] - 72); g.fill();
+    });
+  });
+  sprite('tree4', 260, 300, 130, 284, function (g) { // пальма
+    shadow(g, 50, 13);
+    g.strokeStyle = '#b07a4d'; g.lineWidth = 22; g.beginPath(); g.moveTo(0, -2); g.quadraticCurveTo(-26, -110, 10, -208); g.stroke();
+    g.strokeStyle = '#8a5a3a'; g.lineWidth = 3;
+    for (var k = 0; k < 7; k++) { var t = k / 7, u = 1 - t, x = 2 * u * t * -26 + t * t * 10, y = -2 * u * u - 2 * u * t * 110 - t * t * 208; g.beginPath(); g.moveTo(x - 10, y - 12); g.lineTo(x + 10, y - 16); g.stroke(); }
+    [[-104, -196, -60, -262], [-84, -150, -62, -226], [102, -208, 62, -266], [96, -156, 70, -232], [-30, -292, -14, -268], [50, -292, 30, -270]].forEach(function (l, i) {
+      g.fillStyle = i % 2 ? '#4fb565' : '#3f9e57';
+      g.beginPath(); g.moveTo(10, -210); g.quadraticCurveTo(l[2], l[3], l[0], l[1]); g.quadraticCurveTo(l[2] * 0.7, l[3] + 34, 10, -210); g.fill();
+    });
+    g.fillStyle = '#a66f42'; ell(g, 2, -206, 11, 11); g.fill(); ell(g, 20, -200, 10, 10); g.fill();
+  });
   sprite('house', 400, 380, 200, 350, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, -2, 180, 26); g.fill();
-    // труба
+    shadow(g, 180, 26);
     g.fillStyle = '#d98c6a'; rr(g, 70, -300, 34, 70, 6); g.fill(); g.fillStyle = '#f0b497'; rr(g, 64, -306, 46, 16, 6); g.fill();
-    // стены
     var wg = g.createLinearGradient(0, -190, 0, 0); wg.addColorStop(0, '#fff6ea'); wg.addColorStop(1, '#ffe5cc');
     g.fillStyle = wg; rr(g, -150, -190, 300, 190, 22); g.fill();
     g.fillStyle = '#f3cfae'; rr(g, -150, -30, 300, 30, 14); g.fill();
-    // крыша
     var rg = g.createLinearGradient(0, -320, 0, -170); rg.addColorStop(0, '#ff8ec0'); rg.addColorStop(1, '#f0589a');
     g.fillStyle = rg; g.beginPath(); g.moveTo(-186, -176); g.quadraticCurveTo(-90, -230, 0, -326); g.quadraticCurveTo(90, -230, 186, -176);
     g.quadraticCurveTo(190, -160, 172, -158); g.lineTo(-172, -158); g.quadraticCurveTo(-190, -160, -186, -176); g.closePath(); g.fill();
     g.fillStyle = '#ffc2dd';
     for (var k = -4; k <= 4; k++) { ell(g, k * 40, -158, 20, 13); g.fill(); }
-    g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 5; g.lineCap = 'round';
+    g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 5;
     g.beginPath(); g.moveTo(-120, -200); g.quadraticCurveTo(-60, -238, -14, -292); g.stroke();
-    // сердечко на крыше
     heart(g, 0, -238, 20, '#fff');
-    // дверь
     g.fillStyle = '#9d7be8'; g.beginPath(); g.moveTo(-36, 0); g.lineTo(-36, -74); g.arc(0, -74, 36, Math.PI, 0); g.lineTo(36, 0); g.closePath(); g.fill();
     g.strokeStyle = '#7d5bd0'; g.lineWidth = 5; g.stroke();
     heart(g, 0, -78, 12, '#ffe36b'); g.fillStyle = '#ffe36b'; ell(g, 22, -40, 5, 5); g.fill();
-    // окна
     [-98, 98].forEach(function (x) {
       g.fillStyle = '#fff'; rr(g, x - 36, -128, 72, 66, 14); g.fill();
       var gl = g.createLinearGradient(0, -124, 0, -66); gl.addColorStop(0, '#bfeeff'); gl.addColorStop(1, '#fff2b8');
@@ -423,64 +537,141 @@ function buildSprites() {
     });
   });
   sprite('shop', 280, 250, 140, 228, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.22)'; ell(g, 0, -2, 120, 20); g.fill();
+    shadow(g, 120, 20);
     g.fillStyle = '#a66f42'; rr(g, -104, -150, 12, 150, 5); g.fill(); rr(g, 92, -150, 12, 150, 5); g.fill();
     var cg = g.createLinearGradient(0, -78, 0, 0); cg.addColorStop(0, '#e0a56c'); cg.addColorStop(1, '#c98f5a');
     g.fillStyle = cg; rr(g, -110, -78, 220, 78, 12); g.fill();
     g.fillStyle = '#f2c48e'; rr(g, -118, -88, 236, 20, 9); g.fill();
-    // товары
     [['#ff7eb6', -70], ['#ffd257', -24], ['#4fd3e6', 22], ['#b08cff', 68]].forEach(function (p) { g.fillStyle = p[0]; ell(g, p[1], -104, 15, 15); g.fill(); g.fillStyle = 'rgba(255,255,255,.55)'; ell(g, p[1] - 5, -110, 5, 4); g.fill(); });
-    // навес в полоску
     g.save(); g.beginPath(); g.moveTo(-128, -150); g.lineTo(-112, -206); g.lineTo(112, -206); g.lineTo(128, -150); g.closePath(); g.clip();
     for (var k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; g.fillRect(-128 + k * 32, -210, 32, 64); }
     g.restore();
     for (k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; ell(g, -112 + k * 32, -150, 16, 11); g.fill(); }
-    // вывеска со звездой
     g.fillStyle = '#fff'; ell(g, 0, -214, 26, 26); g.fill(); starPath(g, 0, -214, 18, 8, 0); g.fillStyle = '#ffc928'; g.fill();
   });
   sprite('swing', 260, 240, 130, 222, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 110, 16); g.fill();
-    g.strokeStyle = '#c98f5a'; g.lineWidth = 13; g.lineCap = 'round';
+    shadow(g, 110, 16);
+    g.strokeStyle = '#c98f5a'; g.lineWidth = 13;
     g.beginPath(); g.moveTo(-98, 0); g.lineTo(-74, -196); g.moveTo(-50, 0); g.lineTo(-74, -196); g.moveTo(98, 0); g.lineTo(74, -196); g.moveTo(50, 0); g.lineTo(74, -196); g.stroke();
     g.strokeStyle = '#e0a56c'; g.lineWidth = 15; g.beginPath(); g.moveTo(-86, -196); g.lineTo(86, -196); g.stroke();
     g.strokeStyle = '#8f73f0'; g.lineWidth = 4; g.beginPath(); g.moveTo(-28, -192); g.lineTo(-30, -60); g.moveTo(28, -192); g.lineTo(30, -60); g.stroke();
     g.fillStyle = '#ff7eb6'; rr(g, -40, -64, 80, 14, 7); g.fill();
   });
   sprite('bush', 120, 90, 60, 80, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 46, 10); g.fill();
+    shadow(g, 46, 10);
     g.fillStyle = '#3f9e57'; ell(g, -20, -22, 28, 24); g.fill(); ell(g, 22, -20, 26, 22); g.fill(); ell(g, 0, -38, 30, 26); g.fill();
     g.fillStyle = '#62c474'; ell(g, -16, -28, 20, 16); g.fill(); ell(g, 18, -26, 18, 14); g.fill(); ell(g, 0, -44, 22, 16); g.fill();
     g.fillStyle = '#ff5f87'; [[-22, -18], [8, -30], [24, -14], [-4, -50]].forEach(function (p) { ell(g, p[0], p[1], 5, 5); g.fill(); });
   });
   sprite('rock', 120, 90, 60, 78, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 46, 10); g.fill();
+    shadow(g, 46, 10);
     g.fillStyle = '#a9b3c4'; g.beginPath(); g.moveTo(-40, -2); g.quadraticCurveTo(-46, -40, -14, -52); g.quadraticCurveTo(20, -64, 38, -32); g.quadraticCurveTo(48, -8, 34, -2); g.closePath(); g.fill();
     g.fillStyle = '#c9d1de'; g.beginPath(); g.moveTo(-28, -30); g.quadraticCurveTo(-18, -48, 6, -50); g.quadraticCurveTo(-6, -36, -10, -22); g.closePath(); g.fill();
   });
   sprite('bench', 150, 90, 75, 78, function (g) {
-    g.fillStyle = 'rgba(30,70,40,.2)'; ell(g, 0, -2, 62, 10); g.fill();
+    shadow(g, 62, 10);
     g.fillStyle = '#a66f42'; rr(g, -50, -30, 10, 30, 4); g.fill(); rr(g, 40, -30, 10, 30, 4); g.fill();
     g.fillStyle = '#e0a56c'; rr(g, -60, -40, 120, 14, 6); g.fill();
     g.fillStyle = '#c98f5a'; rr(g, -56, -68, 112, 12, 6); g.fill(); rr(g, -56, -54, 112, 10, 5); g.fill();
   });
-  // звёздочка с сиянием
   sprite('star', 120, 120, 60, 60, function (g) {
     var gl = g.createRadialGradient(0, 0, 4, 0, 0, 56); gl.addColorStop(0, 'rgba(255,240,150,.85)'); gl.addColorStop(1, 'rgba(255,240,150,0)');
     g.fillStyle = gl; ell(g, 0, 0, 56, 56); g.fill();
     starPath(g, 0, 0, 30, 14, 0); var sg = g.createLinearGradient(0, -30, 0, 30); sg.addColorStop(0, '#fff3a0'); sg.addColorStop(1, '#ffb800');
-    g.fillStyle = sg; g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 4; g.lineJoin = 'round'; g.stroke();
+    g.fillStyle = sg; g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 4; g.stroke();
     g.fillStyle = '#7a4a00'; ell(g, -8, -2, 2.6, 3.4); g.fill(); ell(g, 8, -2, 2.6, 3.4); g.fill();
-    g.strokeStyle = '#7a4a00'; g.lineWidth = 2.4; g.lineCap = 'round'; g.beginPath(); g.arc(0, 3, 6, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+    g.strokeStyle = '#7a4a00'; g.lineWidth = 2.4; g.beginPath(); g.arc(0, 3, 6, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
   });
-}
-function heart(g, x, y, s, col) {
-  g.fillStyle = col; g.beginPath(); g.moveTo(x, y + s * 0.9);
-  g.bezierCurveTo(x - s * 1.5, y - s * 0.2, x - s * 0.7, y - s * 1.2, x, y - s * 0.4);
-  g.bezierCurveTo(x + s * 0.7, y - s * 1.2, x + s * 1.5, y - s * 0.2, x, y + s * 0.9); g.fill();
-}
-function drawSpr(name, x, y, s) {
-  var p = SPR[name]; s = s || 1;
-  ctx.drawImage(p.c, x - p.ax * s, y - p.ay * s, p.w * s, p.h * s);
+  sprite('gem', 120, 120, 60, 60, function (g) { // кристалл-самоцвет в пещере
+    var gl = g.createRadialGradient(0, 0, 4, 0, 0, 56); gl.addColorStop(0, 'rgba(150,240,255,.9)'); gl.addColorStop(1, 'rgba(150,240,255,0)');
+    g.fillStyle = gl; ell(g, 0, 0, 56, 56); g.fill();
+    g.fillStyle = '#39c6f0'; g.beginPath(); g.moveTo(0, -30); g.lineTo(24, -8); g.lineTo(0, 32); g.lineTo(-24, -8); g.closePath(); g.fill();
+    g.fillStyle = '#9be9ff'; g.beginPath(); g.moveTo(0, -30); g.lineTo(-24, -8); g.lineTo(-6, -8); g.closePath(); g.fill();
+    g.fillStyle = '#1b9fd0'; g.beginPath(); g.moveTo(24, -8); g.lineTo(0, 32); g.lineTo(8, -8); g.closePath(); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 3.5; g.beginPath(); g.moveTo(0, -30); g.lineTo(24, -8); g.lineTo(0, 32); g.lineTo(-24, -8); g.closePath(); g.stroke();
+  });
+  [0, 1].forEach(function (v) { // горы
+    sprite('mount' + v, 480, 420, 240, 400, function (g) {
+      var bg = g.createLinearGradient(0, -390, 0, 0); bg.addColorStop(0, '#b3a9c4'); bg.addColorStop(1, '#8a7fa0');
+      g.fillStyle = bg; g.beginPath(); g.moveTo(-230, 0);
+      if (v === 0) { g.quadraticCurveTo(-150, -130, -90, -230); g.quadraticCurveTo(-40, -330, 0, -386); g.quadraticCurveTo(50, -300, 110, -200); g.quadraticCurveTo(170, -110, 232, 0); }
+      else { g.quadraticCurveTo(-170, -150, -110, -300); g.quadraticCurveTo(-70, -230, -30, -190); g.quadraticCurveTo(30, -280, 80, -350); g.quadraticCurveTo(150, -200, 232, 0); }
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(70,55,100,.22)'; g.beginPath(); // тень справа
+      if (v === 0) { g.moveTo(0, -386); g.quadraticCurveTo(50, -300, 110, -200); g.quadraticCurveTo(170, -110, 232, 0); g.lineTo(60, 0); g.quadraticCurveTo(70, -200, 0, -386); }
+      else { g.moveTo(80, -350); g.quadraticCurveTo(150, -200, 232, 0); g.lineTo(110, 0); g.quadraticCurveTo(120, -180, 80, -350); }
+      g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); // снежная шапка
+      if (v === 0) { g.moveTo(0, -386); g.quadraticCurveTo(-28, -346, -52, -300); g.lineTo(-26, -316); g.lineTo(-6, -288); g.lineTo(16, -318); g.lineTo(40, -296); g.quadraticCurveTo(24, -340, 0, -386); }
+      else { g.moveTo(80, -350); g.quadraticCurveTo(56, -316, 40, -286); g.lineTo(62, -300); g.lineTo(84, -276); g.lineTo(104, -298); g.quadraticCurveTo(94, -326, 80, -350);
+        g.moveTo(-110, -300); g.quadraticCurveTo(-126, -268, -134, -246); g.lineTo(-112, -260); g.lineTo(-92, -244); g.quadraticCurveTo(-98, -276, -110, -300); }
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.moveTo(-200, -20); g.quadraticCurveTo(-140, -120, -84, -210); g.quadraticCurveTo(-120, -110, -140, -20); g.fill();
+      g.fillStyle = '#58b060'; [[-190, -4], [-120, -8], [150, -6], [200, -2]].forEach(function (p) { ell(g, p[0], p[1], 34, 14); g.fill(); });
+    });
+  });
+  sprite('mouth', 340, 300, 170, 280, function (g) { // вход в пещеру
+    g.fillStyle = '#8a7fa0'; g.beginPath(); g.moveTo(-160, 0); g.quadraticCurveTo(-170, -150, -90, -220); g.quadraticCurveTo(0, -280, 96, -216); g.quadraticCurveTo(170, -150, 160, 0); g.closePath(); g.fill();
+    g.fillStyle = '#a79cbb'; g.beginPath(); g.moveTo(-140, -20); g.quadraticCurveTo(-146, -140, -80, -200); g.quadraticCurveTo(-30, -236, 20, -232); g.quadraticCurveTo(-80, -190, -100, -20); g.fill();
+    var ag = g.createLinearGradient(0, -170, 0, 0); ag.addColorStop(0, '#0e0a1c'); ag.addColorStop(1, '#3a2b58');
+    g.fillStyle = ag; g.beginPath(); g.moveTo(-64, 0); g.lineTo(-64, -90); g.quadraticCurveTo(-60, -168, 0, -170); g.quadraticCurveTo(60, -168, 64, -90); g.lineTo(64, 0); g.closePath(); g.fill();
+    g.strokeStyle = '#6f6487'; g.lineWidth = 12; g.stroke();
+    [[-92, -40, '#5ee6ff'], [96, -62, '#c79bff'], [-104, -120, '#c79bff'], [104, -140, '#5ee6ff']].forEach(function (c) {
+      g.fillStyle = c[2]; g.beginPath(); g.moveTo(c[0], c[1] - 26); g.lineTo(c[0] + 12, c[1]); g.lineTo(c[0], c[1] + 10); g.lineTo(c[0] - 12, c[1]); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.moveTo(c[0], c[1] - 26); g.lineTo(c[0] - 12, c[1]); g.lineTo(c[0] - 3, c[1]); g.closePath(); g.fill();
+    });
+    g.fillStyle = 'rgba(94,230,255,.5)'; ell(g, -20, -60, 3, 3); g.fill(); ell(g, 24, -100, 3, 3); g.fill(); ell(g, 4, -30, 2.5, 2.5); g.fill();
+  });
+  sprite('hole', 220, 200, 110, 150, function (g) { // лаз в бухте
+    g.fillStyle = '#8a7fa0'; ell(g, 0, 0, 96, 50); g.fill();
+    g.fillStyle = '#a79cbb'; for (var k = 0; k < 12; k++) { var a = k / 12 * 6.283; ell(g, Math.cos(a) * 86, Math.sin(a) * 43, 17, 12); g.fill(); }
+    var hg = g.createRadialGradient(0, 4, 6, 0, 0, 70); hg.addColorStop(0, '#0e0a1c'); hg.addColorStop(1, '#33264f');
+    g.fillStyle = hg; ell(g, 0, 0, 68, 33); g.fill();
+    g.strokeStyle = '#c98f5a'; g.lineWidth = 9; g.beginPath(); g.moveTo(-22, 8); g.lineTo(-24, -112); g.moveTo(22, 8); g.lineTo(24, -112); g.stroke();
+    g.lineWidth = 7; for (k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-23, -16 - k * 28); g.lineTo(23, -16 - k * 28); g.stroke(); }
+  });
+  sprite('wreck', 460, 330, 230, 290, function (g) { // старый корабль
+    shadow(g, 190, 26);
+    g.fillStyle = '#7a4f33'; g.beginPath(); g.moveTo(-200, -84); g.quadraticCurveTo(-150, 6, -40, 6); g.lineTo(120, 6); g.quadraticCurveTo(196, -10, 214, -104); g.lineTo(150, -84); g.lineTo(-140, -70); g.closePath(); g.fill();
+    g.fillStyle = '#a66f42'; g.beginPath(); g.moveTo(-200, -84); g.lineTo(-140, -70); g.lineTo(150, -84); g.lineTo(214, -104); g.lineTo(206, -118); g.lineTo(146, -100); g.lineTo(-146, -86); g.lineTo(-206, -98); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(40,20,10,.35)'; g.lineWidth = 4; for (var k = 0; k < 3; k++) { g.beginPath(); g.moveTo(-150 + k * 14, -52 + k * 20); g.quadraticCurveTo(0, -30 + k * 18, 180 - k * 20, -62 + k * 22); g.stroke(); }
+    g.fillStyle = '#231a12'; ell(g, 60, -34, 30, 20); g.fill(); // пробоина
+    g.fillStyle = '#ffe36b'; ell(g, -60, -46, 9, 9); g.fill(); ell(g, 0, -46, 9, 9); g.fill();
+    g.strokeStyle = '#8a5a3a'; g.lineWidth = 16; g.beginPath(); g.moveTo(-20, -84); g.lineTo(-44, -270); g.stroke();
+    g.fillStyle = '#f4ead2'; g.beginPath(); g.moveTo(-40, -256); g.quadraticCurveTo(70, -230, 60, -132); g.lineTo(-28, -128); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(180,150,110,.5)'; g.beginPath(); g.moveTo(20, -150); g.lineTo(44, -170); g.lineTo(50, -134); g.closePath(); g.fill();
+    g.fillStyle = '#e2447a'; g.beginPath(); g.moveTo(-45, -270); g.lineTo(-96, -258); g.lineTo(-46, -244); g.closePath(); g.fill();
+  });
+  [0, 1].forEach(function (open) { // сундук
+    sprite('chest' + open, 150, 150, 75, 120, function (g) {
+      shadow(g, 52, 12);
+      if (open) { var gl = g.createRadialGradient(0, -50, 4, 0, -50, 70); gl.addColorStop(0, 'rgba(255,230,120,.95)'); gl.addColorStop(1, 'rgba(255,230,120,0)'); g.fillStyle = gl; ell(g, 0, -50, 70, 60); g.fill(); }
+      if (open) { g.fillStyle = '#7a4f33'; rr(g, -44, -100, 88, 40, 14); g.fill(); g.fillStyle = '#ffc928'; rr(g, -44, -84, 88, 9, 4); g.fill(); }
+      g.fillStyle = '#a66f42'; rr(g, -46, -52, 92, 52, 8); g.fill();
+      if (open) { g.fillStyle = '#ffd23c'; ell(g, -18, -52, 14, 8); g.fill(); ell(g, 8, -55, 16, 9); g.fill(); ell(g, 26, -51, 11, 7); g.fill(); }
+      else { g.fillStyle = '#c98f5a'; g.beginPath(); g.moveTo(-46, -50); g.quadraticCurveTo(-46, -92, 0, -92); g.quadraticCurveTo(46, -92, 46, -50); g.closePath(); g.fill(); }
+      g.fillStyle = '#ffc928'; rr(g, -46, -56, 92, 10, 4); g.fill(); rr(g, -32, -52, 10, 52, 3); g.fill(); rr(g, 22, -52, 10, 52, 3); g.fill();
+      if (!open) { rr(g, -32, -92, 10, 40, 3); g.fill(); rr(g, 22, -92, 10, 40, 3); g.fill(); }
+      g.fillStyle = '#fff3a0'; rr(g, -9, -62, 18, 22, 5); g.fill(); g.fillStyle = '#7a4f33'; ell(g, 0, -52, 4, 4); g.fill();
+    });
+  });
+  sprite('tint', 160, 160, 80, 80, function (g) { var fg = g.createRadialGradient(0, 0, 26, 0, 0, 80); fg.addColorStop(0, 'rgba(34,120,70,.4)'); fg.addColorStop(1, 'rgba(34,120,70,0)'); g.fillStyle = fg; ell(g, 0, 0, 80, 80); g.fill(); });
+  var fc = ['#ff8ec0', '#ffffff', '#ffd257', '#c9a4ff', '#ff9a6b'];
+  fc.forEach(function (c, i) { sprite('d' + i, 30, 30, 15, 15, function (g) { flower(g, 0, 0, 6, c, '#ffe36b'); }); });
+  sprite('d5', 30, 24, 10, 20, function (g) { g.strokeStyle = 'rgba(50,140,70,.55)'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(0, 0); g.lineTo(-4, -12); g.moveTo(4, 0); g.lineTo(5, -15); g.moveTo(8, 0); g.lineTo(13, -11); g.stroke(); });
+  sprite('d6', 40, 40, 20, 34, function (g) { g.fillStyle = '#fff3e0'; rr(g, -5, -16, 10, 17, 4); g.fill(); g.fillStyle = '#ef5a5a'; g.beginPath(); g.arc(0, -15, 15, Math.PI, 0); g.closePath(); g.fill(); g.fillStyle = '#fff'; ell(g, -6, -21, 3, 3); g.fill(); ell(g, 5, -24, 2.5, 2.5); g.fill(); });
+  sprite('d7', 30, 24, 15, 12, function (g) { g.fillStyle = '#ffe3d0'; ell(g, 0, 0, 9, 6.5); g.fill(); g.strokeStyle = 'rgba(200,140,110,.7)'; g.lineWidth = 1.5; g.stroke(); g.beginPath(); g.moveTo(-5, 3); g.lineTo(0, -6); g.lineTo(5, 3); g.stroke(); });
+  // пещерные кристаллы
+  [['#5ee6ff', '#bff6ff'], ['#c79bff', '#ead9ff'], ['#ff8ec0', '#ffd3e6']].forEach(function (c, i) {
+    sprite('cr' + i, 110, 130, 55, 118, function (g) {
+      [[-20, 0, 16, 58, -0.25], [18, 0, 14, 46, 0.3], [0, 4, 20, 86, 0]].forEach(function (k) {
+        g.save(); g.translate(k[0], k[1]); g.rotate(k[4]);
+        g.fillStyle = c[0]; g.beginPath(); g.moveTo(-k[2], 0); g.lineTo(-k[2], -k[3] * 0.72); g.lineTo(0, -k[3]); g.lineTo(k[2], -k[3] * 0.72); g.lineTo(k[2], 0); g.closePath(); g.fill();
+        g.fillStyle = c[1]; g.beginPath(); g.moveTo(-k[2], 0); g.lineTo(-k[2], -k[3] * 0.72); g.lineTo(0, -k[3]); g.lineTo(-k[2] * 0.2, 0); g.closePath(); g.fill();
+        g.restore();
+      });
+    });
+  });
 }
 
 /* --- героиня --- */
@@ -493,35 +684,27 @@ function drawGirl(c, x, y, s, L, o) {
   c.fillStyle = 'rgba(30,60,40,.24)'; ell(c, 0, 0, 30 - bob * 0.6, 10 - bob * 0.2); c.fill();
   c.scale(o.face || 1, 1); c.translate(0, -bob);
   c.lineCap = 'round'; c.lineJoin = 'round';
-  // волосы сзади
   c.fillStyle = L.hair; c.beginPath(); c.moveTo(-27, -104); c.quadraticCurveTo(-34, -66, -22, -52 + sw * 0.2); c.lineTo(22, -52 - sw * 0.2); c.quadraticCurveTo(34, -66, 27, -104); c.closePath(); c.fill();
-  // ноги и туфельки
   c.strokeStyle = SKIN; c.lineWidth = 9;
   c.beginPath(); c.moveTo(-9, -30); c.lineTo(-9 + sw, -7); c.moveTo(9, -30); c.lineTo(9 - sw, -7); c.stroke();
   c.fillStyle = L.dress2; ell(c, -8 + sw, -4, 9, 5.5); c.fill(); ell(c, 10 - sw, -4, 9, 5.5); c.fill();
-  // руки
   c.strokeStyle = SKIN; c.lineWidth = 7.5;
   c.beginPath(); c.moveTo(-15, -72); c.lineTo(-27 - sw * 0.5, -48); c.moveTo(15, -72); c.lineTo(27 + sw * 0.5, -48); c.stroke();
-  // платье
   var dg = c.createLinearGradient(0, -80, 0, -24); dg.addColorStop(0, L.dress); dg.addColorStop(1, L.dress2);
   c.fillStyle = dg; c.beginPath(); c.moveTo(-15, -80); c.lineTo(15, -80); c.quadraticCurveTo(22, -52, 37, -27);
   c.quadraticCurveTo(0, -17, -37, -27); c.quadraticCurveTo(-22, -52, -15, -80); c.closePath(); c.fill();
   c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 4; c.beginPath(); c.moveTo(-34, -28); c.quadraticCurveTo(0, -19, 34, -28); c.stroke();
   c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, -15, -66, 30, 6, 3); c.fill();
   c.fillStyle = L.dress; ell(c, -15, -76, 8, 7); c.fill(); ell(c, 15, -76, 8, 7); c.fill();
-  // голова
   c.fillStyle = SKIN; ell(c, 0, -102, 23, 22); c.fill();
-  // чёлка
   c.fillStyle = L.hair; c.beginPath(); c.moveTo(-24, -100); c.quadraticCurveTo(-27, -128, 0, -127); c.quadraticCurveTo(27, -128, 24, -100);
   c.quadraticCurveTo(17, -116, 5, -113); c.quadraticCurveTo(-8, -110, -15, -104); c.quadraticCurveTo(-20, -106, -24, -100); c.closePath(); c.fill();
-  // лицо
   var blink = (t * 0.9 + (o.seed || 0)) % 4 < 0.12;
   c.fillStyle = '#3d2b33'; ell(c, -8, -99, 3.1, blink ? 0.7 : 4.2); c.fill(); ell(c, 9, -99, 3.1, blink ? 0.7 : 4.2); c.fill();
   if (!blink) { c.fillStyle = '#fff'; ell(c, -7, -100.6, 1.2, 1.2); c.fill(); ell(c, 10, -100.6, 1.2, 1.2); c.fill(); }
   c.fillStyle = 'rgba(255,120,150,.4)'; ell(c, -15, -92, 4.6, 3.2); c.fill(); ell(c, 16, -92, 4.6, 3.2); c.fill();
   if (o.talk) { c.fillStyle = '#c2476a'; ell(c, 0.5, -89, 4, 2 + Math.abs(Math.sin(t * 14)) * 3); c.fill(); }
   else { c.strokeStyle = '#c2476a'; c.lineWidth = 2.2; c.beginPath(); c.arc(0.5, -92, 6, 0.18 * Math.PI, 0.82 * Math.PI); c.stroke(); }
-  // украшение
   if (L.acc === 'crown') {
     c.fillStyle = '#ffd23c'; c.beginPath(); c.moveTo(-14, -124); c.lineTo(-17, -141); c.lineTo(-8, -133); c.lineTo(0, -146); c.lineTo(8, -133); c.lineTo(17, -141); c.lineTo(14, -124); c.closePath(); c.fill();
     c.fillStyle = '#ff6fa8'; ell(c, 0, -130, 2.6, 2.6); c.fill();
@@ -533,25 +716,97 @@ function drawGirl(c, x, y, s, L, o) {
   c.restore();
 }
 
+/* --- что стоит на острове и в пещере (для порядка «дальше — ближе») --- */
+var OBJ0 = [], OBJ1 = [], CRYST = [], caveGround = null, mini = null;
+function buildObjects() {
+  TREES.forEach(function (t) { OBJ0.push({ x: t[0], y: t[1], k: 'tree' + t[2], h: 300 }); });
+  BUSHES.forEach(function (b) { OBJ0.push({ x: b[0], y: b[1], k: 'bush', h: 90 }); });
+  ROCKS.forEach(function (r) { OBJ0.push({ x: r[0], y: r[1], k: 'rock', h: 90 }); });
+  OBJ0.push({ x: HOUSE.x, y: HOUSE.y, k: 'house', h: 360 }, { x: SHOP.x, y: SHOP.y, k: 'shop', h: 240 }, { x: SWING.x, y: SWING.y, k: 'swing', h: 230 },
+    { x: BENCH.x, y: BENCH.y, k: 'bench', h: 90 }, { x: WRECK.x, y: WRECK.y, k: 'wreck', h: 300 },
+    { x: MOUTH.x, y: MOUTH.y + 6, k: 'mouth', h: 290 }, { x: HOLE.x, y: HOLE.y - 40, k: 'hole', h: 160, ay: 40 });
+  var R = rng(5), x;
+  for (x = 150; x < 5100; x += 205) { // дальний ряд гор
+    var y = bandC(x) - 4; if (isl(x, y) < 0.97) OBJ0.push({ x: x, y: y, k: 'mount' + (R() < 0.5 ? 0 : 1), s: 0.5 + R() * 0.05, h: 240 });
+  }
+  for (x = 90; x < 5150; x += 250) { // ближний ряд
+    var xx = x + R() * 60, yy = bandC(xx) + BAND - 10 - R() * 20;
+    if (Math.abs(xx - MOUTH.x) < 215 || isl(xx, yy) > 0.975) continue;
+    OBJ0.push({ x: xx, y: yy, k: 'mount' + (R() < 0.5 ? 0 : 1), s: 0.86 + R() * 0.12, h: 420 });
+  }
+  // кристаллы по краям залов
+  ROOMS.forEach(function (r, i) {
+    for (var k = 0; k < 6; k++) {
+      var a = k / 6 * 6.283 + i * 0.7 + R() * 0.5, cx = r[0] + Math.cos(a) * (r[2] + 16), cy = r[1] + Math.sin(a) * (r[2] + 16);
+      var q = fix1({ x: cx, y: cy }); if (d2(q.x, q.y, cx, cy) < 12 * 12) continue; // это проход, а не стена
+      var c = { x: cx, y: cy + 14, k: 'cr' + Math.floor(R() * 3), s: 0.7 + R() * 0.5, h: 130 }; OBJ1.push(c); CRYST.push(c);
+    }
+  });
+  CHESTS.forEach(function (c) { (c.m ? OBJ1 : OBJ0).push({ x: c.x, y: c.y, chest: c.id, h: 130 }); });
+}
+function buildCave() {
+  caveGround = document.createElement('canvas'); caveGround.width = CW; caveGround.height = CH;
+  var g = caveGround.getContext('2d'), R = rng(3), i;
+  g.fillStyle = '#1d172c'; g.fillRect(0, 0, CW, CH);
+  for (i = 0; i < 220; i++) { g.fillStyle = R() < 0.5 ? 'rgba(60,48,92,.35)' : 'rgba(10,8,20,.4)'; ell(g, R() * CW, R() * CH, 30 + R() * 120, 20 + R() * 70); g.fill(); }
+  function shapes(extra, col) {
+    g.fillStyle = col; g.strokeStyle = col; g.lineCap = 'round';
+    ROOMS.forEach(function (r) { ell(g, r[0], r[1], r[2] + extra, r[2] + extra); g.fill(); });
+    g.lineWidth = (TR + extra) * 2;
+    TUN.forEach(function (t) { g.beginPath(); g.moveTo(ROOMS[t[0]][0], ROOMS[t[0]][1]); g.lineTo(ROOMS[t[1]][0], ROOMS[t[1]][1]); g.stroke(); });
+  }
+  shapes(34, '#3b2f57'); shapes(18, '#55467a'); shapes(0, '#8576a3');
+  g.save(); g.globalCompositeOperation = 'source-atop';
+  for (i = 0; i < 500; i++) {
+    var x = R() * CW, y = R() * CH; g.fillStyle = R() < 0.5 ? 'rgba(255,255,255,.07)' : 'rgba(40,30,70,.12)';
+    ell(g, x, y, 14 + R() * 60, 8 + R() * 26); g.fill();
+  }
+  g.restore();
+  for (i = 0; i < 400; i++) { var px = R() * CW, py = R() * CH, q = fix1({ x: px, y: py }); if (q.x !== px || q.y !== py) continue; g.fillStyle = 'rgba(50,38,84,.45)'; ell(g, px, py, 3 + R() * 6, 2 + R() * 4); g.fill(); }
+  // подземное озеро
+  g.fillStyle = '#55467a'; ell(g, LAKE.x, LAKE.y + 5, LAKE.rx + 12, LAKE.ry + 10); g.fill();
+  var lg = g.createRadialGradient(LAKE.x - 20, LAKE.y - 14, 6, LAKE.x, LAKE.y, LAKE.rx); lg.addColorStop(0, '#b8fff6'); lg.addColorStop(1, '#2fc4c9');
+  g.fillStyle = lg; ell(g, LAKE.x, LAKE.y, LAKE.rx, LAKE.ry); g.fill();
+  // выходы: свет с улицы и лесенка наверх
+  var sg = g.createRadialGradient(EXIT_S.x, EXIT_S.y + 30, 10, EXIT_S.x, EXIT_S.y, 150); sg.addColorStop(0, 'rgba(255,250,210,.95)'); sg.addColorStop(1, 'rgba(255,250,210,0)');
+  g.fillStyle = sg; ell(g, EXIT_S.x, EXIT_S.y, 150, 110); g.fill();
+  var ng = g.createRadialGradient(EXIT_N.x, EXIT_N.y, 10, EXIT_N.x, EXIT_N.y, 130); ng.addColorStop(0, 'rgba(255,250,210,.95)'); ng.addColorStop(1, 'rgba(255,250,210,0)');
+  g.fillStyle = ng; ell(g, EXIT_N.x, EXIT_N.y, 130, 100); g.fill();
+  g.strokeStyle = '#c98f5a'; g.lineCap = 'round'; g.lineWidth = 9; g.beginPath(); g.moveTo(EXIT_N.x - 22, EXIT_N.y + 30); g.lineTo(EXIT_N.x - 22, EXIT_N.y - 80); g.moveTo(EXIT_N.x + 22, EXIT_N.y + 30); g.lineTo(EXIT_N.x + 22, EXIT_N.y - 80); g.stroke();
+  g.lineWidth = 7; for (i = 0; i < 4; i++) { g.beginPath(); g.moveTo(EXIT_N.x - 22, EXIT_N.y + 14 - i * 26); g.lineTo(EXIT_N.x + 22, EXIT_N.y + 14 - i * 26); g.stroke(); }
+}
+function buildMini() {
+  mini = document.createElement('canvas'); mini.width = 260; mini.height = 195;
+  var g = mini.getContext('2d'), k = 260 / W; g.scale(k, k);
+  g.fillStyle = '#f3d99d'; g.fill(P.sand); g.fillStyle = '#7fd070'; g.fill(P.grass);
+  g.save(); g.clip(P.grass); g.fillStyle = 'rgba(30,110,60,.4)'; ell(g, 1250, 2100, 820, 900); g.fill(); g.restore();
+  g.fillStyle = '#8a7fa0'; g.fill(P.band);
+  g.fillStyle = '#fff'; for (var mx = 300; mx < 5000; mx += 330) { if (isl(mx, bandC(mx)) < 0.9) { g.beginPath(); g.moveTo(mx - 90, bandC(mx) + 60); g.lineTo(mx, bandC(mx) - 130); g.lineTo(mx + 90, bandC(mx) + 60); g.closePath(); g.fill(); } }
+  g.fillStyle = '#ff5fa2'; ell(g, HOUSE.x, HOUSE.y - 60, 110, 110); g.fill();
+  g.fillStyle = '#231a33'; ell(g, MOUTH.x, MOUTH.y, 80, 80); g.fill(); ell(g, HOLE.x, HOLE.y, 70, 70); g.fill();
+  g.fillStyle = '#4fb9e2'; ell(g, POND.x, POND.y, 160, 110); g.fill();
+}
+
 /* =====================================================================
    СОСТОЯНИЕ ИГРЫ
    ===================================================================== */
 var screenMode = 'lobby', demo = false;
-var players = new Map(), me = null, stars = [], total = 0, parts = [], taps = [];
+var players = new Map(), me = null, stars = [], total = 0, parts = [], taps = [], pops = [];
+var album = [], chestOpen = {}, treasure = null, trShowAt = 0, radarLvl = -1, ev = null, trans = null;
 var T = 0;
 
 function mkPlayer(p) {
-  return { id: p.id, name: p.name, look: p.look, x: p.x, y: p.y, tx: p.tx, ty: p.ty, ph: 0, face: 1, mv: false, stuck: 0,
+  return { id: p.id, name: p.name, look: p.look, x: p.x, y: p.y, tx: p.tx, ty: p.ty, m: p.m | 0, ph: 0, face: 1, mv: false, stuck: 0,
     talk: false, em: null, emT: 0, seed: Math.random() * 4, rtc: '' };
 }
 function stepPlayer(e, dt) {
   var dx = e.tx - e.x, dy = e.ty - e.y, d = Math.sqrt(dx * dx + dy * dy);
   if (d < 2) { e.mv = false; return; }
   var st = Math.min(d, SPEED * dt), ox = e.x, oy = e.y;
-  e.x += dx / d * st; e.y += dy / d * st; fix(e);
+  e.x += dx / d * st; e.y += dy / d * st; fixM(e.m, e);
   var moved = Math.sqrt((e.x - ox) * (e.x - ox) + (e.y - oy) * (e.y - oy));
   if (Math.abs(dx) > 3) e.face = dx > 0 ? 1 : -1;
-  e.mv = true; e.ph += dt * 11;
+  e.mv = true; e.ph += dt * 12;
   if (moved < st * 0.25) { e.stuck += dt; if (e.stuck > 0.45) { e.tx = e.x; e.ty = e.y; e.mv = false; e.stuck = 0; if (e === me) sendMove(); } }
   else e.stuck = 0;
 }
@@ -564,12 +819,12 @@ function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
 }
-function beep(freqs, dur, vol) {
+function beep(freqs, dur, vol, type) {
   if (!AC) return;
   var t0 = AC.currentTime;
   freqs.forEach(function (f, i) {
     var o = AC.createOscillator(), g = AC.createGain();
-    o.type = 'sine'; o.frequency.value = f;
+    o.type = type || 'sine'; o.frequency.value = f;
     g.gain.setValueAtTime(0, t0 + i * dur); g.gain.linearRampToValueAtTime(vol || 0.12, t0 + i * dur + 0.015);
     g.gain.exponentialRampToValueAtTime(0.001, t0 + i * dur + dur * 1.6);
     o.connect(g); g.connect(AC.destination); o.start(t0 + i * dur); o.stop(t0 + i * dur + dur * 1.7);
@@ -582,15 +837,15 @@ function beep(freqs, dur, vol) {
 var ws = null, wsWant = false, wsTry = 0, wsOpened = false, pendingHello = null, kicked = false;
 var NOSERVER = !/^https?:$/.test(location.protocol) || !location.host;
 
-function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function send(o) { if (demo) { demoServer(o); return; } if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
 function connect() {
   wsWant = true;
   var url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
   try { ws = new WebSocket(url); } catch (e) { onWsDown(); return; }
   var sock = ws;
   sock.onopen = function () { wsTry = 0; wsOpened = true; if (pendingHello) send(pendingHello); };
-  sock.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } onMsg(m); };
-  sock.onclose = function (ev) { if (ws !== sock) return; ws = null; if (ev.code === 4001) kicked = true; onWsDown(); };
+  sock.onmessage = function (e2) { var m; try { m = JSON.parse(e2.data); } catch (e) { return; } onMsg(m); };
+  sock.onclose = function (e2) { if (ws !== sock) return; ws = null; if (e2.code === 4001) kicked = true; onWsDown(); };
   sock.onerror = function () { /* дальше придёт onclose */ };
 }
 function onWsDown() {
@@ -607,6 +862,7 @@ function disconnect() { wsWant = false; pendingHello = null; if (ws) { var s = w
 
 var ERR = { noroom: 'Такого острова нет. Проверь код.', full: 'На острове уже четверо, мест нет.', slow: 'Слишком много попыток. Подожди пару минут.', bad: 'Что-то пошло не так. Попробуй ещё раз.' };
 var ICE = [];
+function nameOf(id) { var p = players.get(id); return p ? p.name : 'Кто-то'; }
 
 function onMsg(m) {
   var p;
@@ -614,12 +870,14 @@ function onMsg(m) {
   if (m.t === 'in') {
     ICE = m.ice || [];
     players.clear(); closeAllPeers();
-    var keep = me && screenMode === 'game' ? { x: me.x, y: me.y } : null;
-    me = mkPlayer(m.you); if (keep) { me.x = me.tx = keep.x; me.y = me.ty = keep.y; }
+    var keep = me && screenMode === 'game' ? { x: me.x, y: me.y, m: me.m } : null;
+    me = mkPlayer(m.you); if (keep) { me.x = me.tx = keep.x; me.y = me.ty = keep.y; me.m = keep.m; }
     players.set(me.id, me);
     m.players.forEach(function (q) { players.set(q.id, mkPlayer(q)); });
-    stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, born: T }; });
+    stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, m: s.m | 0, k: s.k | 0, born: T }; });
     total = m.total; $('starn').textContent = total;
+    album = m.album || []; chestOpen = {}; (m.chests || []).forEach(function (id) { chestOpen[id] = true; });
+    treasure = m.tr || null; trShowAt = T + 1; ev = null;
     store.room = m.room; saveStore();
     pendingHello = { t: 'hello', id: store.id, name: store.name, look: store.look, room: m.room };
     enterGame(m.room);
@@ -632,25 +890,46 @@ function onMsg(m) {
   else if (m.t === 'pl') { p = players.get(m.id); if (p) { toast(p.name + ' ушла'); players.delete(m.id); } closePeer(m.id); }
   else if (m.t === 'mv') {
     p = players.get(m.id); if (!p) return;
+    if ((m.m | 0) !== p.m) { p.m = m.m | 0; p.x = m.x; p.y = m.y; }
     var dx = m.x - p.x, dy = m.y - p.y;
     if (dx * dx + dy * dy > 160 * 160) { p.x = m.x; p.y = m.y; }
     p.tx = m.tx; p.ty = m.ty; p.stuck = 0;
   }
-  else if (m.t === 'em') { p = players.get(m.id); if (p) { p.em = EMOTES[m.e]; p.emT = T; beep([880], 0.07, 0.07); } }
+  else if (m.t === 'em') { p = players.get(m.id); if (p) { p.em = EMOTES[m.e]; p.emT = T; if (p.m === me.m) beep([880], 0.07, 0.07); } }
   else if (m.t === 'tk') { p = players.get(m.id); if (p) p.talk = m.on; }
   else if (m.t === 'sg') { starGone(m.id, m.by === store.id); total = m.total; bumpStars(); }
-  else if (m.t === 'sn') { stars.push({ id: m.s.id, x: m.s.x, y: m.s.y, born: T }); }
+  else if (m.t === 'sn') { stars.push({ id: m.s.id, x: m.s.x, y: m.s.y, m: m.s.m | 0, k: m.s.k | 0, born: T }); }
+  else if (m.t === 'sx') { stars = stars.filter(function (s) { return m.ids.indexOf(s.id) < 0; }); }
+  else if (m.t === 'ev') { ev = { x: m.x, y: m.y, until: T + m.d }; toast('🌠 Звездопад! Беги по стрелке!'); beep([659, 784, 988, 1319], 0.1, 0.12); }
+  else if (m.t === 'dg') {
+    total = m.total; bumpStars();
+    var it = m.item >= 0 ? ALBUM[m.item] : null;
+    if (it && album.indexOf(m.item) < 0) album.push(m.item);
+    pops.push({ x: m.x, y: m.y, t: 0, e: it ? it[0] : '⭐', m: 0 });
+    burst(m.x, m.y - 40, 26);
+    toast(nameOf(m.by) + ' нашла клад' + (it ? ': ' + it[0] + ' ' + it[1] + '!' : '!') + '  +' + m.add + ' ⭐');
+    beep([523, 659, 784, 1047, 1319], 0.1, 0.14);
+    treasure = m.tr; trShowAt = T + 5; radarLvl = -1; $('dig').classList.add('hidden'); $('radar').classList.add('hidden');
+  }
+  else if (m.t === 'co') {
+    chestOpen[m.id] = true; total = m.total; bumpStars();
+    var c = CHESTS[m.id]; if (c && me.m === c.m) { burst(c.x, c.y - 50, 20); beep([659, 880, 1175], 0.09, 0.13); }
+    toast(nameOf(m.by) + ' открыла сундук!  +' + m.add + ' ⭐');
+  }
+  else if (m.t === 'cc') { delete chestOpen[m.id]; }
   else if (m.t === 'rtc') { onRtc(m.from, m.d); }
 }
 var lastMove = 0;
-function sendMove() { if (!me) return; lastMove = T; send({ t: 'mv', x: Math.round(me.x), y: Math.round(me.y), tx: Math.round(me.tx), ty: Math.round(me.ty) }); }
+function sendMove() { if (!me) return; lastMove = T; send({ t: 'mv', m: me.m, x: Math.round(me.x), y: Math.round(me.y), tx: Math.round(me.tx), ty: Math.round(me.ty) }); }
 
+function burst(x, y, n) { for (var k = 0; k < n; k++) { var a = Math.random() * 6.28, v = 80 + Math.random() * 260; parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 140, t: 0, life: 0.6 + Math.random() * 0.5, c: k % 3 === 0 ? '#fff' : (k % 3 === 1 ? '#ffd23c' : '#ff8ec0'), m: me ? me.m : 0 }); } }
 function starGone(id, mine) {
   var i = stars.findIndex(function (s) { return s.id === id; });
   if (i < 0) return;
   var s = stars[i]; stars.splice(i, 1);
-  for (var k = 0; k < 14; k++) { var a = Math.random() * 6.28, v = 80 + Math.random() * 220; parts.push({ x: s.x, y: s.y - 34, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, t: 0, life: 0.6 + Math.random() * 0.4, c: k % 2 ? '#ffd23c' : '#fff' }); }
-  if (mine) beep([784, 988, 1319], 0.08, 0.13); else beep([988], 0.08, 0.06);
+  if (!me || s.m !== me.m) return;
+  burst(s.x, s.y - 34, 12);
+  if (mine) beep(s.k ? [988, 1319, 1760] : [784, 988, 1319], 0.08, 0.13); else beep([988], 0.08, 0.05);
 }
 function bumpStars() { $('starn').textContent = total; var e = $('stars'); e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
 
@@ -690,38 +969,38 @@ function iAmCaller(id) { return store.id < id; }
 function mkPeer(id, gen) {
   var pc;
   try { pc = new RTCPeerConnection({ iceServers: ICE }); } catch (e) { return null; }
-  var P = { id: id, pc: pc, gen: gen || 0, cand: [], remote: false, audio: null, q: Promise.resolve(), born: Date.now(), dtimer: null };
+  var Pr = { id: id, pc: pc, gen: gen || 0, cand: [], remote: false, audio: null, q: Promise.resolve(), born: Date.now(), dtimer: null };
   if (mic) mic.getTracks().forEach(function (t) { pc.addTrack(t, mic); });
   else if (iAmCaller(id)) pc.addTransceiver('audio', { direction: 'recvonly' });
-  pc.onicecandidate = function (e) { if (e.candidate) send({ t: 'rtc', to: id, d: { g: P.gen, c: e.candidate } }); };
+  pc.onicecandidate = function (e) { if (e.candidate) send({ t: 'rtc', to: id, d: { g: Pr.gen, c: e.candidate } }); };
   pc.ontrack = function (e) {
-    if (!P.audio) { P.audio = document.createElement('audio'); P.audio.autoplay = true; P.audio.playsInline = true; P.audio.setAttribute('playsinline', ''); document.body.appendChild(P.audio); }
-    P.audio.srcObject = e.streams[0] || new MediaStream([e.track]);
-    var pr = P.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; });
+    if (!Pr.audio) { Pr.audio = document.createElement('audio'); Pr.audio.autoplay = true; Pr.audio.playsInline = true; Pr.audio.setAttribute('playsinline', ''); document.body.appendChild(Pr.audio); }
+    Pr.audio.srcObject = e.streams[0] || new MediaStream([e.track]);
+    var pr = Pr.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; });
   };
   pc.onconnectionstatechange = function () {
-    if (peers.get(id) !== P) return;
+    if (peers.get(id) !== Pr) return;
     var st = pc.connectionState, pl = players.get(id);
     if (pl) pl.rtc = st;
-    clearTimeout(P.dtimer);
+    clearTimeout(Pr.dtimer);
     if (st === 'failed') redoPeer(id);
-    else if (st === 'disconnected') P.dtimer = setTimeout(function () { if (peers.get(id) === P && pc.connectionState !== 'connected') redoPeer(id); }, 6000);
+    else if (st === 'disconnected') Pr.dtimer = setTimeout(function () { if (peers.get(id) === Pr && pc.connectionState !== 'connected') redoPeer(id); }, 6000);
   };
-  peers.set(id, P);
+  peers.set(id, Pr);
   var pl = players.get(id); if (pl) pl.rtc = 'new';
-  return P;
+  return Pr;
 }
-function offer(P) {
-  P.q = P.q.then(function () { return P.pc.createOffer(); })
-    .then(function (o) { return P.pc.setLocalDescription(o); })
-    .then(function () { send({ t: 'rtc', to: P.id, d: { g: P.gen, sdp: P.pc.localDescription } }); })
+function offer(Pr) {
+  Pr.q = Pr.q.then(function () { return Pr.pc.createOffer(); })
+    .then(function (o) { return Pr.pc.setLocalDescription(o); })
+    .then(function () { send({ t: 'rtc', to: Pr.id, d: { g: Pr.gen, sdp: Pr.pc.localDescription } }); })
     .catch(function (e) { console.warn('offer', e); });
 }
 function peerUp(id) {
   if (!window.RTCPeerConnection || demo) return;
   closePeer(id);
-  var P = mkPeer(id, 0);
-  if (P && iAmCaller(id)) offer(P);
+  var Pr = mkPeer(id, 0);
+  if (Pr && iAmCaller(id)) offer(Pr);
 }
 /* пересоздать соединение: решает всегда «звонящий», чтобы двое не делали это одновременно */
 function redoPeer(id, force) {
@@ -730,37 +1009,37 @@ function redoPeer(id, force) {
   if (old && !force && Date.now() - old.born < 3000) return;
   var gen = (old ? old.gen : 0) + 1;
   closePeer(id);
-  var P = mkPeer(id, gen);
-  if (!P) return;
+  var Pr = mkPeer(id, gen);
+  if (!Pr) return;
   send({ t: 'rtc', to: id, d: { g: gen, reset: true } });
-  offer(P);
+  offer(Pr);
 }
 function onRtc(from, d) {
   if (!window.RTCPeerConnection || !players.has(from)) return;
   if (d.want) { if (iAmCaller(from)) redoPeer(from, true); return; }
-  var P = peers.get(from);
+  var Pr = peers.get(from);
   if (d.reset) { if (iAmCaller(from)) return; closePeer(from); mkPeer(from, d.g | 0); return; }
-  if (!P) P = mkPeer(from, d.g | 0);
-  if (!P || (d.g | 0) !== P.gen) return;
-  var pc = P.pc;
-  P.q = P.q.then(function () {
+  if (!Pr) Pr = mkPeer(from, d.g | 0);
+  if (!Pr || (d.g | 0) !== Pr.gen) return;
+  var pc = Pr.pc;
+  Pr.q = Pr.q.then(function () {
     if (d.sdp) {
       return pc.setRemoteDescription(d.sdp).then(function () {
-        P.remote = true;
-        P.cand.splice(0).forEach(function (c) { pc.addIceCandidate(c).catch(function () {}); });
+        Pr.remote = true;
+        Pr.cand.splice(0).forEach(function (c) { pc.addIceCandidate(c).catch(function () {}); });
         if (d.sdp.type !== 'offer') return;
         return pc.createAnswer().then(function (a) { return pc.setLocalDescription(a); })
-          .then(function () { send({ t: 'rtc', to: from, d: { g: P.gen, sdp: pc.localDescription } }); });
+          .then(function () { send({ t: 'rtc', to: from, d: { g: Pr.gen, sdp: pc.localDescription } }); });
       });
     }
-    if (d.c) { if (P.remote) return pc.addIceCandidate(d.c).catch(function () {}); P.cand.push(d.c); }
+    if (d.c) { if (Pr.remote) return pc.addIceCandidate(d.c).catch(function () {}); Pr.cand.push(d.c); }
   }).catch(function (e) { console.warn('rtc', e); });
 }
 function closePeer(id) {
-  var P = peers.get(id); if (!P) return;
-  peers.delete(id); clearTimeout(P.dtimer);
-  try { P.pc.onconnectionstatechange = null; P.pc.close(); } catch (e) { /* закрыт */ }
-  if (P.audio) { P.audio.srcObject = null; P.audio.remove(); }
+  var Pr = peers.get(id); if (!Pr) return;
+  peers.delete(id); clearTimeout(Pr.dtimer);
+  try { Pr.pc.onconnectionstatechange = null; Pr.pc.close(); } catch (e) { /* закрыт */ }
+  if (Pr.audio) { Pr.audio.srcObject = null; Pr.audio.remove(); }
   var pl = players.get(id); if (pl) pl.rtc = '';
 }
 function closeAllPeers() { Array.from(peers.keys()).forEach(closePeer); }
@@ -768,7 +1047,7 @@ var needTap = false;
 function unlockAudio() {
   audioInit();
   if (!needTap) return; needTap = false;
-  peers.forEach(function (P) { if (P.audio) { var pr = P.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; }); } });
+  peers.forEach(function (Pr) { if (Pr.audio) { var pr = Pr.audio.play(); if (pr && pr.catch) pr.catch(function () { needTap = true; }); } });
 }
 
 /* =====================================================================
@@ -777,8 +1056,9 @@ function unlockAudio() {
 function showErr(s) { $('err').textContent = s || ''; }
 function busy(b) { ['play', 'create', 'enter', 'demo'].forEach(function (id) { $(id).disabled = b; }); }
 var toastT = null;
-function toast(s, sticky) { var e = $('toast'); e.textContent = s; e.classList.remove('hide'); clearTimeout(toastT); if (!sticky) toastT = setTimeout(function () { e.classList.add('hide'); }, 2600); }
+function toast(s, sticky) { var e = $('toast'); e.textContent = s; e.classList.remove('hide'); clearTimeout(toastT); if (!sticky) toastT = setTimeout(function () { e.classList.add('hide'); }, 3200); }
 
+var joinOpen = false;
 function lobbyView() {
   var has = /^\d{6}$/.test(store.room || '') && !NOSERVER;
   $('saved').classList.toggle('hidden', !has || joinOpen);
@@ -787,13 +1067,10 @@ function lobbyView() {
   $('demo').classList.toggle('hidden', !NOSERVER);
   $('savedcode').textContent = fmtCode(store.room);
 }
-var joinOpen = false;
-
-// выбор героини
 LOOKS.forEach(function (L, i) {
   var b = document.createElement('button'), c = document.createElement('canvas');
   c.width = 140; c.height = 172; b.appendChild(c);
-  var g = c.getContext('2d'); drawGirl(g, 70, 160, 1.02, L, { mv: false, t: 0.5, face: 1, seed: 2 });
+  drawGirl(c.getContext('2d'), 70, 160, 1.02, L, { mv: false, t: 0.5, face: 1, seed: 2 });
   b.onclick = function () { store.look = i; saveStore(); markLook(); };
   $('looks').appendChild(b);
 });
@@ -803,6 +1080,7 @@ $('name').value = store.name || '';
 $('name').addEventListener('input', function () { store.name = $('name').value.trim(); saveStore(); });
 $('code').addEventListener('input', function () { var d = $('code').value.replace(/\D/g, '').slice(0, 6); $('code').value = d.length > 3 ? d.slice(0, 3) + ' ' + d.slice(3) : d; });
 
+var micDenied = false;
 function start(room, create) {
   showErr(''); busy(true); audioInit();
   if (!store.name) { store.name = 'Гостья'; }
@@ -814,7 +1092,6 @@ function start(room, create) {
     if (ws && ws.readyState === 1) send(pendingHello); else if (!ws) connect();
   });
 }
-var micDenied = false;
 $('play').onclick = function () { start(store.room, false); };
 $('create').onclick = function () { start('', true); };
 $('havecode').onclick = function () { joinOpen = true; lobbyView(); showErr(''); };
@@ -831,20 +1108,22 @@ function enterGame(code) {
   var first = screenMode !== 'game';
   screenMode = 'game'; joinOpen = false; busy(false);
   $('lobby').classList.add('hidden'); $('hud').classList.remove('hidden');
-  $('codechip').textContent = demo ? 'демо без сервера' : 'остров ' + fmtCode(code);
+  $('codebtn').classList.toggle('hidden', demo);
   $('toast').classList.add('hide');
   setMic(micOn);
   if (first) {
-    cam.x = me.x; cam.y = me.y;
-    if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми 🎤 и разреши.', false);
+    cam.x = me.x; cam.y = me.y; radarLvl = -1;
+    if (micDenied && !demo) toast('Микрофон выключен — тебя не услышат. Нажми 🎤 и разреши.');
+    else toast('Ищи клад по компасу 🧭 и собирай звёздочки!');
     wakeLock();
     try { if (!demo && document.documentElement.requestFullscreen && window.matchMedia('(pointer: coarse)').matches) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) { /* не страшно */ }
   }
 }
 function leaveGame(msg) {
   disconnect(); demo = false; clearInterval(botTimer);
-  screenMode = 'lobby'; me = null; players.clear(); stars = [];
-  $('hud').classList.add('hidden'); $('modal').classList.add('hidden'); $('lobby').classList.remove('hidden');
+  screenMode = 'lobby'; me = null; players.clear(); stars = []; treasure = null; ev = null; trans = null;
+  ['hud', 'modal', 'album', 'dig', 'radar'].forEach(function (id) { $(id).classList.add('hidden'); });
+  $('lobby').classList.remove('hidden');
   busy(false); lobbyView(); showErr(msg || '');
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
 }
@@ -867,7 +1146,7 @@ EMOTES.forEach(function (e, i) {
   b.onclick = function () { unlockAudio(); if (!me) return; me.em = e; me.emT = T; send({ t: 'em', e: i }); beep([880], 0.07, 0.07); };
   $('emotes').appendChild(b);
 });
-$('codechip').onclick = function () { if (demo) return; $('modalcode').textContent = fmtCode(store.room); $('modal').classList.remove('hidden'); };
+$('codebtn').onclick = function () { $('modalcode').textContent = fmtCode(store.room); $('modal').classList.remove('hidden'); };
 $('closemodal').onclick = function () { $('modal').classList.add('hidden'); };
 $('share').onclick = function () {
   var url = location.origin + location.pathname + '?k=' + store.room;
@@ -875,13 +1154,30 @@ $('share').onclick = function () {
   if (navigator.share) navigator.share({ title: 'Остров', text: text, url: url }).catch(function () {});
   else if (navigator.clipboard) navigator.clipboard.writeText(text + '\n' + url).then(function () { toast('Ссылка скопирована'); $('modal').classList.add('hidden'); });
 };
+$('stars').onclick = function () {
+  unlockAudio();
+  $('albumn').textContent = album.length + ' из ' + ALBUM.length;
+  var g = $('albumgrid'); g.innerHTML = '';
+  ALBUM.forEach(function (a, i) {
+    var d = document.createElement('div'), has = album.indexOf(i) >= 0;
+    d.className = has ? 'yes' : 'no'; d.textContent = has ? a[0] : '?';
+    if (has) { var s = document.createElement('small'); s.textContent = a[1]; d.appendChild(s); }
+    g.appendChild(d);
+  });
+  $('album').classList.remove('hidden');
+};
+$('closealbum').onclick = function () { $('album').classList.add('hidden'); };
+$('dig').onclick = function () {
+  unlockAudio(); if (!me || !treasure || me.m !== 0) return;
+  me.tx = me.x; me.ty = me.y; sendMove(); send({ t: 'dig' });
+  $('dig').classList.add('hidden'); beep([196, 165, 196, 165], 0.09, 0.12, 'triangle');
+};
 
 var wl = null;
 function wakeLock() { try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { wl = l; }).catch(function () {}); } catch (e) { /* нет поддержки */ } }
 document.addEventListener('visibilitychange', function () { if (!document.hidden && screenMode === 'game') { wakeLock(); if (AC && AC.state === 'suspended') AC.resume(); } });
 
-/* ссылка-приглашение вида ?k=123456 */
-(function () {
+(function () { /* ссылка-приглашение вида ?k=123456 */
   var m = /[?&]k=(\d{6})/.exec(location.search);
   if (m && m[1] !== store.room) { joinOpen = true; $('code').value = m[1].slice(0, 3) + ' ' + m[1].slice(3); }
   lobbyView();
@@ -889,151 +1185,143 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 
 /* --- управление: ткнула — пошла; можно вести пальцем --- */
 var held = false, lastDragSend = 0;
-function toWorld(ev) {
+function toWorld(e) {
   var r = cv.getBoundingClientRect();
-  return { x: ((ev.clientX - r.left) * dpr - cw / 2) / scale + cam.x, y: ((ev.clientY - r.top) * dpr - ch / 2) / scale + cam.y };
+  return { x: ((e.clientX - r.left) * dpr - cw / 2) / scale + cam.x, y: ((e.clientY - r.top) * dpr - ch / 2) / scale + cam.y };
 }
-function goTo(ev, isTap) {
-  if (!me || screenMode !== 'game') return;
-  var p = fix(toWorld(ev)); fix(p);
+function goTo(e, isTap) {
+  if (!me || screenMode !== 'game' || trans) return;
+  var p = toWorld(e);
+  if (me.m === 0 && inBand(p.x, p.y)) { var c = bandC(p.x); p.y = me.y < c ? c - BAND - 2 : c + BAND + 2; } // в гору не идём — остаёмся на своей стороне
+  fixM(me.m, p); fixM(me.m, p);
   me.tx = p.x; me.ty = p.y; me.stuck = 0;
-  if (isTap) { taps.push({ x: p.x, y: p.y, t: 0 }); sendMove(); }
+  if (isTap) { taps.push({ x: p.x, y: p.y, t: 0, m: me.m }); sendMove(); }
   else if (T - lastDragSend > 0.15) { lastDragSend = T; sendMove(); }
 }
-cv.addEventListener('pointerdown', function (ev) { unlockAudio(); held = true; try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* не страшно */ } goTo(ev, true); });
-cv.addEventListener('pointermove', function (ev) { if (held) goTo(ev, false); });
+cv.addEventListener('pointerdown', function (e) { unlockAudio(); held = true; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* не страшно */ } goTo(e, true); });
+cv.addEventListener('pointermove', function (e) { if (held) goTo(e, false); });
 function up() { if (held) { held = false; sendMove(); } }
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
 document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
+/* переход между островом и пещерой */
+function travel(m, x, y) { if (trans) return; trans = { t: 0, m: m, x: x, y: y, done: false }; me.tx = me.x; me.ty = me.y; beep([330, 262], 0.12, 0.08); }
+
 /* =====================================================================
-   ДЕМО БЕЗ СЕРВЕРА (посмотреть, как выглядит)
+   ДЕМО БЕЗ СЕРВЕРА: маленький «сервер» прямо в странице
    ===================================================================== */
-var botTimer = null;
-function randSpot() { for (var i = 0; i < 200; i++) { var x = 250 + Math.random() * 1900, y = 200 + Math.random() * 1250; if (spawnOk(x, y)) return { x: x, y: y }; } return { x: 1200, y: 800 }; }
+var botTimer = null, demoSid = 1;
+function randSpot(m, south) {
+  for (var i = 0; i < 400; i++) {
+    var x = m ? Math.random() * CW : 250 + Math.random() * 4700, y = m ? Math.random() * CH : (south ? 1300 : 280) + Math.random() * (south ? 2000 : 3100);
+    if (spawnOk(m, x, y)) return { x: Math.round(x), y: Math.round(y) };
+  }
+  return { x: HOUSE.x, y: HOUSE.y + 200 };
+}
+function demoStar(m) { var s = randSpot(m); stars.push({ id: demoSid++, x: s.x, y: s.y, m: m, k: m, born: T }); }
+function demoServer(o) {
+  if (o.t === 'st') {
+    var s = stars.find(function (q) { return q.id === o.id; }); if (!s) return;
+    var mm = s.m; total += s.k ? 3 : 1; onMsg({ t: 'sg', id: o.id, by: store.id, total: total });
+    setTimeout(function () { if (demo) demoStar(mm); }, 5000);
+  } else if (o.t === 'dig') {
+    var miss = []; ALBUM.forEach(function (a, i) { if (album.indexOf(i) < 0) miss.push(i); });
+    var item = miss.length ? miss[Math.floor(Math.random() * miss.length)] : -1, add = item < 0 ? 15 : 10, old = treasure;
+    onMsg({ t: 'dg', by: store.id, x: old.x, y: old.y, item: item, add: add, total: total + add, tr: randSpot(0, album.length < 2) });
+  } else if (o.t === 'ch') { if (!chestOpen[o.id]) onMsg({ t: 'co', id: o.id, by: store.id, add: 5, total: total + 5 }); }
+}
 function startDemo() {
   demo = true; players.clear();
-  me = mkPlayer({ id: store.id, name: store.name || 'Я', look: store.look, x: 1160, y: 740, tx: 1160, ty: 740 });
+  me = mkPlayer({ id: store.id, name: store.name || 'Я', look: store.look, x: 2560, y: 2190, tx: 2560, ty: 2190 });
   players.set(me.id, me);
-  var bot = mkPlayer({ id: 'bot', name: 'Подружка', look: (store.look + 1) % 6, x: 1260, y: 760, tx: 1260, ty: 760 });
+  var bot = mkPlayer({ id: 'bot', name: 'Подружка', look: (store.look + 1) % 6, x: 2660, y: 2210, tx: 2660, ty: 2210 });
   players.set('bot', bot);
-  stars = []; var sid = 1;
-  for (var i = 0; i < 12; i++) { var s = randSpot(); stars.push({ id: sid++, x: s.x, y: s.y, born: T }); }
-  total = 0; $('starn').textContent = 0;
+  stars = []; album = []; chestOpen = {}; total = 0; $('starn').textContent = 0; ev = null;
+  for (var i = 0; i < 26; i++) demoStar(0);
+  for (i = 0; i < 9; i++) demoStar(1);
+  treasure = randSpot(0, true); trShowAt = T + 1;
   clearInterval(botTimer);
   botTimer = setInterval(function () {
     if (!demo) return;
     var r = Math.random();
-    if (r < 0.6) { var t = stars.length && Math.random() < 0.6 ? stars[Math.floor(Math.random() * stars.length)] : randSpot(); bot.tx = t.x; bot.ty = t.y; bot.stuck = 0; }
+    if (r < 0.6) { var t = { x: bot.x + (Math.random() - 0.5) * 900, y: bot.y + (Math.random() - 0.5) * 700 }; fix0(t); bot.tx = t.x; bot.ty = t.y; bot.stuck = 0; }
     else if (r < 0.8) { bot.em = EMOTES[Math.floor(Math.random() * EMOTES.length)]; bot.emT = T; }
     bot.talk = Math.random() < 0.3;
-    if (stars.length < 12) { var n = randSpot(); stars.push({ id: sid++, x: n.x, y: n.y, born: T }); }
-  }, 2200);
+  }, 2400);
   enterGame('');
 }
 
 /* =====================================================================
    КАДР
    ===================================================================== */
-var lastT = 0, lobbyA = 0;
-function frame(ts) {
-  requestAnimationFrame(frame);
-  var dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts; T += dt;
+var RADAR = ['Холодно', 'Теплее', 'Тепло', 'Горячо!', 'Копай тут!'];
+var lastTick = 0, crit = [], bats = [];
+(function () { var R = rng(21); for (var i = 0; i < 18; i++) crit.push({ hx: 1500 + R() * 2600, hy: 1400 + R() * 1600, a: R() * 6, c: ['#ff8ec0', '#ffd257', '#c9a4ff', '#fff'][i % 4] }); for (i = 0; i < 8; i++) { var r = ROOMS[i % ROOMS.length]; bats.push({ hx: r[0], hy: r[1], a: R() * 6, r: r[2] * 0.7 }); } })();
 
-  if (screenMode === 'game' && me) {
-    players.forEach(function (p) { stepPlayer(p, dt); });
-    if (me.mv && T - lastMove > 1) sendMove();
-    // сбор звёздочек
-    for (var i = stars.length - 1; i >= 0; i--) {
-      var s = stars[i];
-      if (demo) {
-        var got = null;
-        players.forEach(function (p) { var dx = p.x - s.x, dy = p.y - s.y; if (dx * dx + dy * dy < 55 * 55) got = p; });
-        if (got) { starGone(s.id, got === me); total++; bumpStars(); }
-      } else if (!s.sent) {
-        var ddx = me.x - s.x, ddy = me.y - s.y;
-        if (ddx * ddx + ddy * ddy < 55 * 55) { s.sent = true; send({ t: 'st', id: s.id }); }
-      }
+function logic(dt) {
+  players.forEach(function (p) { stepPlayer(p, dt); });
+  if (me.mv && T - lastMove > 1) sendMove();
+  var i, s, dx, dy;
+  if (!trans) {
+    // звёздочки и самоцветы
+    for (i = stars.length - 1; i >= 0; i--) {
+      s = stars[i]; if (s.sent || s.m !== me.m) continue;
+      dx = me.x - s.x; dy = me.y - s.y;
+      if (dx * dx + dy * dy < 55 * 55) { s.sent = true; send({ t: 'st', id: s.id }); }
     }
-    cam.x += (me.x - cam.x) * Math.min(1, dt * 6); cam.y += (me.y - 40 - cam.y) * Math.min(1, dt * 6);
-  } else {
-    lobbyA += dt * 0.12; cam.x = CX + Math.cos(lobbyA) * 260; cam.y = CY + Math.sin(lobbyA) * 150;
-  }
-  var vw = cw / scale, vh = ch / scale;
-  cam.x = vw >= W + 300 ? W / 2 : Math.max(-150 + vw / 2, Math.min(W + 150 - vw / 2, cam.x));
-  cam.y = vh >= H + 300 ? H / 2 : Math.max(-150 + vh / 2, Math.min(H + 150 - vh / 2, cam.y));
-
-  // море
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  var sea = ctx.createLinearGradient(0, 0, 0, ch); sea.addColorStop(0, '#5fd0ee'); sea.addColorStop(1, '#3bb0de');
-  ctx.fillStyle = sea; ctx.fillRect(0, 0, cw, ch);
-  ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale);
-  var x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
-  // волны
-  ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-  var gy0 = Math.floor(y0 / 110) * 110, gx0 = Math.floor(x0 / 230) * 230;
-  for (var wy = gy0; wy < y0 + vh + 110; wy += 110) {
-    for (var wx = gx0; wx < x0 + vw + 230; wx += 230) {
-      var hsh = Math.sin(wx * 12.9898 + wy * 78.233) * 43758.5453; hsh -= Math.floor(hsh);
-      var px = wx + hsh * 150 + Math.sin(T * 0.7 + hsh * 6) * 16, py = wy + hsh * 70;
-      if (inIsl(px + 20, py, 1.06)) continue;
-      ctx.globalAlpha = 0.45 + 0.4 * Math.sin(T * 1.3 + hsh * 9);
-      ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + 11, py - 9, px + 22, py); ctx.quadraticCurveTo(px + 33, py - 9, px + 44, py); ctx.stroke();
-    }
-  }
-  ctx.globalAlpha = 1;
-  // пена у берега
-  ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 + 0.25 * Math.sin(T * 1.6)) + ')'; ctx.lineWidth = 7;
-  pathIsland(ctx, 1, 16 + Math.sin(T * 1.6) * 9); ctx.stroke();
-  ctx.drawImage(ground, 0, 0, W, H);
-
-  // точка, куда идём
-  for (var ti = taps.length - 1; ti >= 0; ti--) {
-    var tp = taps[ti]; tp.t += dt; if (tp.t > 0.5) { taps.splice(ti, 1); continue; }
-    ctx.strokeStyle = 'rgba(255,255,255,' + (1 - tp.t * 2) + ')'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.ellipse(tp.x, tp.y, 14 + tp.t * 70, (14 + tp.t * 70) * 0.45, 0, 0, 6.29); ctx.stroke();
-  }
-
-  // всё, что стоит на земле, рисуем по порядку «дальше — ближе»
-  var list = [];
-  TREES.forEach(function (t) { list.push({ y: t[1], k: 'tree' + t[2], x: t[0] }); });
-  BUSHES.forEach(function (b) { list.push({ y: b[1], k: 'bush', x: b[0] }); });
-  ROCKS.forEach(function (r) { list.push({ y: r[1], k: 'rock', x: r[0] }); });
-  list.push({ y: HOUSE.y, k: 'house', x: HOUSE.x }, { y: SHOP.y, k: 'shop', x: SHOP.x }, { y: SWING.y, k: 'swing', x: SWING.x }, { y: BENCH.y, k: 'bench', x: BENCH.x });
-  stars.forEach(function (s) { list.push({ y: s.y, star: s }); });
-  players.forEach(function (p) { list.push({ y: p.y, pl: p }); });
-  list.sort(function (a, b) { return a.y - b.y; });
-  for (var li = 0; li < list.length; li++) {
-    var o = list[li];
-    if (o.x !== undefined && (o.x < x0 - 220 || o.x > x0 + vw + 220 || o.y < y0 - 60 || o.y > y0 + vh + 400)) continue;
-    if (o.k) drawSpr(o.k, o.x, o.y);
-    else if (o.star) {
-      var st = o.star, age = Math.min(1, (T - st.born) * 2.5), bobS = Math.sin(T * 3 + st.id) * 6;
-      ctx.fillStyle = 'rgba(30,60,40,.18)'; ell(ctx, st.x, st.y, 20 * age, 6 * age); ctx.fill();
-      drawSpr('star', st.x, st.y - 38 + bobS, age * (0.62 + 0.04 * Math.sin(T * 5 + st.id)));
+    // сундуки
+    CHESTS.forEach(function (c) { if (c.m === me.m && !chestOpen[c.id] && !c.sentAt && d2(me.x, me.y, c.x, c.y) < 95 * 95) { c.sentAt = T; send({ t: 'ch', id: c.id }); } if (c.sentAt && T - c.sentAt > 3) c.sentAt = 0; });
+    // входы и выходы пещеры
+    if (me.m === 0) {
+      if (d2(me.x, me.y, MOUTH.x, MOUTH.y + 24) < 50 * 50) travel(1, EXIT_S.x, EXIT_S.y - 110);
+      else if (d2(me.x, me.y, HOLE.x, HOLE.y) < 44 * 44) travel(1, EXIT_N.x, EXIT_N.y + 100);
     } else {
-      var p = o.pl;
-      drawGirl(ctx, p.x, p.y, 1, LOOKS[p.look] || LOOKS[0], { mv: p.mv, ph: p.ph, t: T, face: p.face, seed: p.seed, talk: p.talk });
+      if (d2(me.x, me.y, EXIT_S.x, EXIT_S.y) < 46 * 46) travel(0, MOUTH.x, MOUTH.y + 120);
+      else if (d2(me.x, me.y, EXIT_N.x, EXIT_N.y) < 46 * 46) travel(0, HOLE.x, HOLE.y - 110);
     }
+  } else {
+    trans.t += dt;
+    if (!trans.done && trans.t > 0.35) {
+      trans.done = true; me.m = trans.m; me.x = me.tx = trans.x; me.y = me.ty = trans.y; cam.x = me.x; cam.y = me.y; sendMove();
+      if (me.m === 1) toast('Пещера! Тут темно, держитесь вместе 💎'); else if (me.y < 900) toast('Тайная бухта! 🏝');
+    }
+    if (trans.t > 0.7) trans = null;
   }
-  // искры
-  for (var pi = parts.length - 1; pi >= 0; pi--) {
-    var q = parts[pi]; q.t += dt; if (q.t > q.life) { parts.splice(pi, 1); continue; }
-    q.vy += 500 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
-    ctx.globalAlpha = 1 - q.t / q.life; starPath(ctx, q.x, q.y, 9, 4, q.t * 8); ctx.fillStyle = q.c; ctx.fill();
+  // компас клада
+  var lvl = -1;
+  if (treasure && me.m === 0 && T > trShowAt) {
+    var d = Math.sqrt(d2(me.x, me.y, treasure.x, treasure.y));
+    lvl = d < 110 ? 4 : d < 380 ? 3 : d < 850 ? 2 : d < 1600 ? 1 : 0;
+    var gap = [2.4, 1.5, 0.9, 0.45, 0.22][lvl];
+    if (me.mv && T - lastTick > gap) { lastTick = T; beep([500 + lvl * 170], 0.04, 0.035); }
   }
-  ctx.globalAlpha = 1;
-  // подписи, речь, смайлики — поверх всего
+  if (lvl !== radarLvl) {
+    radarLvl = lvl; var r = $('radar');
+    r.classList.toggle('hidden', lvl < 0); r.className = 'chip' + (lvl < 0 ? ' hidden' : ' r' + lvl);
+    if (lvl >= 0) $('radartx').textContent = RADAR[lvl];
+    $('dig').classList.toggle('hidden', lvl !== 4);
+    if (lvl === 4) beep([880, 1175], 0.08, 0.1);
+  }
+  if (ev && T > ev.until) ev = null;
+  cam.x += (me.x - cam.x) * Math.min(1, dt * 6); cam.y += (me.y - 40 - cam.y) * Math.min(1, dt * 6);
+}
+
+function drawLabels() {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  pops.forEach(function (pp) { // найденное сокровище всплывает поверх всего
+    if (pp.m !== (me ? me.m : 0) || pp.t < 0.3) return;
+    var k = Math.min(1, (pp.t - 0.3) * 3), py = pp.y - 120 - Math.min(70, (pp.t - 0.3) * 90);
+    ctx.globalAlpha = pp.t > 3 ? Math.max(0, 1 - (pp.t - 3)) : 1;
+    ctx.fillStyle = '#fff'; ell(ctx, pp.x, py, 52 * k, 52 * k); ctx.fill();
+    ctx.font = Math.round(62 * k) + 'px system-ui, sans-serif'; ctx.fillText(pp.e, pp.x, py + 4); ctx.globalAlpha = 1;
+  });
   players.forEach(function (p) {
+    if (p.m !== (me ? me.m : 0)) return;
     ctx.font = '800 21px ui-rounded, system-ui, sans-serif';
     var tw = ctx.measureText(p.name).width, bw = tw + 30 + (p !== me ? 18 : 0), by = p.y - 172;
-    ctx.fillStyle = p === me ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.82)'; rr(ctx, p.x - bw / 2, by - 16, bw, 32, 16); ctx.fill();
+    ctx.fillStyle = p === me ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.85)'; rr(ctx, p.x - bw / 2, by - 16, bw, 32, 16); ctx.fill();
     ctx.fillStyle = '#4a3560'; ctx.fillText(p.name, p.x + (p !== me ? 9 : 0), by + 1);
-    if (p !== me && !demo) { // огонёк голосовой связи
-      ctx.fillStyle = p.rtc === 'connected' ? '#43c463' : (p.rtc === 'failed' ? '#e2447a' : '#f0a92b');
-      ell(ctx, p.x - bw / 2 + 16, by, 6, 6); ctx.fill();
-    }
+    if (p !== me && !demo) { ctx.fillStyle = p.rtc === 'connected' ? '#43c463' : (p.rtc === 'failed' ? '#e2447a' : '#f0a92b'); ell(ctx, p.x - bw / 2 + 16, by, 6, 6); ctx.fill(); }
     if (p.talk) {
       ctx.strokeStyle = '#43c463'; ctx.lineWidth = 4; ctx.lineCap = 'round';
       for (var k = 0; k < 3; k++) { var a = 0.5 + 0.5 * Math.sin(T * 9 - k * 1.1); ctx.globalAlpha = 0.35 + 0.65 * a; ctx.beginPath(); ctx.arc(p.x + 30, p.y - 104, 12 + k * 9, -0.6, 0.6); ctx.stroke(); }
@@ -1049,8 +1337,206 @@ function frame(ts) {
     }
   });
 }
+function drawSorted(list, x0, y0, vw, vh, curMap) {
+  var vis = [], i, o;
+  for (i = 0; i < list.length; i++) { o = list[i]; if (o.x > x0 - 260 && o.x < x0 + vw + 260 && o.y > y0 - 40 && o.y < y0 + vh + o.h) vis.push(o); }
+  stars.forEach(function (s) { if (s.m === curMap) vis.push({ y: s.y, star: s }); });
+  players.forEach(function (p) { if (p.m === curMap) vis.push({ y: p.y, pl: p }); });
+  pops.forEach(function (p) { if (p.m === curMap) vis.push({ y: p.y + 1, pop: p }); });
+  vis.sort(function (a, b) { return a.y - b.y; });
+  for (i = 0; i < vis.length; i++) {
+    o = vis[i];
+    if (o.k) drawSpr(o.k, o.x, o.y + (o.ay || 0), o.s);
+    else if (o.chest !== undefined) drawSpr('chest' + (chestOpen[o.chest] ? 1 : 0), o.x, o.y, chestOpen[o.chest] ? 1 : 1 + 0.04 * Math.sin(T * 4));
+    else if (o.star) {
+      var st = o.star, age = Math.min(1, (T - st.born) * 2.5), bobS = Math.sin(T * 3 + st.id) * 6;
+      ctx.fillStyle = 'rgba(30,60,40,.18)'; ell(ctx, st.x, st.y, 20 * age, 6 * age); ctx.fill();
+      drawSpr(st.k ? 'gem' : 'star', st.x, st.y - 38 + bobS, age * (0.62 + 0.04 * Math.sin(T * 5 + st.id)));
+    } else if (o.pop) {
+      var pp = o.pop, k = Math.min(1, pp.t * 4);
+      drawSpr('chest1', pp.x, pp.y, k * 1.1);
+    } else {
+      var p = o.pl;
+      drawGirl(ctx, p.x, p.y, 1, LOOKS[p.look] || LOOKS[0], { mv: p.mv, ph: p.ph, t: T, face: p.face, seed: p.seed, talk: p.talk });
+    }
+  }
+}
+function drawParts(dt, curMap) {
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var q = parts[i]; q.t += dt; if (q.t > q.life) { parts.splice(i, 1); continue; }
+    q.vy += 500 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
+    if (q.m !== curMap) continue;
+    ctx.globalAlpha = 1 - q.t / q.life; starPath(ctx, q.x, q.y, 9, 4, q.t * 8); ctx.fillStyle = q.c; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for (i = taps.length - 1; i >= 0; i--) {
+    var tp = taps[i]; tp.t += dt; if (tp.t > 0.5) { taps.splice(i, 1); continue; }
+    if (tp.m !== curMap) continue;
+    ctx.strokeStyle = 'rgba(255,255,255,' + (1 - tp.t * 2) + ')'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.ellipse(tp.x, tp.y, 14 + tp.t * 70, (14 + tp.t * 70) * 0.45, 0, 0, 6.29); ctx.stroke();
+  }
+  for (i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t > 4) pops.splice(i, 1); }
+}
 
-buildGround(); buildSprites();
+function drawIsland(dt, x0, y0, vw, vh) {
+  var sea = ctx.createLinearGradient(0, 0, 0, ch); sea.addColorStop(0, '#5fd0ee'); sea.addColorStop(1, '#3bb0de');
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = sea; ctx.fillRect(0, 0, cw, ch);
+  ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale);
+  // волны
+  ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  var gy0 = Math.floor(y0 / 110) * 110, gx0 = Math.floor(x0 / 230) * 230, wx, wy;
+  for (wy = gy0; wy < y0 + vh + 110; wy += 110) for (wx = gx0; wx < x0 + vw + 230; wx += 230) {
+    var hsh = Math.sin(wx * 12.9898 + wy * 78.233) * 43758.5453; hsh -= Math.floor(hsh);
+    var px = wx + hsh * 150 + Math.sin(T * 0.7 + hsh * 6) * 16, py = wy + hsh * 70;
+    if (isl(px + 20, py) < 1.08 || (px > PIER.x0 - 70 && px < PIER.x1 + 20 && py < PIER.y1 + 30 && py > SAND_BOTTOM - 40)) continue;
+    ctx.globalAlpha = 0.45 + 0.4 * Math.sin(T * 1.3 + hsh * 9);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + 11, py - 9, px + 22, py); ctx.quadraticCurveTo(px + 33, py - 9, px + 44, py); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(170,240,250,.35)'; ctx.fill(P.sh2);
+  ctx.fillStyle = 'rgba(200,248,252,.5)'; ctx.fill(P.sh1);
+  ctx.strokeStyle = 'rgba(255,255,255,' + (0.45 + 0.25 * Math.sin(T * 1.6)) + ')'; ctx.lineWidth = 16 + Math.sin(T * 1.6) * 8; ctx.stroke(P.sand);
+  // песок, трава, лес, горы
+  ctx.fillStyle = '#f7e3b4'; ctx.fill(P.sand);
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 8; ctx.stroke(P.sand);
+  ctx.fillStyle = '#58b060'; ctx.fill(P.grassE);
+  var gg = ctx.createLinearGradient(0, 300, 0, 3400); gg.addColorStop(0, '#a5e684'); gg.addColorStop(1, '#6cc56a');
+  ctx.fillStyle = gg; ctx.fill(P.grass);
+  ctx.drawImage(SPR.tint.c, 1250 - 780, 2100 - 780, 1560, 1560); // лес потемнее
+  ctx.fillStyle = '#a2978f'; ctx.fill(P.band);
+  ctx.strokeStyle = '#b8ac9c'; ctx.lineWidth = 26; ctx.lineJoin = 'round'; ctx.stroke(P.band);
+  // тропинки
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  P.trails.forEach(function (t) { ctx.strokeStyle = '#d9b877'; ctx.lineWidth = t.w + 10; ctx.stroke(t.p); });
+  P.trails.forEach(function (t) { ctx.strokeStyle = '#f2dcab'; ctx.lineWidth = t.w; ctx.stroke(t.p); });
+  // полянка в лесу
+  ctx.fillStyle = 'rgba(190,240,140,.45)'; ell(ctx, CLEAR.x, CLEAR.y, CLEAR.r, CLEAR.r * 0.72); ctx.fill();
+  // пруд
+  if (POND.x > x0 - 250 && POND.x < x0 + vw + 250 && POND.y > y0 - 200 && POND.y < y0 + vh + 200) {
+    ctx.fillStyle = '#58b060'; ell(ctx, POND.x, POND.y + 6, POND.rx + 12, POND.ry + 10); ctx.fill();
+    ctx.fillStyle = '#e9d6a3'; ell(ctx, POND.x, POND.y, POND.rx + 8, POND.ry + 6); ctx.fill();
+    var pg = ctx.createRadialGradient(POND.x - 30, POND.y - 30, 10, POND.x, POND.y, POND.rx); pg.addColorStop(0, '#aeeaf7'); pg.addColorStop(1, '#4fb9e2');
+    ctx.fillStyle = pg; ell(ctx, POND.x, POND.y, POND.rx, POND.ry); ctx.fill();
+    [[-70, 30], [60, 44], [20, -44], [104, -5]].forEach(function (l, n) {
+      ctx.fillStyle = '#4fb565'; ctx.beginPath(); ctx.moveTo(POND.x + l[0], POND.y + l[1]); ctx.arc(POND.x + l[0], POND.y + l[1], 20, 0.4, Math.PI * 2 - 0.1); ctx.closePath(); ctx.fill();
+      if (n % 2 === 0) drawSpr('d0', POND.x + l[0] + 3, POND.y + l[1] - 3, 1.2);
+    });
+  }
+  // пирс
+  if (y0 + vh > SAND_BOTTOM - 80 && x0 < PIER.x1 + 40 && x0 + vw > PIER.x0 - 40) {
+    var py0 = SAND_BOTTOM - 46, yy;
+    ctx.fillStyle = 'rgba(40,90,120,.22)'; rr(ctx, PIER.x0 - 6, SAND_BOTTOM - 10, 112, PIER.y1 - SAND_BOTTOM + 24, 10); ctx.fill();
+    ctx.fillStyle = '#8a5a3a';
+    for (yy = py0 + 60; yy < PIER.y1; yy += 78) { rr(ctx, PIER.x0 - 10, yy, 14, 30, 5); ctx.fill(); rr(ctx, PIER.x1 - 4, yy, 14, 30, 5); ctx.fill(); }
+    ctx.fillStyle = '#c98f5a'; rr(ctx, PIER.x0, py0, PIER.x1 - PIER.x0, PIER.y1 - py0, 12); ctx.fill();
+    ctx.strokeStyle = '#a66f42'; ctx.lineWidth = 3;
+    for (yy = py0 + 22; yy < PIER.y1 - 6; yy += 22) { ctx.beginPath(); ctx.moveTo(PIER.x0 + 3, yy); ctx.lineTo(PIER.x1 - 3, yy); ctx.stroke(); }
+  }
+  // цветы, грибы, ракушки
+  for (var i = 0; i < DECOR.length; i++) { var d = DECOR[i]; if (d[0] > x0 - 20 && d[0] < x0 + vw + 20 && d[1] > y0 - 20 && d[1] < y0 + vh + 30) drawSpr('d' + d[2], d[0], d[1]); }
+  // место звездопада
+  if (ev) { ctx.fillStyle = 'rgba(255,240,150,' + (0.16 + 0.1 * Math.sin(T * 5)) + ')'; ell(ctx, ev.x, ev.y, 420, 300); ctx.fill(); }
+  drawSorted(OBJ0, x0, y0, vw, vh, 0);
+  // бабочки
+  crit.forEach(function (b, n) {
+    b.a += dt * (0.5 + n % 3 * 0.2); var bx = b.hx + Math.cos(b.a) * 150 + Math.sin(b.a * 2.3) * 60, by = b.hy + Math.sin(b.a * 1.3) * 100 - 60;
+    if (bx < x0 - 30 || bx > x0 + vw + 30 || by < y0 - 30 || by > y0 + vh + 30) return;
+    var f = Math.abs(Math.sin(T * 14 + n)) * 9 + 2; ctx.fillStyle = b.c;
+    ctx.beginPath(); ctx.ellipse(bx - f / 2, by, f, 9, -0.4, 0, 6.29); ctx.ellipse(bx + f / 2, by, f, 9, 0.4, 0, 6.29); ctx.fill();
+    ctx.fillStyle = '#4a3560'; ell(ctx, bx, by, 1.8, 6); ctx.fill();
+  });
+  if (ev && Math.random() < 0.5) parts.push({ x: ev.x + (Math.random() - 0.5) * 700, y: ev.y - 500 - Math.random() * 200, vx: -60, vy: 500, t: 0, life: 0.9, c: '#fff3a0', m: 0 });
+}
+
+function drawCave(dt, x0, y0, vw, vh) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120e1f'; ctx.fillRect(0, 0, cw, ch);
+  ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale);
+  ctx.drawImage(caveGround, 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + 0.15 * Math.sin(T * 2)) + ')'; ctx.beginPath(); ctx.ellipse(LAKE.x - 20, LAKE.y - 12, 40, 14, -0.2, 0, 6.29); ctx.fill();
+  drawSorted(OBJ1, x0, y0, vw, vh, 1);
+  bats.forEach(function (b, n) {
+    b.a += dt * (0.9 + n % 3 * 0.3); var bx = b.hx + Math.cos(b.a) * b.r, by = b.hy + Math.sin(b.a * 1.7) * b.r * 0.6 - 90, f = Math.sin(T * 16 + n) * 10;
+    ctx.fillStyle = '#2a2140'; ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx - 16, by - 14 - f, bx - 30, by + f * 0.5); ctx.quadraticCurveTo(bx - 14, by + 2, bx, by + 8);
+    ctx.quadraticCurveTo(bx + 14, by + 2, bx + 30, by + f * 0.5); ctx.quadraticCurveTo(bx + 16, by - 14 - f, bx, by); ctx.fill();
+  });
+}
+function drawDark() { // темнота с кругами света
+  var s2 = scale / 2, ox = dk.width / 2 - cam.x * s2, oy = dk.height / 2 - cam.y * s2;
+  dctx.setTransform(1, 0, 0, 1, 0, 0); dctx.globalCompositeOperation = 'source-over';
+  dctx.clearRect(0, 0, dk.width, dk.height); dctx.fillStyle = 'rgba(10,7,26,.95)'; dctx.fillRect(0, 0, dk.width, dk.height);
+  dctx.globalCompositeOperation = 'destination-out'; dctx.setTransform(s2, 0, 0, s2, ox, oy);
+  function light(x, y, r, a) {
+    var g = dctx.createRadialGradient(x, y, r * 0.15, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    dctx.fillStyle = g; dctx.beginPath(); dctx.arc(x, y, r, 0, 6.29); dctx.fill();
+  }
+  players.forEach(function (p) { if (p.m === 1) light(p.x, p.y - 50, 330 + Math.sin(T * 3 + p.seed) * 8, 1); });
+  CRYST.forEach(function (c, i) { light(c.x, c.y - 40, 130 + Math.sin(T * 2 + i) * 14, 0.55); });
+  stars.forEach(function (s) { if (s.m === 1) light(s.x, s.y - 30, 90, 0.6); });
+  CHESTS.forEach(function (c) { if (c.m === 1) light(c.x, c.y - 30, chestOpen[c.id] ? 170 : 110, 0.6); });
+  light(LAKE.x, LAKE.y, 250, 0.7); light(EXIT_S.x, EXIT_S.y, 250, 0.9); light(EXIT_N.x, EXIT_N.y, 230, 0.9);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(dk, 0, 0, cw, ch);
+}
+/* стрелка к тому, чего не видно на экране */
+function edgeArrow(wx, wy, col, txt, inset) {
+  var sx = (wx - cam.x) * scale + cw / 2, sy = (wy - cam.y) * scale + ch / 2;
+  if (sx > 20 * dpr && sx < cw - 20 * dpr && sy > 20 * dpr && sy < ch - 20 * dpr) return;
+  var mx = (64 + (inset || 0)) * dpr, mt = (118 + (inset || 0)) * dpr, mb = (176 + (inset || 0)) * dpr;
+  var dx = sx - cw / 2, dy = sy - ch / 2, k = Math.min((cw / 2 - mx) / Math.abs(dx || 1), (ch / 2 - (dy < 0 ? mt : mb)) / Math.abs(dy || 1));
+  var x = cw / 2 + dx * k, y = ch / 2 + dy * k, a = Math.atan2(dy, dx), r = 26 * dpr;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r + 4 * dpr, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (r + 20 * dpr), y + Math.sin(a) * (r + 20 * dpr)); ctx.lineTo(x + Math.cos(a + 0.6) * r, y + Math.sin(a + 0.6) * r); ctx.lineTo(x + Math.cos(a - 0.6) * r, y + Math.sin(a - 0.6) * r); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '800 ' + Math.round(24 * dpr) + 'px ui-rounded, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x, y + 1 * dpr);
+}
+function drawHudCanvas() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // где подруга, если она на другой карте
+  var lines = [];
+  players.forEach(function (p) { if (p !== me && p.m !== me.m) lines.push(p.name + (p.m ? ' в пещере 💎' : (p.y < 900 ? ' в тайной бухте 🏝' : ' на острове 🌳'))); });
+  if (lines.length) {
+    ctx.font = '800 ' + Math.round(17 * dpr) + 'px ui-rounded, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var tx = lines.join('   '), tw = ctx.measureText(tx).width + 28 * dpr, ty = ch - 104 * dpr;
+    ctx.fillStyle = 'rgba(74,53,96,.85)'; rr(ctx, cw / 2 - tw / 2, ty - 17 * dpr, tw, 34 * dpr, 17 * dpr); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillText(tx, cw / 2, ty + 1);
+  }
+  if (me.m === 0) {
+    // мини-карта
+    var mw = 150 * dpr, mh = mw * 0.75, mx = 12 * dpr, my = 80 * dpr, k = mw / W;
+    ctx.fillStyle = 'rgba(255,252,248,.9)'; rr(ctx, mx - 5 * dpr, my - 5 * dpr, mw + 10 * dpr, mh + 10 * dpr, 16 * dpr); ctx.fill();
+    ctx.fillStyle = '#5fc8ea'; rr(ctx, mx, my, mw, mh, 12 * dpr); ctx.fill();
+    ctx.drawImage(mini, mx, my, mw, mh);
+    if (ev) { ctx.font = Math.round(16 * dpr) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🌠', mx + ev.x * k, my + ev.y * k); }
+    players.forEach(function (p) {
+      if (p.m !== 0) return;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx + p.x * k, my + p.y * k, (p === me ? 6.5 : 5.5) * dpr, 0, 6.29); ctx.fill();
+      ctx.fillStyle = (LOOKS[p.look] || LOOKS[0]).dress2; ctx.beginPath(); ctx.arc(mx + p.x * k, my + p.y * k, (p === me ? 4.5 : 3.8) * dpr, 0, 6.29); ctx.fill();
+    });
+    if (ev) edgeArrow(ev.x, ev.y, '#f5a623', '★', 62);
+  }
+  players.forEach(function (p) { if (p !== me && p.m === me.m) edgeArrow(p.x, p.y - 60, (LOOKS[p.look] || LOOKS[0]).dress2, (p.name || '?').charAt(0).toUpperCase()); });
+  if (trans) { ctx.fillStyle = 'rgba(8,6,20,' + Math.min(1, trans.t < 0.35 ? trans.t / 0.3 : (0.7 - trans.t) / 0.3) + ')'; ctx.fillRect(0, 0, cw, ch); }
+}
+
+var lastT = 0, lobbyA = 0;
+function frame(ts) {
+  requestAnimationFrame(frame);
+  var dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts; T += dt;
+  var inGame = screenMode === 'game' && me, curMap = inGame ? me.m : 0;
+  if (inGame) { logic(dt); curMap = me.m; }
+  else { lobbyA += dt * 0.1; cam.x = HOUSE.x + Math.cos(lobbyA) * 420; cam.y = HOUSE.y + 150 + Math.sin(lobbyA) * 240; }
+  var vw = cw / scale, vh = ch / scale, mw = curMap ? CW : W, mh = curMap ? CH : H, pad = curMap ? 60 : 150;
+  cam.x = vw >= mw + pad * 2 ? mw / 2 : Math.max(-pad + vw / 2, Math.min(mw + pad - vw / 2, cam.x));
+  cam.y = vh >= mh + pad * 2 ? mh / 2 : Math.max(-pad + vh / 2, Math.min(mh + pad - vh / 2, cam.y));
+  var x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
+  if (curMap) drawCave(dt, x0, y0, vw, vh); else drawIsland(dt, x0, y0, vw, vh);
+  drawParts(dt, curMap);
+  if (curMap) { drawDark(); ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale); }
+  drawLabels();
+  if (inGame) drawHudCanvas();
+}
+
+buildSprites(); buildObjects(); buildCave(); buildMini();
 requestAnimationFrame(frame);
 </script>
 </body>
