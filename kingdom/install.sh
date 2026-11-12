@@ -63,7 +63,7 @@ location ^~ /kingdom/ {
 NGINX
 
 # какие файлы настроек отвечают за $DOMAIN
-mapfile -t FILES < <(grep -rlE "server_name[^;]*[[:space:]]$DOMAIN([[:space:]]|;)" /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | xargs -r -n1 readlink -f | sort -u)
+mapfile -t FILES < <(grep -RlE "server_name[^;]*[[:space:]]$DOMAIN([[:space:]]|;)" /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | xargs -r -n1 readlink -f | sort -u)
 [ "${#FILES[@]}" -gt 0 ] || stop "Не нашёл в nginx сайт $DOMAIN."
 STAMP="$(date +%s)"
 for f in "${FILES[@]}"; do cp -p "$f" "$f.before-kingdom.$STAMP"; done
