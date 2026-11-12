@@ -493,3 +493,5 @@ svg.staff .clef { fill: none; stroke: var(--berry); stroke-width: 6; stroke-line
 .board.g3 .arrows { flex-wrap: wrap; justify-content: center; max-width: 420px; }
 .board.g3 .arrows i { font-size: 46px; width: 58px; height: 58px; }
 .board.g3 .opts:has(.wordc) > .card:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; }
+.gate p small { display: block; font-size: 22px; opacity: .75; margin-top: 6px; }
+.gate .g-row { display: flex; gap: 14px; }

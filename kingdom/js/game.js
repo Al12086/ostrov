@@ -9,7 +9,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const sample = (a, n) => shuffle(a).slice(0, n);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const APP_VER = 31;   // номер версии виден в разделе «Для родителей»
+const APP_VER = 32;   // номер версии виден в разделе «Для родителей»
 const FAST = /[?&]fast\b/.test(location.search);   // режим автопроверки: без голоса и пауз
 
 /* ---------- состояние ---------- */
@@ -20,7 +20,7 @@ const DEF = () => ({
   wear: { dress: 'rose', crown: 'simple', acc: 'none', pet: 'none' },
   owned: ['rose', 'simple', 'none'],
   stars: {}, wallet: 0, stats: {}, seen: {},
-  set: { limit: 20, pause: 60, music: true, rate: 0.9, voiceName: '', special: 0 },
+  set: { limit: 20, pause: 60, music: true, rate: 0.9, voiceName: '', special: 0, pin: '' },
   grade: 0,                                // 0 — дошкольник, 3 — третий класс
   day: { d: '', ms: 0 },
   sk: {},                                  // навыки тренажёра: уровень, сколько решено, последние ответы
@@ -624,14 +624,24 @@ function finishLevel() {
 
 /* ---------- для родителей ---------- */
 let gate = null, pTab = 'progress';
-function gateScreen() {
-  const g3 = S.grade === 3, a = g3 ? 11 + Math.floor(Math.random() * 9) : 6 + Math.floor(Math.random() * 4), b = g3 ? 12 + Math.floor(Math.random() * 8) : 6 + Math.floor(Math.random() * 4);   // третьеклассница таблицу умножения знает
-  gate = { ans: String(a * b), val: '' };
+/* Вход для взрослых. Дошкольнику хватает примера на умножение. Третьеклассница его решит,
+   поэтому в 3 классе — ПИН-код, который взрослые придумывают сами; забыли — длинный пример. */
+function gateScreen(mode) {
+  const g3 = S.grade === 3;
+  mode = mode || (!g3 ? 'math' : S.set.pin ? 'pin' : 'new');
+  let q, ans = '';
+  if (mode === 'math' || mode === 'hard') {
+    const hard = mode === 'hard', a = hard ? 23 + Math.floor(Math.random() * 60) : 6 + Math.floor(Math.random() * 4), b = hard ? 13 + Math.floor(Math.random() * 7) : 6 + Math.floor(Math.random() * 4);
+    q = `Сколько будет ${a} × ${b}?`; ans = String(a * b);
+  } else if (mode === 'pin') q = 'Введите ПИН-код для взрослых';
+  else if (mode === 'new') q = 'Придумайте ПИН-код из 4 цифр.<br><small>Его будут знать только взрослые: он закрывает настройки от ребёнка.</small>';
+  else q = 'Повторите ПИН-код';
+  gate = { mode, ans, val: '', first: gate && gate.mode === 'new' ? gate.val : '' };
   modal.className = 'open';
-  modal.innerHTML = `<div class="panel gate"><h2>Для взрослых</h2><p>Сколько будет ${a} × ${b}?</p>
+  modal.innerHTML = `<div class="panel gate"><h2>Для взрослых</h2><p>${q}</p>
     <div class="g-val" id="gval">&nbsp;</div>
     <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<button data-act="gk" data-d="${d}">${d}</button>`).join('')}</div>
-    <button class="chip" data-act="closeModal">Закрыть</button></div>`;
+    <div class="g-row">${mode === 'pin' ? '<button class="chip" data-act="gforgot">Забыли ПИН?</button>' : ''}<button class="chip" data-act="closeModal">Закрыть</button></div></div>`;
 }
 function parents() {
   Sfx.music(false);
@@ -663,6 +673,7 @@ function parents() {
     body = `<label>Имя принцессы <input id="pname" maxlength="14" value="${esc(S.name)}"></label>
       <label>Сколько играть подряд <select id="plimit">${[[10, '10 минут'], [15, '15 минут'], [20, '20 минут'], [30, '30 минут'], [0, 'без ограничения']].map(([v, n]) => `<option value="${v}" ${S.set.limit === v ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label>Перерыв после игры <select id="ppause">${[[30, '30 минут'], [60, '1 час'], [120, '2 часа'], [180, '3 часа']].map(([v, n]) => `<option value="${v}" ${(S.set.pause || 60) === v ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      ${S.grade === 3 ? `<label>ПИН для взрослых <button class="chip" data-act="pinReset">${S.set.pin ? 'Сбросить — придумать новый' : 'Не задан — спросим при входе'}</button></label>` : ''}
       <label>Класс <select id="pgrade"><option value="0" ${S.grade === 3 ? '' : 'selected'}>дошкольник</option><option value="3" ${S.grade === 3 ? 'selected' : ''}>3 класс</option></select></label>
       ${Sync.isOwner ? `<label>Особая принцесса <select id="pspecial"><option value="0" ${S.set.special ? '' : 'selected'}>скрыта</option>${HERO_LOOKS.map((l, i) => l.special && l.ready !== false ? `<option value="${i}" ${+S.set.special === i ? 'selected' : ''}>${i === 4 ? 'первая (как дочка)' : 'вторая (как племянница)'} — в этой игре</option>` : '').join('')}</select></label>` : ''}
       <label>Музыка <select id="pmusic"><option value="1" ${S.set.music ? 'selected' : ''}>включена</option><option value="0" ${S.set.music ? '' : 'selected'}>выключена</option></select></label>
@@ -944,12 +955,20 @@ const ACT = {
   ncKeep() { if (askNewCode.res) askNewCode.res('keep'); },
   ncCancel() { if (askNewCode.res) askNewCode.res(null); },
   gk(el) {
-    gate.val += el.dataset.d; $('#gval').textContent = gate.val;
-    if (gate.val.length >= gate.ans.length) {
-      if (gate.val === gate.ans) { pTab = 'progress'; parents(); }
-      else { Sfx.bad(); gate.val = ''; setTimeout(() => { const g = $('#gval'); if (g) g.innerHTML = '&nbsp;'; }, 400); }
-    }
+    const pinish = gate.mode === 'pin' || gate.mode === 'new' || gate.mode === 'again';
+    gate.val += el.dataset.d; $('#gval').textContent = pinish ? '•'.repeat(gate.val.length) : gate.val;
+    const need = pinish ? 4 : gate.ans.length;
+    if (gate.val.length < need) return;
+    const open = () => { pTab = 'progress'; parents(); };
+    const wrong = () => { Sfx.bad(); gate.val = ''; setTimeout(() => { const g = $('#gval'); if (g) g.innerHTML = '&nbsp;'; }, 400); };
+    if (gate.mode === 'new') return gateScreen('again');
+    if (gate.mode === 'again') { if (gate.val === gate.first) { S.set.pin = gate.val; save(); return open(); } Sfx.bad(); gate = null; return gateScreen('new'); }
+    if (gate.mode === 'pin') return gate.val === S.set.pin ? open() : wrong();
+    if (gate.val === gate.ans) { if (gate.mode === 'hard') S.set.pin = ''; return open(); }   // забыли ПИН: решили пример — ПИН сброшен, придумаете новый
+    wrong();
   },
+  gforgot() { gateScreen('hard'); },
+  pinReset() { S.set.pin = ''; save(); Sfx.tap(); parents(); },
   ptab(el) { readSettings(); pTab = el.dataset.id; parents(); },
   pClose() { readSettings(); title(); },
   pTest() { readSettings(); Voice.say(['Найди слог', 'ма'], true); },
