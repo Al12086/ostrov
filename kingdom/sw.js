@@ -1,6 +1,6 @@
 /* Офлайн-режим. Когда есть интернет — всегда берём свежие файлы с сайта и обновляем копию;
    когда интернета нет — отдаём сохранённую копию. Обновления игры подхватываются сами. */
-const VERSION = 'kingdom-30';
+const VERSION = 'kingdom-31';
 const FILES = ['./', 'index.html', 'css/style.css', 'js/data.js', 'js/math.js', 'js/tower.js', 'js/workshop.js', 'js/hall.js', 'js/skills.js', 'js/grade3.js', 'js/art.js', 'js/audio.js', 'js/sync.js', 'js/game.js',
   'fonts/Inter-Bold.woff', 'fonts/Inter-Black.woff', 'icons/icon-192.png', 'icons/icon-512.png', 'manifest.webmanifest'];
 const fresh = url => new Request(url, { cache: 'reload' });      // мимо кэша браузера

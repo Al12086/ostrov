@@ -9,7 +9,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const sample = (a, n) => shuffle(a).slice(0, n);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const APP_VER = 30;   // номер версии виден в разделе «Для родителей»
+const APP_VER = 31;   // номер версии виден в разделе «Для родителей»
 const FAST = /[?&]fast\b/.test(location.search);   // режим автопроверки: без голоса и пауз
 
 /* ---------- состояние ---------- */
@@ -664,7 +664,7 @@ function parents() {
       <label>Сколько играть подряд <select id="plimit">${[[10, '10 минут'], [15, '15 минут'], [20, '20 минут'], [30, '30 минут'], [0, 'без ограничения']].map(([v, n]) => `<option value="${v}" ${S.set.limit === v ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label>Перерыв после игры <select id="ppause">${[[30, '30 минут'], [60, '1 час'], [120, '2 часа'], [180, '3 часа']].map(([v, n]) => `<option value="${v}" ${(S.set.pause || 60) === v ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label>Класс <select id="pgrade"><option value="0" ${S.grade === 3 ? '' : 'selected'}>дошкольник</option><option value="3" ${S.grade === 3 ? 'selected' : ''}>3 класс</option></select></label>
-      ${Sync.isOwner ? `<label>Особая принцесса <select id="pspecial"><option value="0" ${S.set.special ? '' : 'selected'}>скрыта</option>${HERO_LOOKS.map((l, i) => l.special && l.ready !== false ? `<option value="${i}" ${+S.set.special === i ? 'selected' : ''}>${i === 4 ? 'первая' : 'вторая'} — в этой игре</option>` : '').join('')}</select></label>` : ''}
+      ${Sync.isOwner ? `<label>Особая принцесса <select id="pspecial"><option value="0" ${S.set.special ? '' : 'selected'}>скрыта</option>${HERO_LOOKS.map((l, i) => l.special && l.ready !== false ? `<option value="${i}" ${+S.set.special === i ? 'selected' : ''}>${i === 4 ? 'первая (как дочка)' : 'вторая (как племянница)'} — в этой игре</option>` : '').join('')}</select></label>` : ''}
       <label>Музыка <select id="pmusic"><option value="1" ${S.set.music ? 'selected' : ''}>включена</option><option value="0" ${S.set.music ? '' : 'selected'}>выключена</option></select></label>
       <label>Скорость речи <input id="prate" type="range" min="0.6" max="1.1" step="0.05" value="${S.set.rate}"></label>
       <label>Голос планшета <select id="pvoice">${vs.length ? vs.map(v => `<option ${v.name === S.set.voiceName ? 'selected' : ''}>${esc(v.name)}</option>`).join('') : '<option value="">русский голос не найден</option>'}</select></label>
