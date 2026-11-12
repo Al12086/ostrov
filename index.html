@@ -198,6 +198,20 @@
   #seedgrid button.on { background: #ffe9f3; box-shadow: inset 0 0 0 3px #ff7eb6; }
   #pcare { display: flex; gap: 8px; margin-top: 10px; }
   #pcare button { flex: 1; margin-top: 0; font-size: 19px; padding: 14px 6px; }
+  #matchip { font-size: 19px; gap: 6px; padding: 0 14px; }
+  .npcface { font-size: 86px; line-height: 1; }
+  .hearts { font-size: 22px; letter-spacing: 2px; margin: 4px 0; }
+  #npctext { font-size: 20px; font-weight: 700; margin: 8px 4px 4px; line-height: 1.35; }
+  #projrows { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; text-align: left; }
+  .prow { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; }
+  .prow i { font-style: normal; font-size: 28px; width: 34px; text-align: center; }
+  .prow .bar { flex: 1; height: 18px; border-radius: 9px; background: #f0e8fa; overflow: hidden; }
+  .prow .bar b { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, #7ed48a, #4aae5e); }
+  .prow small { width: 76px; text-align: right; color: #8a78a8; font-size: 16px; }
+  #cookgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  #cookgrid button { padding: 8px 4px; border-radius: 16px; background: #f4eefb; font-weight: 900; font-size: 15px; }
+  #cookgrid button span { display: block; font-size: 42px; line-height: 1.15; }
+  #cookgrid button.on { background: #ffe9f3; box-shadow: inset 0 0 0 3px #ff7eb6; }
   .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
   #albumgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
   #albumgrid div { aspect-ratio: 1; border-radius: 18px; background: #f4eefb; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 38px; line-height: 1.1; }
@@ -254,6 +268,7 @@
 <div id="hud" class="hidden">
   <div id="tl">
     <button id="stars" class="chip">⭐ <span id="starn">0</span></button>
+    <div id="matchip" class="chip">🪵 0  🪨 0  🐚 0</div>
     <div id="radar" class="chip hidden"><span>🧭</span><span id="radartx"></span></div>
   </div>
   <button id="mic" class="round" aria-label="Микрофон">🎤</button>
@@ -359,6 +374,37 @@
   </div>
 </div>
 
+<div id="npcm" class="modalbg hidden">
+  <div class="card">
+    <div id="npcface" class="npcface"></div>
+    <div id="npcname" class="lbl"></div>
+    <div id="npchearts" class="hearts"></div>
+    <div id="npctext"></div>
+    <button id="npcbtn" class="big hidden"></button>
+    <button id="closenpc" class="link">пока!</button>
+  </div>
+</div>
+
+<div id="projm" class="modalbg hidden">
+  <div class="card">
+    <div id="projface" class="npcface" style="font-size:64px"></div>
+    <div id="projname" class="lbl"></div>
+    <div id="projstat" class="sub" style="margin:4px 0 0"></div>
+    <div id="projrows"></div>
+    <button id="projbtn" class="big"></button>
+    <button id="closeproj" class="link">закрыть</button>
+  </div>
+</div>
+
+<div id="cookm" class="modalbg hidden">
+  <div class="card">
+    <div class="lbl" style="margin-top:0">Что приготовим? · еды: <span id="cookfood"></span> 🥕</div>
+    <div id="cookgrid"></div>
+    <button id="cookbtn" class="big" disabled>Выбери блюдо</button>
+    <button id="closecook" class="link">закрыть</button>
+  </div>
+</div>
+
 <div id="shop" class="modalbg hidden">
   <div class="card">
     <div class="lbl" style="margin-top:0">Лавка · у нас <span id="shopbal"></span> ⭐</div>
@@ -402,6 +448,25 @@ var HOUSE = { x: 2600, y: 2050 }, SHOP = { x: 3180, y: 2130 }, SWING = { x: 3060
 var CLEAR = { x: 1150, y: 2100, r: 190 };
 var TRAMP = { x: 2850, y: 2790 }, SLIDE = { x: 3370, y: 2620 };
 var PETH = { x: 2020, y: 2030 };
+/* жители острова: где живут, о чём просят (k — вид просьбы) */
+var NPCS = [
+  { n: 'Ёжик Тимоша', e: '🦔', x: 1760, y: 2620, ks: ['bug', 'wood', 'shell'] },
+  { n: 'Белочка Рыжик', e: '🐿️', x: 1250, y: 2180, ks: ['food', 'wood', 'harvest'] },
+  { n: 'Сова Софья', e: '🦉', x: 2330, y: 2900, ks: ['fish', 'bug', 'swing'] },
+  { n: 'Мишка Потап', e: '🐻', x: 3360, y: 3020, ks: ['food', 'dance', 'tramp'] },
+  { n: 'Зайка Пуша', e: '🐰', x: 4250, y: 2620, ks: ['harvest', 'food', 'tramp'] },
+  { n: 'Осьминожка Тиша', e: '🐙', x: 2950, y: 560, ks: ['shell', 'fish', 'dance'] }
+];
+var QNEED = { fish: 2, bug: 1, food: 1, wood: 3, shell: 3 };
+/* стройки: s — звёзды, w — брёвна, r — камни, h — ракушки; m — минут строить */
+var BRIDGE = { x: 4000 }, CAFE = { x: 1560, y: 1660 }, STAGE = { x: 3100, y: 1660 };
+var PROJ = [
+  { n: 'Мост через горы', e: '🌉', need: { s: 60, w: 40, r: 20, h: 0 }, m: 30 },
+  { n: 'Кафе', e: '🍰', need: { s: 100, w: 30, r: 15, h: 20 }, m: 60 },
+  { n: 'Сцена', e: '🎤', need: { s: 120, w: 25, r: 10, h: 30 }, m: 90 }
+];
+var DISHES = [['Морковный сок', '🥤'], ['Клубничный торт', '🍰'], ['Пицца', '🍕'], ['Попкорн', '🍿'], ['Тыквенный суп', '🍲'], ['Мороженое', '🍦']];
+var bridgeOpen = false;
 /* огород: 6 грядок; культуры: n — название, e — значок, p — цена семян, g — минут до урожая */
 var GARDEN = { x: 3830, y: 2470 };
 var BEDS = [[-150, -62], [0, -62], [150, -62], [-150, 62], [0, 62], [150, 62]].map(function (q) { return { x: GARDEN.x + q[0], y: GARDEN.y + q[1] }; });
@@ -475,6 +540,10 @@ function landmark(x, y) {
   if (Math.abs(x - PETH.x) < 250 && y > PETH.y - 320 && y < PETH.y + 330) return true;
   if (Math.abs(x - GARDEN.x) < 360 && y > GARDEN.y - 240 && y < GARDEN.y + 440) return true;
   if (Math.abs(x - 3700) < 220 && y < 820) return true;
+  if (Math.abs(x - CAFE.x) < 440 && y > CAFE.y - 340 && y < CAFE.y + 230) return true;
+  if (Math.abs(x - STAGE.x) < 320 && y > STAGE.y - 340 && y < STAGE.y + 240) return true;
+  if (Math.abs(x - BRIDGE.x) < 220 && Math.abs(y - bandC(BRIDGE.x)) < BAND + 330) return true;
+  for (var ni = 0; ni < NPCS.length; ni++) if (d2(x, y, NPCS[ni].x, NPCS[ni].y) < 230 * 230) return true;
   if (d2(x, y, POND.x - POND.rx - 40, POND.y + 10) < 240 * 240) return true;
   if (d2(x, y, BENCH.x, BENCH.y) < 120 * 120 || d2(x, y, CLEAR.x, CLEAR.y) < CLEAR.r * CLEAR.r) return true;
   if (d2(x, y, MOUTH.x, MOUTH.y + 90) < 280 * 280 || d2(x, y, HOLE.x, HOLE.y) < 210 * 210 || d2(x, y, WRECK.x, WRECK.y) < 280 * 280) return true;
@@ -578,15 +647,19 @@ function pushOut(col, p) {
 }
 function toShore(p) { var ax = (p.x - CX) / RX, ay = (p.y - CY) / RY, a = Math.atan2(ay, ax), r = islR(a) * (WALK - 0.004); p.x = CX + Math.cos(a) * r * RX; p.y = CY + Math.sin(a) * r * RY; }
 /* подвинуть точку туда, где можно стоять (остров) */
+var COLP = [];
 function fix0(p) {
-  pushOut(COL0, p);
+  pushOut(COL0, p); pushOut(COLP, p);
   if (inPier(p.x, p.y)) return p;
   var out = isl(p.x, p.y) >= WALK;
   if (out && p.y > PIER.y0 && Math.abs(p.x - 2600) < 120) {
     p.x = Math.max(PIER.x0 + 4, Math.min(PIER.x1 - 4, p.x)); p.y = Math.max(PIER.y0 + 4, Math.min(PIER.y1 - 4, p.y)); return p;
   }
   if (out) toShore(p);
-  if (inBand(p.x, p.y)) { var c = bandC(p.x); p.y = p.y < c ? c - BAND - 1 : c + BAND + 1; if (isl(p.x, p.y) >= WALK) toShore(p); }
+  if (inBand(p.x, p.y)) {
+    if (bridgeOpen && Math.abs(p.x - BRIDGE.x) < 95) p.x = Math.max(BRIDGE.x - 46, Math.min(BRIDGE.x + 46, p.x)); // по мосту через горы
+    else { var c = bandC(p.x); p.y = p.y < c ? c - BAND - 1 : c + BAND + 1; if (isl(p.x, p.y) >= WALK) toShore(p); }
+  }
   return p;
 }
 /* то же для пещеры: залы-круги и коридоры между ними */
@@ -668,6 +741,12 @@ var FISHSPOTS = (function () {
   out.push({ x: POND.x - POND.rx - 46, y: POND.y + 10, bx: POND.x - 70, by: POND.y + 6, w: 'pond', face: 1 });
   return out;
 })();
+/* ракушки, которые можно подобрать (часть ракушек на пляже) и места стройки */
+var SHELLS = [];
+DECOR.forEach(function (d, i) { if (d[2] === 7 && i % 2 === 0) SHELLS.push(i); });
+PROJ[0].x = BRIDGE.x; PROJ[0].y = Math.round(bandC(BRIDGE.x) + BAND + 120);
+PROJ[1].x = CAFE.x; PROJ[1].y = CAFE.y; PROJ[2].x = STAGE.x; PROJ[2].y = STAGE.y;
+var CAFE_T = [{ x: CAFE.x - 310, y: CAFE.y + 10 }, { x: CAFE.x + 310, y: CAFE.y + 10 }];
 /* ===== конец описания мира ===== */
 
 var EMOTES = ['❤️', '👋', '😂', '👍', '🌟'];
@@ -924,6 +1003,52 @@ function buildSprites() {
     g.fillStyle = '#8a5a3a'; rr(g, -56, -60, 12, 70, 4); g.fill(); rr(g, 44, -60, 12, 70, 4); g.fill();
     g.fillStyle = '#c98f5a'; rr(g, -60, -70, 120, 90, 10); g.fill(); g.strokeStyle = '#a66f42'; g.lineWidth = 3;
     for (var k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-58, -48 + k * 22); g.lineTo(58, -48 + k * 22); g.stroke(); }
+  });
+  sprite('site', 260, 220, 130, 200, function (g) { // стройплощадка: забор, табличка, брёвна
+    shadow(g, 110, 16);
+    g.fillStyle = '#c98f5a'; for (var k = -4; k <= 4; k++) { rr(g, k * 26 - 5, -60, 10, 60, 4); g.fill(); }
+    rr(g, -110, -48, 220, 8, 4); g.fill(); rr(g, -110, -22, 220, 8, 4); g.fill();
+    g.fillStyle = '#a66f42'; [[-70, -8], [-46, -8], [-58, -26]].forEach(function (q) { ell(g, q[0], q[1], 14, 13); g.fill(); g.fillStyle = '#e0a56c'; ell(g, q[0] + 9, q[1], 6, 10); g.fill(); g.fillStyle = '#a66f42'; });
+    g.fillStyle = '#8a7fa0'; ell(g, 66, -12, 20, 14); g.fill(); ell(g, 84, -18, 14, 11); g.fill();
+    g.fillStyle = '#8a5a3a'; rr(g, -6, -170, 12, 110, 4); g.fill();
+    g.fillStyle = '#ffd257'; rr(g, -60, -196, 120, 70, 12); g.fill(); g.fillStyle = '#fff6e4'; rr(g, -52, -188, 104, 54, 8); g.fill();
+    g.fillStyle = '#e2447a'; g.font = '900 17px system-ui'; g.textAlign = 'center'; g.fillText('СТРОЙКА', 0, -154);
+  });
+  sprite('scaff', 360, 330, 180, 310, function (g) { // идёт стройка
+    shadow(g, 160, 20);
+    g.fillStyle = '#e8d4b4'; rr(g, -140, -190, 280, 190, 10); g.fill();
+    g.strokeStyle = '#c98f5a'; g.lineWidth = 9; g.lineCap = 'round';
+    [-150, -50, 50, 150].forEach(function (x) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, -260); g.stroke(); });
+    [-60, -130, -200].forEach(function (y) { g.beginPath(); g.moveTo(-160, y); g.lineTo(160, y); g.stroke(); });
+    g.lineWidth = 5; g.beginPath(); g.moveTo(-150, -60); g.lineTo(-50, -130); g.moveTo(50, -60); g.lineTo(150, -130); g.moveTo(-50, -130); g.lineTo(50, -200); g.stroke();
+    g.fillStyle = '#ffd257'; g.beginPath(); g.moveTo(-40, -300); g.lineTo(40, -300); g.lineTo(0, -262); g.closePath(); g.fill();
+  });
+  sprite('cafe', 520, 330, 260, 300, function (g) { // кафе
+    shadow(g, 230, 26);
+    var wg = g.createLinearGradient(0, -200, 0, 0); wg.addColorStop(0, '#fff6ea'); wg.addColorStop(1, '#ffe5cc');
+    g.fillStyle = wg; rr(g, -210, -200, 420, 200, 22); g.fill();
+    g.fillStyle = '#c98f5a'; rr(g, -190, -70, 380, 70, 14); g.fill(); g.fillStyle = '#e0a56c'; rr(g, -200, -82, 400, 22, 10); g.fill();
+    ['#ff8ec0', '#ffd257', '#7ed48a', '#4fd3e6'].forEach(function (c, i) { g.fillStyle = c; ell(g, -120 + i * 80, -100, 18, 18); g.fill(); g.fillStyle = '#fff'; ell(g, -126 + i * 80, -106, 6, 5); g.fill(); });
+    g.fillStyle = '#9d7be8'; rr(g, -60, -190, 120, 70, 12); g.fill(); g.fillStyle = '#fff'; g.font = '900 30px system-ui'; g.textAlign = 'center'; g.fillText('КАФЕ', 0, -144);
+    g.save(); g.beginPath(); g.moveTo(-240, -200); g.lineTo(-220, -270); g.lineTo(220, -270); g.lineTo(240, -200); g.closePath(); g.clip();
+    for (var k = 0; k < 16; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; g.fillRect(-240 + k * 30, -275, 30, 80); } g.restore();
+    for (k = 0; k < 16; k++) { g.fillStyle = k % 2 ? '#fff' : '#ff8ec0'; ell(g, -225 + k * 30, -200, 15, 11); g.fill(); }
+  });
+  sprite('ctable', 160, 200, 80, 180, function (g) { // столик с зонтиком
+    shadow(g, 60, 12);
+    g.fillStyle = '#8a7fa0'; rr(g, -4, -150, 8, 150, 3); g.fill(); rr(g, -24, -4, 48, 6, 3); g.fill();
+    g.fillStyle = '#fff'; ell(g, 0, -56, 50, 16); g.fill(); g.fillStyle = '#f0e8fa'; ell(g, 0, -52, 50, 14); g.fill();
+    g.fillStyle = '#ffd257'; g.beginPath(); g.moveTo(-74, -136); g.quadraticCurveTo(0, -196, 74, -136); g.closePath(); g.fill();
+    g.fillStyle = '#ff8ec0'; g.beginPath(); g.moveTo(-74, -136); g.quadraticCurveTo(-30, -186, -24, -150); g.closePath(); g.fill(); g.beginPath(); g.moveTo(74, -136); g.quadraticCurveTo(30, -186, 24, -150); g.closePath(); g.fill();
+  });
+  sprite('stage', 500, 360, 250, 300, function (g) { // сцена
+    shadow(g, 230, 22);
+    g.fillStyle = '#7d5bd0'; rr(g, -220, -300, 440, 230, 16); g.fill();
+    g.fillStyle = '#e2447a'; g.beginPath(); g.moveTo(-220, -300); g.quadraticCurveTo(-150, -200, -200, -70); g.lineTo(-220, -70); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(220, -300); g.quadraticCurveTo(150, -200, 200, -70); g.lineTo(220, -70); g.closePath(); g.fill();
+    g.fillStyle = '#ffd257'; for (var k = 0; k < 9; k++) { starPath(g, -160 + k * 40, -280, 9, 4, 0); g.fill(); }
+    g.fillStyle = '#c98f5a'; rr(g, -240, -80, 480, 60, 10); g.fill(); g.fillStyle = '#a66f42'; rr(g, -240, -26, 480, 26, 8); g.fill();
+    g.strokeStyle = '#e0a56c'; g.lineWidth = 3; for (k = 0; k < 6; k++) { g.beginPath(); g.moveTo(-230 + k * 92, -76); g.lineTo(-230 + k * 92, -24); g.stroke(); }
   });
   sprite('bush', 120, 90, 60, 80, function (g) {
     shadow(g, 46, 10);
@@ -1356,6 +1481,7 @@ function drawPlayer(p) {
       if (e < 0.8) { x = q.x - 128 + e / 0.8 * 34; o.z = e / 0.8 * 152; o.mv = true; o.ph = e * 14; }
       else { var v = Math.min(1, (e - 0.8) / 1.1); x = q.x - 70 + v * 220; o.z = 150 - 144 * (1.7 * v - 0.7 * v * v); o.sit = 1; o.arms = 1; }
     }
+    else if (q.k === 'sing') { o.arms = 2; o.face = q.s ? -1 : 1; o.z = Math.abs(Math.sin(e * 4)) * 6; }
     else if (q.k === 'fish') { o.face = FISHSPOTS[q.s] ? FISHSPOTS[q.s].face : 1; o.arms = 2; }
     else if (q.k === 'skate') { var sa = e * 1.3 + q.s * 1.6; x = q.x + Math.sin(sa) * 60; y = q.y + Math.cos(sa) * 22; o.face = Math.cos(sa) > 0 ? 1 : -1; o.arms = 1; o.rot = Math.sin(sa) * 0.12; }
     else if (q.k === 'swim') { y = q.y + 52 + Math.sin(T * 2 + p.seed) * 3; o.clip = 1; }
@@ -1373,7 +1499,8 @@ function drawPlayer(p) {
     ctx.fillStyle = '#e2302f'; ell(ctx, FS.bx, FS.by + bob - 4, 7, 8); ctx.fill(); ctx.fillStyle = '#fff'; ell(ctx, FS.bx, FS.by + bob + 2, 7, 4); ctx.fill();
   }
   if (q && q.k === 'sleep') { ctx.fillStyle = '#8f73f0'; ctx.font = '800 26px ui-rounded, system-ui, sans-serif'; ctx.textAlign = 'center'; for (var k = 0; k < 3; k++) { var zz = (e * 0.5 + k / 3) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', x - 130 - zz * 26, y - 40 - zz * 70); } ctx.globalAlpha = 1; }
-  if (q && (q.k === 'dance' || q.k === 'piano') && Math.random() < 0.08) parts.push({ x: x + (Math.random() - 0.5) * 60, y: y - 130, vx: (Math.random() - 0.5) * 80, vy: -260, t: 0, life: 0.8, c: ['#ff8ec0', '#b08cff', '#4fd3e6'][Math.floor(Math.random() * 3)], m: p.m });
+  if (q && q.k === 'sing') { ctx.fillStyle = '#4a3560'; ell(ctx, x + (q.s ? -16 : 16), y - 92 - (o.z || 0), 6, 6); ctx.fill(); ctx.strokeStyle = '#4a3560'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + (q.s ? -16 : 16), y - 86 - (o.z || 0)); ctx.lineTo(x + (q.s ? -10 : 10), y - 66 - (o.z || 0)); ctx.stroke(); }
+  if (q && (q.k === 'dance' || q.k === 'piano' || q.k === 'sing') && Math.random() < 0.08) parts.push({ x: x + (Math.random() - 0.5) * 60, y: y - 130, vx: (Math.random() - 0.5) * 80, vy: -260, t: 0, life: 0.8, c: ['#ff8ec0', '#b08cff', '#4fd3e6'][Math.floor(Math.random() * 3)], m: p.m });
 }
 function drawSwingSeats() {
   [-40, 40].forEach(function (sx, n) {
@@ -1387,7 +1514,9 @@ function drawSwingSeats() {
 /* --- что стоит на острове и в пещере (для порядка «дальше — ближе») --- */
 var OBJ0 = [], OBJ1 = [], CRYST = [], caveGround = null, mini = null;
 function buildObjects() {
-  TREES.forEach(function (t) { OBJ0.push({ x: t[0], y: t[1], k: 'tree' + t[2], h: 300 }); });
+  TREES.forEach(function (t, i) { OBJ0.push({ x: t[0], y: t[1], k: 'tree' + t[2], h: 300, ti: i }); });
+  PROJ.forEach(function (P, i) { OBJ0.push({ x: P.x, y: P.y, proj: i, h: 360 }); });
+  CAFE_T.forEach(function (c, i) { OBJ0.push({ x: c.x, y: c.y, ct: i, h: 200 }); });
   BUSHES.forEach(function (b) { OBJ0.push({ x: b[0], y: b[1], k: 'bush', h: 90 }); });
   LAMPS.forEach(function (l) { OBJ0.push({ x: l[0], y: l[1], k: 'lamp', h: 180 }); });
   ROCKS.forEach(function (r) { OBJ0.push({ x: r[0], y: r[1], k: 'rock', h: 90 }); });
@@ -1594,6 +1723,7 @@ function onMsg(m) {
     stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, m: s.m | 0, k: s.k | 0, born: T }; });
     total = m.total; $('starn').textContent = total;
     ward = m.ward || []; pets = m.pets || {};
+    mat = m.mat || { w: 0, r: 0, h: 0 }; got = m.got || { t: [], r: [], s: [] }; npcs = m.npc || {}; proj = m.proj || {}; cafe = m.cafe || [-1, -1]; matChip(); hideShells();
     garden = m.garden || [null, null, null, null, null, null]; food = m.food || 0; fishA = m.fish || []; bugsA = m.bugs || []; cropsA = m.crops || []; petDay = m.petDay || {}; SOFF = m.now ? m.now - Date.now() : 0;
     day = m.day || null; mailReady = !!m.mail; lim = m.lim || null; updatePlanBadge();
     album = m.album || []; chestOpen = {}; (m.chests || []).forEach(function (id) { chestOpen[id] = true; });
@@ -1645,6 +1775,11 @@ function onMsg(m) {
   else if (m.t === 'lk' || m.t === 'wb' || m.t === 'eg' || m.t === 'fd') shopMsg(m);
   else if (m.t === 'dy' || m.t === 'dt' || m.t === 'dd' || m.t === 'ml') dayMsg(m);
   else if (m.t === 'gd' || m.t === 'hv') gardenMsg(m);
+  else if (m.t === 'mg' || m.t === 'mx') { gatherMsg(m); hideShells(); }
+  else if (m.t === 'nq' || m.t === 'nu' || m.t === 'nd') npcMsg(m);
+  else if (m.t === 'pg') projMsg(m);
+  else if (m.t === 'pz') say('Пока нечего вложить. Соберите звёзды, брёвна, камни и ракушки!', true);
+  else if (m.t === 'cf') cafeMsg(m);
   else if (m.t === 'fc' || m.t === 'bc') catchMsg(m);
   else if (m.t === 'pn') toast(PETS[m.k].n + (m.a === 'f' ? ' уже сытый.' : m.a === 'p' ? ' уже наглажен сегодня.' : ' уже наигрался сегодня.') + ' Приходи завтра!');
   else if (m.t === 'by') { total = m.total; bumpStars(); inv[m.i] = m.n; drawTray(); drawShop(); toast(nameOf(m.by) + ' купила: ' + CAT[m.i].n + '. Поставь в домике 🏠'); beep([784, 1047], 0.09, 0.12); }
@@ -1864,7 +1999,7 @@ function leaveGame(msg) {
   disconnect(); demo = false; clearInterval(botTimer);
   screenMode = 'lobby'; me = null; players.clear(); stars = []; treasure = null; ev = null; trans = null;
   setDecor(false); game = null; curSpot = null; curKey = ''; $('ride').classList.remove('on');
-  ['hud', 'modal', 'album', 'dig', 'radar', 'shop', 'shopbtn', 'decor', 'act', 'gbar', 'gamesm', 'wardm', 'petsm', 'boardm', 'mailm', 'seedm', 'catch'].forEach(function (id) { $(id).classList.add('hidden'); });
+  ['hud', 'modal', 'album', 'dig', 'radar', 'shop', 'shopbtn', 'decor', 'act', 'gbar', 'gamesm', 'wardm', 'petsm', 'boardm', 'mailm', 'seedm', 'catch', 'npcm', 'projm', 'cookm'].forEach(function (id) { $(id).classList.add('hidden'); });
   $('lobby').classList.remove('hidden');
   busy(false); lobbyView(); showErr(msg || '');
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
@@ -1981,16 +2116,17 @@ function seen(p) { // в прятках ищущая видит подругу �
   return Math.max(0, Math.min(1, (310 - Math.sqrt(d2(me.x, me.y, p.x, p.y))) / 70));
 }
 function findSpot() {
+  if (me.pose && !trans) return eatSpot();
   if (me.pose || trans || frozen() || radarLvl === 4 || nearShop) return null;
   var i, s;
   if (me.m === 0) {
-    var ex = fishSpot() || bedSpot(); if (ex) return ex;
+    var ex = fishSpot() || bedSpot() || cafeSpot() || stageSpot(); if (ex) return ex;
     for (i = 0; i < SPOTS0.length; i++) {
       s = SPOTS0[i];
       if (s.pond) { var dx = (me.x - POND.x) / (POND.rx + 95), dy = (me.y - POND.y) / (POND.ry + 85); if (dx * dx + dy * dy < 1) return s; }
       else if (d2(me.x, me.y, s.x, s.y) < s.r * s.r) return s;
     }
-    return critterSpot();
+    return npcSpot() || projSpot() || gatherSpot() || critterSpot();
   } else if (me.m === 2 && !decor) {
     if (d2(me.x, me.y, WARDROBE.x, WARDROBE.y + 60) < 130 * 130) return { key: 'ward', ui: 'ward', n: 'Наряды', e: '👗' };
     var best = null, bd = 135 * 135;
@@ -2012,6 +2148,7 @@ function poseFx(p) {
   else if (k === 'slide') beep([400, 500, 600, 700, 800, 900], 0.1, 0.06);
   else if (k === 'swim') beep([300, 240], 0.1, 0.08);
   else if (k === 'tramp') beep([330, 520], 0.08, 0.08);
+  else if (k === 'sing') playSong();
 }
 function setPose(k, s, x, y, sy) {
   rideOff(); me.pose = { k: k, s: s, x: x, y: y, sy: sy, t0: T }; me.tx = me.x; me.ty = me.y; me.mv = false;
@@ -2020,6 +2157,13 @@ function setPose(k, s, x, y, sy) {
 function clearPose() { if (me && me.pose) { me.pose = null; send({ t: 'ps', k: null }); } }
 $('act').onclick = function () {
   unlockAudio(); var sp = curSpot; if (!sp || !me) return;
+  if (sp.ui === 'npc') { openNpc(sp.id); return; }
+  if (sp.ui === 'proj') { openProj(sp.id, true); return; }
+  if (sp.ui === 'gather') { gatherAct(sp); return; }
+  if (sp.ui === 'cook') { openCook(); return; }
+  if (sp.ui === 'eat') { send({ t: 'et', t2: sp.t }); return; }
+  if (sp.ui === 'seat') { var tb = CAFE_T[sp.t], sx = me.x < tb.x ? -78 : 78; setPose('sit', sp.t * 2 + (sx > 0 ? 1 : 0), tb.x + sx, tb.y - 8, tb.y + 4); return; }
+  if (sp.ui === 'sing') { var fr = 0; players.forEach(function (pl) { if (pl !== me && pl.pose && pl.pose.k === 'sing' && pl.pose.s === 0) fr = 1; }); setPose('sing', fr, STAGE.x + (fr ? 70 : -70), STAGE.y - 74, STAGE.y + 4); say('Твой выход! Пой свою любимую песню, а подружка пусть хлопает!', true); return; }
   if (sp.ui === 'bed') { bedAct(sp); return; }
   if (sp.ui === 'fish') { me.tx = me.x; me.ty = me.y; startFishing(sp.s); return; }
   if (sp.ui === 'bug') { netCatch(sp.c); return; }
@@ -2445,12 +2589,183 @@ function pd(k) { var p = petDay[k]; return p && p.d === (day ? day.key : '') ? p
 function stageOf(h) { var s = 0; PET_STAGE.forEach(function (v, i) { if (h >= v) s = i; }); return s; }
 
 /* =====================================================================
+   ЖИТЕЛИ, МАТЕРИАЛЫ, СТРОЙКИ, КАФЕ И СЦЕНА
+   ===================================================================== */
+var mat = { w: 0, r: 0, h: 0 }, got = { t: [], r: [], s: [] }, npcs = {}, proj = {}, cafe = [-1, -1], shakeT = {};
+var QTEXT = {
+  fish: 'Поймай мне, пожалуйста, {n} рыбки!', bug: SEASON === 'winter' ? 'Поймай сачком снежинку и покажи мне!' : 'Поймай сачком жучка или бабочку и покажи мне!',
+  food: 'Я проголодался! Угости меня урожаем с огорода.', wood: 'Мне нужно {n} бревна для домика. Потряси деревья и принеси!',
+  shell: 'Я собираю ракушки! Принеси мне {n} ракушки с пляжа.', dance: 'Потанцуй, пожалуйста! Я так люблю смотреть на танцы.',
+  swing: 'Покачайся на качелях, а потом расскажи, как там весело!', harvest: 'Собери урожай на огороде, а то я сам не умею!', tramp: 'Попрыгай на батуте — высоко-высоко!'
+};
+var CONSUME = { food: 1, wood: 1, shell: 1 };
+function today() { return day ? day.key : ''; }
+function npcPos(i) { // все видят жителя в одном месте: путь зависит от часов
+  var N = NPCS[i], t = sNow() / 1000, a = t * 0.07 + i * 1.7, x = N.x + Math.cos(a) * 80 + Math.sin(a * 2.3) * 30, y = N.y + Math.sin(a * 1.3) * 45;
+  var dx = -Math.sin(a) * 80 + Math.cos(a * 2.3) * 69; return { x: x, y: y, face: dx > 0 ? 1 : -1 };
+}
+function npcState(i) { // new — есть просьба, wait — делаем, ready — можно отдать, done — помогли сегодня
+  var s = npcs[i] || { h: 0 }, q = s.q;
+  if (s.ok === today()) return 'done';
+  if (!q || q.d !== today()) return 'new';
+  if (CONSUME[q.k]) return (q.k === 'food' ? food : q.k === 'wood' ? mat.w : mat.h) >= q.need ? 'ready' : 'wait';
+  return q.have >= q.need ? 'ready' : 'wait';
+}
+function qWords(q) { return QTEXT[q.k].replace('{n}', q.need); }
+function hearts(h) { var s = ''; for (var i = 0; i < 10; i++) s += i < h ? '❤️' : '🤍'; return s; }
+var npcOpen = -1;
+function openNpc(i) {
+  npcOpen = i; var N = NPCS[i], s = npcs[i] || { h: 0 }, st = npcState(i), q = s.q, txt = '', btn = '';
+  if (st === 'new') { txt = 'Привет! ' + qWords({ k: dayQuest(i), need: QNEED[dayQuest(i)] || 1 }); btn = 'Хорошо, помогу!'; }
+  else if (st === 'wait') { var have = CONSUME[q.k] ? (q.k === 'food' ? food : q.k === 'wood' ? mat.w : mat.h) : q.have; txt = 'Жду! ' + qWords(q) + (q.need > 1 ? ' Сейчас есть ' + Math.min(have, q.need) + ' из ' + q.need + '.' : ''); }
+  else if (st === 'ready') { txt = 'Ой, у тебя всё получилось! Отдашь мне?'; btn = 'Отдать 🎁'; }
+  else txt = 'Спасибо тебе огромное! Приходи завтра, у меня будет новая просьба.';
+  $('npcface').textContent = N.e; $('npcname').textContent = N.n; $('npchearts').textContent = hearts(s.h || 0); $('npctext').textContent = txt;
+  $('npcbtn').textContent = btn; $('npcbtn').classList.toggle('hidden', !btn);
+  $('npcm').classList.remove('hidden');
+  say(N.n + ': ' + txt, true);
+}
+function dayQuest(i) { var ks = NPCS[i].ks; return ks[hashStr(today() + ':' + i) % ks.length]; } // та же формула, что на сервере
+$('npcbtn').onclick = function () { unlockAudio(); var st = npcState(npcOpen); if (st === 'new') send({ t: 'nq', id: npcOpen }); else if (st === 'ready') send({ t: 'nd', id: npcOpen }); };
+$('closenpc').onclick = function () { $('npcm').classList.add('hidden'); npcOpen = -1; };
+function npcSpot() {
+  var best = -1, bd = 115 * 115;
+  NPCS.forEach(function (N, i) { var p = npcPos(i), d = d2(me.x, me.y, p.x, p.y); if (d < bd) { bd = d; best = i; } });
+  if (best < 0) return null;
+  var st = npcState(best);
+  return { key: 'npc' + best + st, ui: 'npc', id: best, n: 'Поговорить: ' + NPCS[best].n, e: st === 'ready' ? '🎁' : st === 'new' ? '❗' : '💬' };
+}
+function drawNpcs(x0, y0, vw, vh, list) {
+  NPCS.forEach(function (N, i) { var p = npcPos(i); if (p.x > x0 - 100 && p.x < x0 + vw + 100 && p.y > y0 - 120 && p.y < y0 + vh + 80) list.push({ y: p.y, npc: i, p: p }); });
+}
+function drawNpc(o) {
+  var p = o.p, N = NPCS[o.npc], st = npcState(o.npc), bob = Math.abs(Math.sin(T * 6 + o.npc)) * 5;
+  ctx.fillStyle = 'rgba(30,60,40,.22)'; ell(ctx, p.x, p.y, 30, 10); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.85)'; ell(ctx, p.x, p.y - 42 - bob, 44, 44); ctx.fill(); ctx.strokeStyle = st === 'ready' ? '#7ed48a' : st === 'new' ? '#ffd257' : '#e7d9f5'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.font = '800 20px ui-rounded, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; var nw = ctx.measureText(N.n).width + 20; ctx.fillStyle = 'rgba(255,255,255,.9)'; rr(ctx, p.x - nw / 2, p.y + 6, nw, 28, 14); ctx.fill(); ctx.fillStyle = '#5b3f78'; ctx.fillText(N.n, p.x, p.y + 21);
+  ctx.save(); ctx.translate(p.x, p.y - 42 - bob); ctx.scale(p.face, 1); ctx.font = '62px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(N.e, 0, 0); ctx.restore();
+  if (st === 'new' || st === 'ready') {
+    var by = p.y - 110 + Math.sin(T * 4 + o.npc) * 5;
+    ctx.fillStyle = st === 'ready' ? '#7ed48a' : '#ffd257'; ell(ctx, p.x, by, 20, 20); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '900 26px ui-rounded, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(st === 'ready' ? '✓' : '!', p.x, by + 1);
+  }
+}
+/* --- материалы: потрясти дерево, собрать камешки, подобрать ракушку --- */
+function gatherSpot() {
+  var i, d;
+  for (i = 0; i < TREES.length; i++) { var t = TREES[i]; if (got.t.indexOf(i) < 0 && Math.abs(me.x - t[0]) < 80 && me.y > t[1] - 20 && me.y < t[1] + 90) return { key: 'gt' + i, ui: 'gather', o: 't', i: i, n: 'Потрясти дерево', e: '🌳' }; }
+  for (i = 0; i < ROCKS.length; i++) { var r = ROCKS[i]; if (got.r.indexOf(i) < 0 && d2(me.x, me.y, r[0], r[1] + 30) < 80 * 80) return { key: 'gr' + i, ui: 'gather', o: 'r', i: i, n: 'Собрать камешки', e: '🪨' }; }
+  for (i = 0; i < SHELLS.length; i++) { var s = DECOR[SHELLS[i]]; if (got.s.indexOf(i) < 0 && d2(me.x, me.y, s[0], s[1]) < 70 * 70) return { key: 'gs' + i, ui: 'gather', o: 's', i: i, n: 'Подобрать ракушку', e: '🐚' }; }
+  return null;
+}
+function gatherAct(sp) { send({ t: 'mt', o: sp.o, i: sp.i }); if (sp.o === 't') shakeT[sp.i] = T; beep(sp.o === 't' ? [330, 392] : [523, 659], 0.06, 0.08); }
+function matChip() { $('matchip').textContent = '🪵 ' + mat.w + '  🪨 ' + mat.r + '  🐚 ' + mat.h; }
+var MATN = { t: ['бревно', '🪵'], r: ['камешек', '🪨'], s: ['ракушка', '🐚'] };
+function gatherMsg(m) {
+  if (m.t === 'mx') { (m.o === 't' ? got.t : m.o === 'r' ? got.r : got.s).push(m.i); say(m.o === 't' ? 'Это дерево сегодня уже трясли. Попробуй другое!' : 'Тут уже всё собрали. Поищи в другом месте!', true); return; }
+  (m.o === 't' ? got.t : m.o === 'r' ? got.r : got.s).push(m.i); mat = m.mat; total = m.total; bumpStars(); matChip();
+  if (m.o === 't') { shakeT[m.i] = T; var t = TREES[m.i]; if (me.m === 0) for (var k = 0; k < 10; k++) parts.push({ x: t[0] + (Math.random() - 0.5) * 120, y: t[1] - 140 - Math.random() * 60, vx: (Math.random() - 0.5) * 60, vy: 40, t: 0, life: 0.9, c: SEASON === 'autumn' ? '#ef8a3c' : '#59bf6c', m: 0 }); }
+  if (m.by === store.id) toast('+1 ' + MATN[m.o][1] + ' ' + MATN[m.o][0] + (m.add ? ' и ещё +' + m.add + ' ⭐ упало!' : '') + '  (' + MATN[m.o][1] + ' ' + (m.o === 't' ? mat.w : m.o === 'r' ? mat.r : mat.h) + ')');
+}
+/* --- стройки --- */
+function built(i) { var p = proj[i]; return !!(p && p.done && sNow() >= p.done); }
+function building(i) { var p = proj[i]; return !!(p && p.done && sNow() < p.done); }
+function projSpot() {
+  for (var i = 0; i < PROJ.length; i++) { var P = PROJ[i]; if (!built(i) && d2(me.x, me.y, P.x, P.y + 40) < 150 * 150) return { key: 'pj' + i + (building(i) ? 'b' : ''), ui: 'proj', id: i, n: building(i) ? P.n + ' строится' : 'Стройка: ' + P.n, e: '🏗' }; }
+  return null;
+}
+var RES = [['s', '⭐', 'звёзды'], ['w', '🪵', 'брёвна'], ['r', '🪨', 'камни'], ['h', '🐚', 'ракушки']];
+var projOpen = -1;
+function openProj(i, speak) {
+  projOpen = i; var P = PROJ[i], pr = proj[i] || { p: { s: 0, w: 0, r: 0, h: 0 } }, rows = $('projrows'), words = [];
+  $('projface').textContent = P.e; $('projname').textContent = P.n; rows.innerHTML = '';
+  RES.forEach(function (R) {
+    var need = P.need[R[0]]; if (!need) return; var have = pr.p[R[0]] || 0;
+    var d = document.createElement('div'); d.className = 'prow';
+    d.innerHTML = '<i>' + R[1] + '</i><div class="bar"><b style="width:' + Math.round(have / need * 100) + '%"></b></div><small>' + have + ' / ' + need + '</small>';
+    rows.appendChild(d); if (have < need) words.push(R[2] + ': ' + have + ' из ' + need);
+  });
+  var stat = building(i) ? 'Строится! Готово через ' + minsWord((pr.done - sNow()) / 60000) + '.' : 'Вкладывайте звёзды и материалы вместе. Материалы: трясите деревья, собирайте камешки и ракушки.';
+  $('projstat').textContent = stat;
+  var pb = $('projbtn'); pb.classList.toggle('hidden', building(i)); pb.textContent = 'Вложить всё, что есть';
+  $('projm').classList.remove('hidden');
+  if (speak) say(P.n + '. ' + (building(i) ? stat : 'Ещё нужно: ' + words.join(', ') + '. Нажми «Вложить», и всё, что у нас есть, пойдёт на стройку.'), true);
+}
+$('projbtn').onclick = function () { unlockAudio(); send({ t: 'pj', id: projOpen }); };
+$('closeproj').onclick = function () { $('projm').classList.add('hidden'); projOpen = -1; };
+var projSaid = {};
+function projMsg(m) {
+  proj[m.id] = m.pr; mat = m.mat; total = m.total; bumpStars(); matChip();
+  if (projOpen === m.id) openProj(m.id, false);
+  if (m.pr.done) { toast('Ура! На стройку «' + PROJ[m.id].n + '» всё собрано! Строим ' + minsWord(PROJ[m.id].m) + '.'); beep([523, 659, 784, 1047], 0.1, 0.13); }
+  else toast((m.by === store.id ? 'Вложили в стройку «' : nameOf(m.by) + ' вложила в стройку «') + PROJ[m.id].n + '»!');
+}
+function projLogic() {
+  PROJ.forEach(function (P, i) {
+    var p = proj[i]; if (!p || !p.done) return;
+    if (built(i) && !projSaid[i]) { projSaid[i] = 1; if (sNow() - p.done < 3600000) { toast('Построено: ' + P.n + '! Скорее посмотри! ' + P.e); beep([523, 659, 784, 1047, 1319, 1568], 0.1, 0.14); } }
+  });
+  bridgeOpen = built(0);
+  COLP.length = 0;
+  PROJ.forEach(function (P, i) {
+    if (built(i)) { if (i === 1) COLP.push(ellCol(CAFE.x, CAFE.y - 40, 200, 50), ellCol(CAFE_T[0].x, CAFE_T[0].y - 6, 40, 18), ellCol(CAFE_T[1].x, CAFE_T[1].y - 6, 40, 18)); if (i === 2) COLP.push(ellCol(STAGE.x, STAGE.y - 50, 230, 55)); }
+    else COLP.push(ellCol(P.x, P.y - 20, building(i) ? 150 : 110, 30));
+  });
+}
+/* --- кафе и сцена --- */
+var cookSel = -1;
+function openCook() { cookSel = -1; drawCook(); $('cookm').classList.remove('hidden'); say('Что приготовим? Каждое блюдо — это одна еда с огорода. Готовое блюдо появится на столике.', true); }
+function drawCook() {
+  $('cookfood').textContent = food; var g = $('cookgrid'); g.innerHTML = '';
+  DISHES.forEach(function (d, i) { var b = document.createElement('button'); b.className = cookSel === i ? 'on' : ''; b.innerHTML = '<span>' + d[1] + '</span>' + d[0]; b.onclick = function () { unlockAudio(); cookSel = i; say(d[0], true); drawCook(); }; g.appendChild(b); });
+  var cb = $('cookbtn'); cb.textContent = cookSel < 0 ? 'Выбери блюдо' : food < 1 ? 'Нужна еда с огорода' : 'Приготовить: ' + DISHES[cookSel][0]; cb.disabled = cookSel < 0 || food < 1;
+}
+$('cookbtn').onclick = function () { unlockAudio(); var t = cafe[0] < 0 ? 0 : cafe[1] < 0 ? 1 : -1; if (t < 0) { say('Оба столика заняты! Сначала съешьте то, что приготовили.', true); return; } send({ t: 'ck', d: cookSel, t2: t }); $('cookm').classList.add('hidden'); };
+$('closecook').onclick = function () { $('cookm').classList.add('hidden'); };
+function cafeMsg(m) {
+  cafe = m.cafe; if (m.food !== undefined) food = m.food; if (m.total !== undefined) { total = m.total; bumpStars(); }
+  if (m.a === 'c') { toast((m.by === store.id ? 'Готово: ' : nameOf(m.by) + ' приготовила: ') + DISHES[m.d][0] + ' ' + DISHES[m.d][1] + '! Садитесь за столик.'); beep([659, 784, 988], 0.08, 0.1); }
+  else { toast((m.by === store.id ? 'Ням-ням! Очень вкусно! ' : nameOf(m.by) + ' съела: ' + DISHES[m.d][0] + '. ') + '+2 ⭐'); beep([523, 659], 0.08, 0.1); }
+}
+function cafeSpot() {
+  if (!built(1)) return null;
+  if (d2(me.x, me.y, CAFE.x, CAFE.y + 50) < 110 * 110) return { key: 'cook', ui: 'cook', n: 'Приготовить блюдо', e: '👩‍🍳' };
+  for (var t = 0; t < 2; t++) if (d2(me.x, me.y, CAFE_T[t].x, CAFE_T[t].y + 40) < 110 * 110) return { key: 'tbl' + t, ui: 'seat', t: t, n: 'Сесть за столик', e: '🪑' };
+  return null;
+}
+function stageSpot() { return built(2) && d2(me.x, me.y, STAGE.x, STAGE.y + 50) < 170 * 170 ? { key: 'stage', ui: 'sing', n: 'Выступить на сцене', e: '🎤' } : null; }
+function eatSpot() { // сидит за столиком, а на нём блюдо
+  if (!me.pose || me.pose.k !== 'sit' || me.m !== 0) return null;
+  for (var t = 0; t < 2; t++) if (cafe[t] >= 0 && Math.abs(me.pose.x - CAFE_T[t].x) < 90 && Math.abs(me.pose.y - CAFE_T[t].y) < 60) return { key: 'eat' + t, ui: 'eat', t: t, n: 'Съесть: ' + DISHES[cafe[t]][0], e: DISHES[cafe[t]][1] };
+  return null;
+}
+var SONG = [523, 523, 784, 784, 880, 880, 784, 0, 698, 698, 659, 659, 587, 587, 523, 0, 784, 784, 698, 698, 659, 659, 587, 0];
+function playSong() { if (!AC) return; var t0 = AC.currentTime; SONG.forEach(function (f, i) { if (!f) return; var o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + i * 0.28); g.gain.linearRampToValueAtTime(0.08, t0 + i * 0.28 + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.28 + 0.26); o.connect(g); g.connect(AC.destination); o.start(t0 + i * 0.28); o.stop(t0 + i * 0.28 + 0.3); }); }
+
+var shellHide = {};
+function hideShells() { shellHide = {}; got.s.forEach(function (i) { if (SHELLS[i] !== undefined) shellHide[SHELLS[i]] = 1; }); }
+function npcMsg(m) {
+  var N = NPCS[m.id], wasReady = npcState(m.id) === 'ready';
+  npcs[m.id] = m.s;
+  if (m.t === 'nq') { if (m.by === store.id) say('Отлично! ' + N.n + ' будет ждать. ' + qWords(m.s.q), true); else toast(nameOf(m.by) + ' обещала помочь: ' + N.n); }
+  else if (m.t === 'nu') { if (!wasReady && npcState(m.id) === 'ready') toast('Можно идти к жителю: ' + N.n + ' ' + N.e + ' — у вас всё получилось!'); }
+  else {
+    total = m.total; mat = m.mat; food = m.food; bumpStars(); matChip();
+    var gtxt = '';
+    if (m.g) { if (m.g.f !== undefined) { inv[m.g.f] = m.n; drawTray(); gtxt = ' Подарок: ' + CAT[m.g.f].n + ' — лежит в запасе домика!'; } else if (m.g.w) { if (ward.indexOf(m.g.w) < 0) ward.push(m.g.w); gtxt = ' Подарок: ' + WARD[m.g.w.charAt(0)][+m.g.w.slice(1)].n + ' — уже в шкафу!'; } }
+    var txt = N.n + ': Спасибо! Ты настоящий друг! +10 ⭐.' + gtxt + (m.s.h >= 10 ? ' Мы лучшие друзья!' : '');
+    if (m.by === store.id) say(txt, true); toast(txt, false, m.by === store.id); beep([523, 659, 784, 1047], 0.09, 0.13);
+  }
+  if (npcOpen === m.id) openNpc(m.id);
+}
+
+/* =====================================================================
    ЖИВОЙ МИР: время суток, погода, дела на день, почта, товар дня, отдых
    ===================================================================== */
-var TNAME = { fish: 'Поймайте {n} рыбки', bug: SEASON === 'winter' ? 'Поймайте сачком {n} снежинки' : 'Поймайте сачком {n} жучка или бабочки', plant: 'Посадите что-нибудь на огороде', harvest: 'Соберите урожай на огороде', pet: 'Погладьте питомца', stars: 'Соберите {n} звёздочек', gems: 'Найдите {n} самоцвета в пещере', swing: 'Покачайтесь на качелях', tramp: 'Попрыгайте на батуте', slide: 'Скатитесь с горки',
+var TNAME = { npc: 'Помогите жителю острова', wood: 'Потрясите {n} дерева', shell: 'Найдите {n} ракушки на пляже', build: 'Вложите что-нибудь в стройку', cook: 'Приготовьте блюдо в кафе', sing: 'Выступите на сцене', fish: 'Поймайте {n} рыбки', bug: SEASON === 'winter' ? 'Поймайте сачком {n} снежинки' : 'Поймайте сачком {n} жучка или бабочки', plant: 'Посадите что-нибудь на огороде', harvest: 'Соберите урожай на огороде', pet: 'Погладьте питомца', stars: 'Соберите {n} звёздочек', gems: 'Найдите {n} самоцвета в пещере', swing: 'Покачайтесь на качелях', tramp: 'Попрыгайте на батуте', slide: 'Скатитесь с горки',
   swim: SEASON === 'winter' ? 'Покатайтесь на льду' : 'Искупайтесь в пруду', dance: 'Потанцуйте', dig: 'Выкопайте клад по компасу', chest: 'Откройте сундук', bay: 'Сходите в тайную бухту',
   cave: 'Загляните в пещеру', tag: 'Сыграйте в догонялки', hide: 'Сыграйте в прятки', feed: 'Покормите питомца', buy: 'Купите что-нибудь в лавке' };
-var TICON = { fish: '🎣', bug: SEASON === 'winter' ? '❄️' : '🦋', plant: '🌱', harvest: '🥕', pet: '🤚', stars: '⭐', gems: '💎', swing: '🎠', tramp: '🤸', slide: '🎢', swim: SEASON === 'winter' ? '⛸' : '🏊', dance: '💃', dig: '⛏', chest: '🧰', bay: '🏝', cave: '🕯', tag: '🏃', hide: '🙈', feed: '🍖', buy: '🛍' };
+var TICON = { npc: '💬', wood: '🪵', shell: '🐚', build: '🏗', cook: '🍰', sing: '🎤', fish: '🎣', bug: SEASON === 'winter' ? '❄️' : '🦋', plant: '🌱', harvest: '🥕', pet: '🤚', stars: '⭐', gems: '💎', swing: '🎠', tramp: '🤸', slide: '🎢', swim: SEASON === 'winter' ? '⛸' : '🏊', dance: '💃', dig: '⛏', chest: '🧰', bay: '🏝', cave: '🕯', tag: '🏃', hide: '🙈', feed: '🍖', buy: '🛍' };
 var DAY_REWARD = 25;
 var LETTERS = [
   ['🦉', 'Сова Софья', 'Здравствуй! Ночью у пруда светятся светлячки. Загляни вечером — это очень красиво!'],
@@ -2517,6 +2832,11 @@ function greet() {
   greeted = true;
   var parts = [hello() + ', ' + (store.name || 'подружка') + '! ' + weatherWords(), planWords()];
   if (mailReady) parts.push('В почтовом ящике у домика тебя ждёт письмо!');
+  var nw = NPCS.filter(function (N, i) { var st = npcState(i); return st === 'new' || st === 'ready'; });
+  if (nw.length) parts.push('Жители острова ждут твоей помощи: ' + nw.slice(0, 3).map(function (N) { return N.n; }).join(', ') + '. Ищи над ними жёлтый восклицательный знак!');
+  var pj = -1; PROJ.forEach(function (P, i) { if (pj < 0 && !built(i) && !building(i)) pj = i; });
+  if (pj >= 0) parts.push('А ещё мы строим: ' + PROJ[pj].n.toLowerCase() + '. Тряси деревья, собирай камешки и ракушки — и неси на стройку!');
+  else PROJ.forEach(function (P, i) { if (building(i)) parts.push(P.n + ' строится, скоро будет готово!'); });
   if (day && day.deals && day.deals.length) parts.push('А в лавке сегодня товар дня со скидкой: ' + day.deals.map(function (i) { return CAT[i].n.toLowerCase(); }).join(', ') + '.');
   say(parts.join(' '), true);
   toast(hello() + '! Сегодня ' + tasksLeft().length + ' дела — нажми 📋', false, true);
@@ -2649,9 +2969,9 @@ function drawWeather(dt, a) {
 }
 function genDayLocal(seed) { // только для демо без сервера
   var R = rng(hashStr(seed)), pick = function (a) { return a[Math.floor(R() * a.length)]; };
-  var ks = [pick(['stars', 'gems', 'fish', 'bug']), pick(['swing', 'tramp', 'slide', 'swim', 'dance']), pick(['dig', 'chest', 'bay', 'cave', 'fish']), pick(['feed', 'pet', 'buy', 'plant', 'harvest'])];
+  var ks = [pick(['stars', 'gems', 'fish', 'bug', 'wood', 'shell']), pick(['swing', 'tramp', 'slide', 'swim', 'dance']), pick(['dig', 'chest', 'bay', 'cave', 'fish']), pick(['feed', 'pet', 'buy', 'plant', 'harvest', 'npc', 'build'])];
   if (ks[2] === ks[0]) ks[2] = 'dig';
-  var need = { stars: 15, gems: 3, fish: 2, bug: 2 }, deals = [];
+  var need = { stars: 15, gems: 3, fish: 2, bug: 2, wood: 3, shell: 3 }, deals = [];
   while (deals.length < 3) { var i = Math.floor(R() * CAT.length); if (deals.indexOf(i) < 0 && CAT[i].p >= 12) deals.push(i); }
   return { key: dayKeyOf(krasNow()), tasks: ks.map(function (k) { return { k: k, need: need[k] || 1, have: 0 }; }), done: false, deals: deals };
 }
@@ -2684,7 +3004,7 @@ function goTo(e, isTap) {
     if (hit) { send({ t: 'take', u: hit.u }); beep([660, 440], 0.06, 0.1); return; }
   }
   if (me.m === 2 && decor && !isTap) return;
-  if (me.m === 0 && inBand(p.x, p.y)) { var c = bandC(p.x); p.y = me.y < c ? c - BAND - 2 : c + BAND + 2; } // в гору не идём — остаёмся на своей стороне
+  if (me.m === 0 && inBand(p.x, p.y) && !(bridgeOpen && Math.abs(p.x - BRIDGE.x) < 95)) { var c = bandC(p.x); p.y = me.y < c ? c - BAND - 2 : c + BAND + 2; } // в гору не идём — остаёмся на своей стороне
   fixM(me.m, p); fixM(me.m, p);
   me.tx = p.x; me.ty = p.y; me.stuck = 0;
   if (isTap) { taps.push({ x: p.x, y: p.y, t: 0, m: me.m }); sendMove(); }
@@ -2721,12 +3041,36 @@ function demoHook(o) {
   else if (o.t === 'hv' && bedState(o.b) === 3) demoProg('harvest');
   else if (o.t === 'fc') demoProg('fish'); else if (o.t === 'bc') demoProg('bug');
   else if (o.t === 'pc' && !pd(o.k)[o.a]) demoProg('pet');
+  else if (o.t === 'mt' && (o.o === 't' ? got.t : o.o === 'r' ? got.r : got.s).indexOf(o.i) < 0) demoProg(o.o === 't' ? 'wood' : o.o === 'r' ? 'stone' : 'shell');
+  else if (o.t === 'pj') demoProg('build'); else if (o.t === 'ck' && food > 0) demoProg('cook');
+  else if (o.t === 'nd' && npcState(o.id) === 'ready') demoProg('npc');
   else if (o.t === 'ml' && mailReady) onMsg({ t: 'ml', by: store.id, l: Math.floor(Math.random() * LETTERS.length), g: { s: 10 }, total: total + 10 });
 }
 function demoServer(o) {
   demoHook(o);
   if (o.t === 'wb') { var wi = WARD[o.k.charAt(0)][+o.k.slice(1)]; if (total < wi.p) onMsg({ t: 'no' }); else onMsg({ t: 'wb', by: store.id, k: o.k, total: total - wi.p }); return; }
   if (o.t === 'eg') { var free = []; PETS.forEach(function (q, i) { if (pets[i] === undefined) free.push(i); }); if (!free.length) onMsg({ t: 'nn' }); else if (total < EGG_PRICE) onMsg({ t: 'no' }); else onMsg({ t: 'eg', by: store.id, k: free[Math.floor(Math.random() * free.length)], total: total - EGG_PRICE }); return; }
+  if (o.t === 'mt') {
+    var arr = o.o === 't' ? got.t : o.o === 'r' ? got.r : got.s; if (arr.indexOf(o.i) >= 0) { onMsg({ t: 'mx', o: o.o, i: o.i }); return; }
+    var nm = { w: mat.w, r: mat.r, h: mat.h }, add = o.o === 't' && Math.random() < 0.25 ? 3 : 0; nm[o.o === 't' ? 'w' : o.o === 'r' ? 'r' : 'h']++;
+    onMsg({ t: 'mg', by: store.id, o: o.o, i: o.i, mat: nm, add: add, total: total + add }); return;
+  }
+  if (o.t === 'nq') { var q = { k: dayQuest(o.id), need: QNEED[dayQuest(o.id)] || 1, have: 0, d: today() }; onMsg({ t: 'nq', by: store.id, id: o.id, s: { h: (npcs[o.id] || {}).h || 0, q: q } }); return; }
+  if (o.t === 'nd') {
+    if (npcState(o.id) !== 'ready') return; var s0 = npcs[o.id], q2 = s0.q, m2 = { w: mat.w, r: mat.r, h: mat.h }, f2 = food;
+    if (q2.k === 'food') f2 -= q2.need; else if (q2.k === 'wood') m2.w -= q2.need; else if (q2.k === 'shell') m2.h -= q2.need;
+    var h2 = Math.min(10, (s0.h || 0) + 1), g = h2 === 3 || h2 === 10 ? { f: 13 } : null;
+    onMsg({ t: 'nd', by: store.id, id: o.id, s: { h: h2, q: q2, ok: today() }, total: total + 10, mat: m2, food: f2, g: g, n: g ? (inv[13] || 0) + 1 : 0 }); return;
+  }
+  if (o.t === 'pj') {
+    var P = PROJ[o.id], pr = proj[o.id] || { p: { s: 0, w: 0, r: 0, h: 0 }, done: 0 }, p2 = { s: pr.p.s, w: pr.p.w, r: pr.p.r, h: pr.p.h }, m3 = { w: mat.w, r: mat.r, h: mat.h }, t3 = total, took = 0;
+    ['s', 'w', 'r', 'h'].forEach(function (k) { var left = P.need[k] - p2[k], have = k === 's' ? t3 : m3[k], tk = Math.max(0, Math.min(left, have)); if (tk) { took += tk; p2[k] += tk; if (k === 's') t3 -= tk; else m3[k] -= tk; } });
+    if (!took) { onMsg({ t: 'pz' }); return; }
+    var full = ['s', 'w', 'r', 'h'].every(function (k) { return p2[k] >= P.need[k]; });
+    onMsg({ t: 'pg', by: store.id, id: o.id, pr: { p: p2, done: full ? Date.now() + 12000 : 0 }, mat: m3, total: t3 }); return;
+  }
+  if (o.t === 'ck') { if (food < 1 || cafe[o.t2] >= 0) return; var c1 = cafe.slice(); c1[o.t2] = o.d; onMsg({ t: 'cf', by: store.id, cafe: c1, food: food - 1, a: 'c', d: o.d }); return; }
+  if (o.t === 'et') { if (cafe[o.t2] < 0) return; var c2 = cafe.slice(), d2x = c2[o.t2]; c2[o.t2] = -1; onMsg({ t: 'cf', by: store.id, cafe: c2, total: total + 2, a: 'e', d: d2x }); return; }
   if (o.t === 'pl') { if (garden[o.b]) return; if (total < CROPS[o.s].p) { onMsg({ t: 'no' }); return; } var g1 = garden.slice(); g1[o.b] = { s: o.s, t: 0 }; onMsg({ t: 'gd', garden: g1, total: total - CROPS[o.s].p, by: store.id, a: 'p', b: o.b }); return; }
   if (o.t === 'wa') { if (!garden[o.b] || garden[o.b].t) return; var g2 = garden.slice(); g2[o.b] = { s: garden[o.b].s, t: Date.now() - CROPS[garden[o.b].s].g * 60000 + 15000 }; onMsg({ t: 'gd', garden: g2, by: store.id, a: 'w', b: o.b }); return; }
   if (o.t === 'hv') { if (bedState(o.b) !== 3) return; var s3 = garden[o.b].s, g3 = garden.slice(); g3[o.b] = null; onMsg({ t: 'hv', by: store.id, b: o.b, s: s3, garden: g3, add: CROPS[s3].p * 3, total: total + CROPS[s3].p * 3, food: food + 2 }); return; }
@@ -2760,7 +3104,7 @@ function startDemo() {
   players.set(me.id, me);
   var bot = mkPlayer({ id: 'bot', name: 'Подружка', look: (normLook(store.look).d + 1) % 6, x: 2660, y: 2210, tx: 2660, ty: 2210 });
   players.set('bot', bot);
-  stars = []; album = []; chestOpen = {}; total = 300; $('starn').textContent = 300; ev = null; furn = []; inv = { 0: 1, 1: 1 }; setFurn(); ward = []; pets = {}; garden = [null, null, null, null, null, null]; food = 2; fishA = []; bugsA = []; cropsA = []; petDay = {}; day = genDayLocal('demo' + dayKeyOf(krasNow())); mailReady = true; lim = null; updatePlanBadge();
+  stars = []; album = []; chestOpen = {}; total = 300; $('starn').textContent = 300; ev = null; furn = []; inv = { 0: 1, 1: 1 }; setFurn(); ward = []; pets = {}; mat = { w: 30, r: 15, h: 10 }; got = { t: [], r: [], s: [] }; npcs = {}; proj = {}; cafe = [-1, -1]; matChip(); hideShells(); garden = [null, null, null, null, null, null]; food = 2; fishA = []; bugsA = []; cropsA = []; petDay = {}; day = genDayLocal('demo' + dayKeyOf(krasNow())); mailReady = true; lim = null; updatePlanBadge();
   for (var i = 0; i < 26; i++) demoStar(0);
   for (i = 0; i < 9; i++) demoStar(1);
   treasure = randSpot(0, true); trShowAt = T + 1;
@@ -2779,7 +3123,7 @@ function startDemo() {
    КАДР
    ===================================================================== */
 var RADAR = ['Холодно', 'Теплее', 'Тепло', 'Горячо!', 'Копай тут!'];
-var lastTick = 0, crit = [], bats = [], gardenTick = 0;
+var lastTick = 0, crit = [], bats = [], gardenTick = 0, projTick = 0;
 (function () { var R = rng(21); for (var i = 0; i < 18; i++) crit.push({ hx: 1500 + R() * 2600, hy: 1400 + R() * 1600, a: R() * 6, c: ['#ff8ec0', '#ffd257', '#c9a4ff', '#fff'][i % 4] }); for (i = 0; i < 8; i++) { var r = ROOMS[i % ROOMS.length]; bats.push({ hx: r[0], hy: r[1], a: R() * 6, r: r[2] * 0.7 }); } })();
 
 function logic(dt) {
@@ -2833,6 +3177,7 @@ function logic(dt) {
   if (ns !== nearShop) { nearShop = ns; $('shopbtn').classList.toggle('hidden', !ns || radarLvl === 4); if (!ns) $('shop').classList.add('hidden'); }
   playLogic(); petLogic(dt); restLogic(); if (!me) return;
   fishLogic(); critterLogic(dt);
+  if (T - projTick > 1) { projTick = T; projLogic(); }
   if (T - gardenTick > 2) { gardenTick = T; garden.forEach(function (g, i) { if (g && g.t && bedState(i) === 3 && !ripeSaid[i + ':' + g.t]) { ripeSaid[i + ':' + g.t] = 1; if (sNow() - (g.t + CROPS[g.s].g * 60000) < 30 * 60000) toast('Урожай созрел: ' + CROPS[g.s].n + ' ' + CROPS[g.s].e + '! Можно собирать на огороде.'); } }); }
   if (T - wxCheck > 60) { wxCheck = T; updateWeather(); }
   if (ev && T > ev.until) ev = null;
@@ -2881,12 +3226,21 @@ function drawSorted(list, x0, y0, vw, vh, curMap) {
   stars.forEach(function (s) { if (s.m === curMap) vis.push({ y: s.y, star: s }); });
   players.forEach(function (p) { if (p.m === curMap && (!me || seen(p) > 0)) vis.push({ y: p.pose ? p.pose.sy : p.y, pl: p }); });
   pops.forEach(function (p) { if (p.m === curMap) vis.push({ y: p.y + 1, pop: p }); });
+  if (curMap === 0) drawNpcs(x0, y0, vw, vh, vis);
   players.forEach(function (p) { if (p.pet && p.m === curMap && (!me || seen(p) >= 1)) vis.push({ y: p.pet.y, pet: p }); });
   vis.sort(function (a, b) { return a.y - b.y; });
   for (i = 0; i < vis.length; i++) {
     o = vis[i];
-    if (o.k) { drawSpr(o.mail ? (mailReady ? 'mail1' : 'mail0') : o.k, o.x, o.y + (o.ay || 0), o.s); if (o.k === 'swing') drawSwingSeats(); }
+    if (o.k && bridgeOpen && o.k.charAt(0) === 'm' && o.k.indexOf('mount') === 0 && Math.abs(o.x - BRIDGE.x) < 170) continue;
+    if (o.k) { drawSpr(o.mail ? (mailReady ? 'mail1' : 'mail0') : o.k, o.x + (o.ti !== undefined && T - (shakeT[o.ti] || -9) < 0.5 ? Math.sin(T * 60) * 6 : 0), o.y + (o.ay || 0), o.s); if (o.k === 'swing') drawSwingSeats(); }
     else if (o.chest !== undefined) drawSpr('chest' + (chestOpen[o.chest] ? 1 : 0), o.x, o.y, chestOpen[o.chest] ? 1 : 1 + 0.04 * Math.sin(T * 4));
+    else if (o.npc !== undefined) drawNpc(o);
+    else if (o.proj !== undefined) {
+      if (built(o.proj)) { if (o.proj === 1) drawSpr('cafe', o.x, o.y); else if (o.proj === 2) { drawSpr('stage', o.x, o.y); players.forEach(function (pl) { if (pl.pose && pl.pose.k === 'sing' && pl.m === 0) { ctx.fillStyle = 'rgba(255,240,150,.28)'; ctx.beginPath(); ctx.moveTo(pl.pose.x - 20, o.y - 300); ctx.lineTo(pl.pose.x + 20, o.y - 300); ctx.lineTo(pl.pose.x + 70, pl.pose.y + 6); ctx.lineTo(pl.pose.x - 70, pl.pose.y + 6); ctx.closePath(); ctx.fill(); } }); } }
+      else if (building(o.proj)) { drawSpr('scaff', o.x, o.y); if (Math.random() < 0.1) parts.push({ x: o.x + (Math.random() - 0.5) * 200, y: o.y - 100 - Math.random() * 120, vx: (Math.random() - 0.5) * 120, vy: -120, t: 0, life: 0.5, c: '#ffd257', m: 0 }); }
+      else drawSpr('site', o.x, o.y);
+    }
+    else if (o.ct !== undefined) { if (built(1)) { drawSpr('ctable', o.x, o.y); if (cafe[o.ct] >= 0) { ctx.font = '46px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(DISHES[cafe[o.ct]][1], o.x, o.y - 76); } } }
     else if (o.pet) { var pq = o.pet.pet, pk = o.pet.look.pt; drawPet(ctx, pq.x, pq.y, pk, petSize(pk), pq.face, pq.ph, pq.mv, (pets[pk] || 0) >= PET_MAX); }
     else if (o.star) {
       var st = o.star, age = Math.min(1, (T - st.born) * 2.5), bobS = Math.sin(T * 3 + st.id) * 6;
@@ -2973,6 +3327,14 @@ function drawIsland(dt, x0, y0, vw, vh) {
     ctx.strokeStyle = '#a66f42'; ctx.lineWidth = 3;
     for (yy = py0 + 22; yy < PIER.y1 - 6; yy += 22) { ctx.beginPath(); ctx.moveTo(PIER.x0 + 3, yy); ctx.lineTo(PIER.x1 - 3, yy); ctx.stroke(); }
   }
+  // мост через горы
+  if (bridgeOpen) {
+    var bc = bandC(BRIDGE.x), by0 = bc - BAND - 40, by1 = bc + BAND + 40;
+    ctx.fillStyle = '#4a3f5e'; rr(ctx, BRIDGE.x - 110, by0 + 40, 220, by1 - by0 - 80, 30); ctx.fill();
+    ctx.fillStyle = '#c98f5a'; rr(ctx, BRIDGE.x - 56, by0, 112, by1 - by0, 10); ctx.fill();
+    ctx.strokeStyle = '#a66f42'; ctx.lineWidth = 4; for (var yy = by0 + 20; yy < by1; yy += 26) { ctx.beginPath(); ctx.moveTo(BRIDGE.x - 54, yy); ctx.lineTo(BRIDGE.x + 54, yy); ctx.stroke(); }
+    ctx.strokeStyle = '#8a5a3a'; ctx.lineWidth = 6; [-62, 62].forEach(function (dx) { ctx.beginPath(); ctx.moveTo(BRIDGE.x + dx, by0); ctx.quadraticCurveTo(BRIDGE.x + dx, bc + 30, BRIDGE.x + dx, by1); ctx.stroke(); ctx.fillStyle = '#8a5a3a'; rr(ctx, BRIDGE.x + dx - 7, by0 - 30, 14, 40, 4); ctx.fill(); rr(ctx, BRIDGE.x + dx - 7, by1 - 10, 14, 40, 4); ctx.fill(); });
+  }
   // огород
   if (GARDEN.x > x0 - 400 && GARDEN.x < x0 + vw + 400 && GARDEN.y > y0 - 300 && GARDEN.y < y0 + vh + 300) {
     ctx.fillStyle = '#c99a63'; rr(ctx, GARDEN.x - 250, GARDEN.y - 140, 500, 280, 30); ctx.fill();
@@ -2991,7 +3353,7 @@ function drawIsland(dt, x0, y0, vw, vh) {
   }
   var DK = FISHSPOTS[1]; if (DK.x > x0 - 200 && DK.x < x0 + vw + 200 && DK.y > y0 - 200 && DK.y < y0 + vh + 200) drawSpr('dock', DK.x, DK.y - 40);
   // цветы, грибы, ракушки
-  for (var i = 0; i < DECOR.length; i++) { var d = DECOR[i]; if ((SEASON !== 'winter' || d[2] === 7) && d[0] > x0 - 20 && d[0] < x0 + vw + 20 && d[1] > y0 - 20 && d[1] < y0 + vh + 30) drawSpr('d' + d[2], d[0], d[1]); }
+  for (var i = 0; i < DECOR.length; i++) { var d = DECOR[i]; if ((SEASON !== 'winter' || d[2] === 7) && !shellHide[i] && d[0] > x0 - 20 && d[0] < x0 + vw + 20 && d[1] > y0 - 20 && d[1] < y0 + vh + 30) drawSpr('d' + d[2], d[0], d[1]); }
   // место звездопада
   if (ev) { ctx.fillStyle = 'rgba(255,240,150,' + (0.16 + 0.1 * Math.sin(T * 5)) + ')'; ell(ctx, ev.x, ev.y, 420, 300); ctx.fill(); }
   drawSorted(OBJ0, x0, y0, vw, vh, 0);
