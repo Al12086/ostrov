@@ -9,7 +9,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const sample = (a, n) => shuffle(a).slice(0, n);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const APP_VER = 32;   // номер версии виден в разделе «Для родителей»
+const APP_VER = 33;   // номер версии виден в разделе «Для родителей»
 const FAST = /[?&]fast\b/.test(location.search);   // режим автопроверки: без голоса и пауз
 
 /* ---------- состояние ---------- */
@@ -213,7 +213,7 @@ function creator(first) {
     <div class="cr-left">${heroHTML('happy', 'big')}</div>
     <div class="panel cr-panel">
       <h2>Выбери свою принцессу</h2>
-      <div class="looks">${HERO_LOOKS.map((l, i) => l.special && (+S.set.special !== i || l.ready === false) ? '' : `<button class="look ${heroLook(S.hero) === i ? 'on' : ''}" data-act="cr" data-p="look" data-v="${i}" aria-label="${l.n}"><img src="img/hero/h${i}_0.webp" alt=""><span>${l.n}</span></button>`).join('')}</div>
+      <div class="looks">${HERO_LOOKS.map((l, i) => l.special && (+S.set.special !== i || l.ready === false) ? '' : `<button class="look ${heroLook(S.hero) === i ? 'on' : ''}" data-act="cr" data-p="look" data-v="${i}" aria-label="${l.n}"><img src="img/hero/${l.thumb || `h${i}_0.webp`}" alt=""><span>${l.n}</span></button>`).join('')}</div>
       <div class="cr-row"><span>Класс</span><div class="grade">${[[0, 'Дошкольник'], [3, '3 класс']].map(([g, n]) => `<button class="chip ${(S.grade === 3 ? 3 : 0) === g ? 'on' : ''}" data-act="crg" data-v="${g}">${n}</button>`).join('')}</div></div>
       <div class="cr-row"><span>Имя</span><div><input id="nm" maxlength="14" placeholder="Имя принцессы" value="${esc(S.name)}" autocomplete="off"></div></div>
       ${first && !Sync.code ? `<div class="cr-row"><span>Слово</span><div><input id="mw" maxlength="20" placeholder="Волшебное слово" value="${esc(crWord)}" autocomplete="off" autocapitalize="off"></div></div>

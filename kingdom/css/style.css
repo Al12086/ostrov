@@ -495,3 +495,9 @@ svg.staff .clef { fill: none; stroke: var(--berry); stroke-width: 6; stroke-line
 .board.g3 .opts:has(.wordc) > .card:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; }
 .gate p small { display: block; font-size: 22px; opacity: .75; margin-top: 6px; }
 .gate .g-row { display: flex; gap: 14px; }
+/* v33: экран создания — все кнопки помещаются (строка «Класс» и особые принцессы) */
+.cr-panel { bottom: 18px; overflow-y: auto; gap: 10px; }
+.cr-panel .looks { gap: 10px; flex-wrap: nowrap; }
+.cr-panel .look { width: 112px; padding: 6px 5px 4px; border-radius: 22px; }
+.cr-panel .look img { width: 98px; height: 98px; }
+.cr-panel .look span { font-size: 19px; }
