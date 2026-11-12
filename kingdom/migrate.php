@@ -6,7 +6,9 @@ $old = rtrim($argv[1], '/'); $root = rtrim($argv[2], '/'); $adm = getenv('ADM');
 function get($url, &$code = null) {
     $ch = curl_init($url);
     curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 60, CURLOPT_FOLLOWLOCATION => true));
-    $b = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+    $b = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($b === false) $GLOBALS['cerr'] = curl_error($ch);
+    curl_close($ch);
     return $b === false ? '' : $b;
 }
 function api($old, $q, &$code = null) { return get($old . '/api.php?' . http_build_query($q), $code); }
@@ -15,7 +17,7 @@ $dummy = 'perenos-' . mt_rand(100000, 999999);
 
 $j = json_decode(api($old, array('a' => 'games', 'code' => $dummy, 'adm' => $adm), $c), true);
 if ($c === 403) { fwrite(STDERR, "Пароль владельца не подошёл\n"); exit(3); }
-if (!is_array($j) || empty($j['ok'])) { fwrite(STDERR, "Старый сайт не ответил ($c)\n"); exit(2); }
+if (!is_array($j) || empty($j['ok'])) { fwrite(STDERR, "Старый сайт не ответил ($c) " . (isset($GLOBALS['cerr']) ? $GLOBALS['cerr'] : '') . "\n"); exit(2); }
 
 @mkdir($root . '/_voice', 0700, true);
 wj($root . '/_voice/owner.json', array('hash' => hash('sha256', 'kingdom-owner:' . $adm)));
