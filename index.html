@@ -212,6 +212,27 @@
   #cookgrid button { padding: 8px 4px; border-radius: 16px; background: #f4eefb; font-weight: 900; font-size: 15px; }
   #cookgrid button span { display: block; font-size: 42px; line-height: 1.15; }
   #cookgrid button.on { background: #ffe9f3; box-shadow: inset 0 0 0 3px #ff7eb6; }
+  #quizm .card { padding-top: 14px; }
+  #qwho { font-size: 64px; line-height: 1; }
+  #qtitle { font-size: 14px; font-weight: 800; color: #8a78a8; margin: 2px 0 8px; }
+  #qshow { background: #f4eefb; border-radius: 22px; padding: 12px; margin-bottom: 4px; }
+  .qrow { font-size: 34px; line-height: 1.35; letter-spacing: 2px; word-break: break-word; }
+  .qrow b { color: #5b3f78; margin: 0 6px; }
+  .qbig { font-size: 46px; font-weight: 900; color: #5b3f78; letter-spacing: 3px; }
+  .qpic { font-size: 84px; line-height: 1.1; }
+  .qopts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .qopts.groups { grid-template-columns: 1fr 1fr; }
+  .qopts button { min-height: 86px; border-radius: 22px; background: #fff; box-shadow: 0 5px 0 #d8c8ec, inset 0 0 0 3px #eadff6; font-size: 44px; font-weight: 900; color: #5b3f78; padding: 6px; }
+  .qopts.words button { font-size: 26px; }
+  .qopts.groups button { font-size: 28px; line-height: 1.3; word-break: break-word; }
+  .qopts button.ok { background: #c9f2d0; box-shadow: 0 5px 0 #7ed48a, inset 0 0 0 3px #7ed48a; }
+  .qopts button.bad { background: #ffd9e3; box-shadow: 0 5px 0 #f59ab2; opacity: .55; }
+  .qbar { display: flex; gap: 10px; margin-top: 12px; }
+  .qbar .big { margin-top: 0; }
+  #ages { display: flex; gap: 10px; justify-content: center; }
+  #ages button { width: 64px; height: 64px; border-radius: 20px; background: #fff; font-size: 28px; font-weight: 900; color: #5b3f78; box-shadow: 0 4px 0 #d8c8ec; }
+  #ages button.on { background: #ff8ec0; color: #fff; box-shadow: 0 4px 0 #d9417f; }
+  #skills { white-space: pre-line; text-align: left; font-size: 15px; margin: 10px 4px 0; color: #6d5a88; }
   .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
   #albumgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
   #albumgrid div { aspect-ratio: 1; border-radius: 18px; background: #f4eefb; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 38px; line-height: 1.1; }
@@ -240,6 +261,9 @@
 
     <div class="lbl">Выбери героиню</div>
     <div id="looks"></div>
+
+    <div class="lbl">Сколько тебе лет?</div>
+    <div id="ages"></div>
 
     <div id="saved" class="hidden">
       <button id="play" class="big">▶ Играть</button>
@@ -341,6 +365,7 @@
     <div class="lbl" style="margin-top:0" id="bdate">Дела на сегодня</div>
     <div id="blist"></div>
     <div id="breward" class="sub" style="margin:10px 0 0"></div>
+    <div id="skills"></div>
     <button id="bsay" class="big alt">🔊 Прочитать</button>
     <button id="closeboard" class="link">закрыть</button>
   </div>
@@ -405,6 +430,17 @@
   </div>
 </div>
 
+<div id="quizm" class="modalbg hidden">
+  <div class="card">
+    <div id="qwho"></div>
+    <div id="qtitle"></div>
+    <div id="qshow"></div>
+    <div id="qopts" class="qopts"></div>
+    <div class="qbar"><button id="qsay" class="big alt">🔊 Повтори</button></div>
+    <button id="qskip" class="link">пропустить</button>
+  </div>
+</div>
+
 <div id="shop" class="modalbg hidden">
   <div class="card">
     <div class="lbl" style="margin-top:0">Лавка · у нас <span id="shopbal"></span> ⭐</div>
@@ -459,6 +495,7 @@ var NPCS = [
 ];
 var QNEED = { fish: 2, bug: 1, food: 1, wood: 3, shell: 3 };
 /* стройки: s — звёзды, w — брёвна, r — камни, h — ракушки; m — минут строить */
+var SCHOOL = { x: 2850, y: 3200 };
 var BRIDGE = { x: 4000 }, CAFE = { x: 1560, y: 1660 }, STAGE = { x: 3100, y: 1660 };
 var PROJ = [
   { n: 'Мост через горы', e: '🌉', need: { s: 60, w: 40, r: 20, h: 0 }, m: 30 },
@@ -540,6 +577,7 @@ function landmark(x, y) {
   if (Math.abs(x - PETH.x) < 250 && y > PETH.y - 320 && y < PETH.y + 330) return true;
   if (Math.abs(x - GARDEN.x) < 360 && y > GARDEN.y - 240 && y < GARDEN.y + 440) return true;
   if (Math.abs(x - 3700) < 220 && y < 820) return true;
+  if (Math.abs(x - SCHOOL.x) < 280 && y > SCHOOL.y - 330 && y < SCHOOL.y + 160) return true;
   if (Math.abs(x - CAFE.x) < 440 && y > CAFE.y - 340 && y < CAFE.y + 230) return true;
   if (Math.abs(x - STAGE.x) < 320 && y > STAGE.y - 340 && y < STAGE.y + 240) return true;
   if (Math.abs(x - BRIDGE.x) < 220 && Math.abs(y - bandC(BRIDGE.x)) < BAND + 330) return true;
@@ -636,6 +674,7 @@ CHESTS.forEach(function (c) { (c.m ? COL1 : COL0).push(ellCol(c.x, c.y - 8, 40, 
 LAMPS.forEach(function (l) { COL0.push(ellCol(l[0], l[1] - 6, 16, 10)); });
 COL0.push(ellCol(BOARD.x, BOARD.y - 8, 70, 20), ellCol(MAILBOX.x, MAILBOX.y - 6, 26, 14));
 COL0.push(ellCol(GARDEN.x + 270, GARDEN.y - 70, 26, 14));
+COL0.push(ellCol(SCHOOL.x, SCHOOL.y - 10, 150, 26));
 
 
 
@@ -1003,6 +1042,18 @@ function buildSprites() {
     g.fillStyle = '#8a5a3a'; rr(g, -56, -60, 12, 70, 4); g.fill(); rr(g, 44, -60, 12, 70, 4); g.fill();
     g.fillStyle = '#c98f5a'; rr(g, -60, -70, 120, 90, 10); g.fill(); g.strokeStyle = '#a66f42'; g.lineWidth = 3;
     for (var k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-58, -48 + k * 22); g.lineTo(58, -48 + k * 22); g.stroke(); }
+  });
+  sprite('school', 360, 330, 180, 300, function (g) { // лесная школа: доска на ножках и вывеска
+    shadow(g, 160, 18);
+    g.fillStyle = '#a66f42'; rr(g, -140, -200, 16, 200, 6); g.fill(); rr(g, 124, -200, 16, 200, 6); g.fill();
+    g.fillStyle = '#c98f5a'; rr(g, -156, -250, 312, 180, 16); g.fill();
+    g.fillStyle = '#2f6b52'; rr(g, -142, -236, 284, 152, 10); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.font = '900 34px ui-rounded, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('А Б В', -50, -200); g.fillText('1+2=3', -40, -150); g.font = '900 30px system-ui'; g.fillText('🍎', 90, -195);
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 4; g.beginPath(); g.arc(90, -135, 22, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#ff8ec0'; rr(g, -100, -298, 200, 46, 18); g.fill(); g.fillStyle = '#fff'; g.font = '900 28px ui-rounded, system-ui'; g.fillText('ШКОЛА', 0, -274);
+    g.fillStyle = '#f1e3c8'; rr(g, -150, -82, 300, 12, 6); g.fill();
+    g.fillStyle = '#fff'; rr(g, -40, -84, 26, 10, 3); g.fill(); g.fillStyle = '#ffd257'; rr(g, 10, -84, 30, 9, 3); g.fill();
   });
   sprite('site', 260, 220, 130, 200, function (g) { // стройплощадка: забор, табличка, брёвна
     shadow(g, 110, 16);
@@ -1517,6 +1568,7 @@ function buildObjects() {
   TREES.forEach(function (t, i) { OBJ0.push({ x: t[0], y: t[1], k: 'tree' + t[2], h: 300, ti: i }); });
   PROJ.forEach(function (P, i) { OBJ0.push({ x: P.x, y: P.y, proj: i, h: 360 }); });
   CAFE_T.forEach(function (c, i) { OBJ0.push({ x: c.x, y: c.y, ct: i, h: 200 }); });
+  OBJ0.push({ x: SCHOOL.x, y: SCHOOL.y, k: 'school', h: 300 });
   BUSHES.forEach(function (b) { OBJ0.push({ x: b[0], y: b[1], k: 'bush', h: 90 }); });
   LAMPS.forEach(function (l) { OBJ0.push({ x: l[0], y: l[1], k: 'lamp', h: 180 }); });
   ROCKS.forEach(function (r) { OBJ0.push({ x: r[0], y: r[1], k: 'rock', h: 90 }); });
@@ -1767,7 +1819,7 @@ function onMsg(m) {
     treasure = m.tr; trShowAt = T + 5; radarLvl = -1; $('dig').classList.add('hidden'); $('radar').classList.add('hidden');
   }
   else if (m.t === 'co') {
-    chestOpen[m.id] = true; total = m.total; bumpStars();
+    chestOpen[m.id] = true; total = m.total; bumpStars(); if (m.by === store.id) quizLater(['pat', 'count'], 2400);
     var c = CHESTS[m.id]; if (c && me.m === c.m) { burst(c.x, c.y - 50, 20); beep([659, 880, 1175], 0.09, 0.13); }
     toast(nameOf(m.by) + ' открыла сундук!  +' + m.add + ' ⭐');
   }
@@ -1780,6 +1832,7 @@ function onMsg(m) {
   else if (m.t === 'pg') projMsg(m);
   else if (m.t === 'pz') say('Пока нечего вложить. Соберите звёзды, брёвна, камни и ракушки!', true);
   else if (m.t === 'cf') cafeMsg(m);
+  else if (m.t === 'qr' || m.t === 'qq') qzMsg(m);
   else if (m.t === 'fc' || m.t === 'bc') catchMsg(m);
   else if (m.t === 'pn') toast(PETS[m.k].n + (m.a === 'f' ? ' уже сытый.' : m.a === 'p' ? ' уже наглажен сегодня.' : ' уже наигрался сегодня.') + ' Приходи завтра!');
   else if (m.t === 'by') { total = m.total; bumpStars(); inv[m.i] = m.n; drawTray(); drawShop(); toast(nameOf(m.by) + ' купила: ' + CAT[m.i].n + '. Поставь в домике 🏠'); beep([784, 1047], 0.09, 0.12); }
@@ -1945,6 +1998,15 @@ PRESETS.forEach(function (PR, i) {
   b.onclick = function () { var l = normLook(store.look), n = normLook(i); l.d = n.d; l.h = n.h; l.a = n.a; store.look = l; saveStore(); markLook(); };
   $('looks').appendChild(b);
 });
+(function () {
+  [5, 6, 7, 8].forEach(function (a) {
+    var b = document.createElement('button'); b.textContent = a === 8 ? '8+' : a; b.dataset.a = a;
+    b.onclick = function () { unlockAudio(); store.age = a; store.sk = {}; saveStore(); markAge(); say(a === 5 ? 'Пять лет' : a === 6 ? 'Шесть лет' : a === 7 ? 'Семь лет' : 'Восемь лет и больше', true); };
+    $('ages').appendChild(b);
+  });
+})();
+function markAge() { Array.prototype.forEach.call($('ages').children, function (b) { b.classList.toggle('on', +b.dataset.a === (store.age || 6)); }); }
+markAge();
 function markLook() { Array.prototype.forEach.call($('looks').children, function (b, i) { var n = normLook(i), l = normLook(store.look); b.classList.toggle('on', n.d === l.d && n.h === l.h && n.a === l.a); }); }
 markLook();
 $('name').value = store.name || '';
@@ -1999,7 +2061,7 @@ function leaveGame(msg) {
   disconnect(); demo = false; clearInterval(botTimer);
   screenMode = 'lobby'; me = null; players.clear(); stars = []; treasure = null; ev = null; trans = null;
   setDecor(false); game = null; curSpot = null; curKey = ''; $('ride').classList.remove('on');
-  ['hud', 'modal', 'album', 'dig', 'radar', 'shop', 'shopbtn', 'decor', 'act', 'gbar', 'gamesm', 'wardm', 'petsm', 'boardm', 'mailm', 'seedm', 'catch', 'npcm', 'projm', 'cookm'].forEach(function (id) { $(id).classList.add('hidden'); });
+  ['hud', 'modal', 'album', 'dig', 'radar', 'shop', 'shopbtn', 'decor', 'act', 'gbar', 'gamesm', 'wardm', 'petsm', 'boardm', 'mailm', 'seedm', 'catch', 'npcm', 'projm', 'cookm', 'quizm'].forEach(function (id) { $(id).classList.add('hidden'); });
   $('lobby').classList.remove('hidden');
   busy(false); lobbyView(); showErr(msg || '');
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* не страшно */ }
@@ -2120,7 +2182,7 @@ function findSpot() {
   if (me.pose || trans || frozen() || radarLvl === 4 || nearShop) return null;
   var i, s;
   if (me.m === 0) {
-    var ex = fishSpot() || bedSpot() || cafeSpot() || stageSpot(); if (ex) return ex;
+    var ex = fishSpot() || bedSpot() || cafeSpot() || stageSpot() || schoolSpot(); if (ex) return ex;
     for (i = 0; i < SPOTS0.length; i++) {
       s = SPOTS0[i];
       if (s.pond) { var dx = (me.x - POND.x) / (POND.rx + 95), dy = (me.y - POND.y) / (POND.ry + 85); if (dx * dx + dy * dy < 1) return s; }
@@ -2157,6 +2219,7 @@ function setPose(k, s, x, y, sy) {
 function clearPose() { if (me && me.pose) { me.pose = null; send({ t: 'ps', k: null }); } }
 $('act').onclick = function () {
   unlockAudio(); var sp = curSpot; if (!sp || !me) return;
+  if (sp.ui === 'school') { openSchool(); return; }
   if (sp.ui === 'npc') { openNpc(sp.id); return; }
   if (sp.ui === 'proj') { openProj(sp.id, true); return; }
   if (sp.ui === 'gather') { gatherAct(sp); return; }
@@ -2428,6 +2491,7 @@ function waterFx(b) { var B = BEDS[b]; for (var k = 0; k < 18; k++) parts.push({
 function gardenMsg(m) {
   if (m.t === 'gd') { garden = m.garden; if (m.total !== undefined) { total = m.total; bumpStars(); } if (m.by === store.id && m.a === 'p') { say('Посадили! Теперь полей грядку из лейки.', true); beep([392, 523], 0.08, 0.1); } if (m.a === 'w') { if (m.by !== store.id && me.m === 0) waterFx(m.b); if (m.by === store.id) say('Полили! ' + CROPS[garden[m.b].s].n + ' вырастет за ' + minsWord(CROPS[garden[m.b].s].g) + '.', true); } }
   else if (m.t === 'hv') {
+    if (m.by === store.id) quizLater(['count', 'add'], 3000);
     garden = m.garden; total = m.total; food = m.food; bumpStars();
     if (cropsA.indexOf(m.s) < 0) cropsA.push(m.s);
     var B = BEDS[m.b]; pops.push({ x: B.x, y: B.y + 20, t: 0, e: CROPS[m.s].e, m: 0 }); burst(B.x, B.y - 30, 14);
@@ -2546,6 +2610,7 @@ function showCatch(kind, i, isNew) {
   clearTimeout(catchT); catchT = setTimeout(function () { el.classList.add('hidden'); }, 2800);
 }
 $('catch').onclick = function () { $('catch').classList.add('hidden'); };
+var oldShowCatch = showCatch; showCatch = function (kind, i, isNew) { oldShowCatch(kind, i, isNew); if (Math.random() < 0.6) quizLater(['count', 'add', 'more'], 3200); };
 function catchMsg(m) {
   total = m.total; bumpStars();
   if (m.t === 'fc') {
@@ -2594,9 +2659,9 @@ function stageOf(h) { var s = 0; PET_STAGE.forEach(function (v, i) { if (h >= v)
 var mat = { w: 0, r: 0, h: 0 }, got = { t: [], r: [], s: [] }, npcs = {}, proj = {}, cafe = [-1, -1], shakeT = {};
 var QTEXT = {
   fish: 'Поймай мне, пожалуйста, {n} рыбки!', bug: SEASON === 'winter' ? 'Поймай сачком снежинку и покажи мне!' : 'Поймай сачком жучка или бабочку и покажи мне!',
-  food: 'Я проголодался! Угости меня урожаем с огорода.', wood: 'Мне нужно {n} бревна для домика. Потряси деревья и принеси!',
+  food: 'Так хочется кушать! Угости меня урожаем с огорода.', wood: 'Мне нужно {n} бревна для домика. Потряси деревья и принеси!',
   shell: 'Я собираю ракушки! Принеси мне {n} ракушки с пляжа.', dance: 'Потанцуй, пожалуйста! Я так люблю смотреть на танцы.',
-  swing: 'Покачайся на качелях, а потом расскажи, как там весело!', harvest: 'Собери урожай на огороде, а то я сам не умею!', tramp: 'Попрыгай на батуте — высоко-высоко!'
+  swing: 'Покачайся на качелях, а потом расскажи, как там весело!', harvest: 'Собери урожай на огороде, а то у меня не получается!', tramp: 'Попрыгай на батуте — высоко-высоко!'
 };
 var CONSUME = { food: 1, wood: 1, shell: 1 };
 function today() { return day ? day.key : ''; }
@@ -2621,12 +2686,13 @@ function openNpc(i) {
   else if (st === 'ready') { txt = 'Ой, у тебя всё получилось! Отдашь мне?'; btn = 'Отдать 🎁'; }
   else txt = 'Спасибо тебе огромное! Приходи завтра, у меня будет новая просьба.';
   $('npcface').textContent = N.e; $('npcname').textContent = N.n; $('npchearts').textContent = hearts(s.h || 0); $('npctext').textContent = txt;
-  $('npcbtn').textContent = btn; $('npcbtn').classList.toggle('hidden', !btn);
+  if (!btn) btn = 'Хорошо!';
+  $('npcbtn').textContent = btn; $('npcbtn').classList.remove('hidden'); $('closenpc').textContent = st === 'new' ? 'не сейчас' : st === 'ready' ? 'потом' : ''; $('closenpc').classList.toggle('hidden', st !== 'new' && st !== 'ready');
   $('npcm').classList.remove('hidden');
   say(N.n + ': ' + txt, true);
 }
 function dayQuest(i) { var ks = NPCS[i].ks; return ks[hashStr(today() + ':' + i) % ks.length]; } // та же формула, что на сервере
-$('npcbtn').onclick = function () { unlockAudio(); var st = npcState(npcOpen); if (st === 'new') send({ t: 'nq', id: npcOpen }); else if (st === 'ready') send({ t: 'nd', id: npcOpen }); };
+$('npcbtn').onclick = function () { unlockAudio(); var st = npcState(npcOpen); if (st === 'new') { send({ t: 'nq', id: npcOpen }); $('closenpc').onclick(); } else if (st === 'ready') send({ t: 'nd', id: npcOpen }); else $('closenpc').onclick(); };
 $('closenpc').onclick = function () { $('npcm').classList.add('hidden'); npcOpen = -1; };
 function npcSpot() {
   var best = -1, bd = 115 * 115;
@@ -2724,6 +2790,7 @@ $('cookbtn').onclick = function () { unlockAudio(); var t = cafe[0] < 0 ? 0 : ca
 $('closecook').onclick = function () { $('cookm').classList.add('hidden'); };
 function cafeMsg(m) {
   cafe = m.cafe; if (m.food !== undefined) food = m.food; if (m.total !== undefined) { total = m.total; bumpStars(); }
+  if (m.a === 'c' && m.by === store.id) quizLater(['abc'], 2600);
   if (m.a === 'c') { toast((m.by === store.id ? 'Готово: ' : nameOf(m.by) + ' приготовила: ') + DISHES[m.d][0] + ' ' + DISHES[m.d][1] + '! Садитесь за столик.'); beep([659, 784, 988], 0.08, 0.1); }
   else { toast((m.by === store.id ? 'Ням-ням! Очень вкусно! ' : nameOf(m.by) + ' съела: ' + DISHES[m.d][0] + '. ') + '+2 ⭐'); beep([523, 659], 0.08, 0.1); }
 }
@@ -2742,6 +2809,111 @@ function eatSpot() { // сидит за столиком, а на нём блю�
 var SONG = [523, 523, 784, 784, 880, 880, 784, 0, 698, 698, 659, 659, 587, 587, 523, 0, 784, 784, 698, 698, 659, 659, 587, 0];
 function playSong() { if (!AC) return; var t0 = AC.currentTime; SONG.forEach(function (f, i) { if (!f) return; var o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + i * 0.28); g.gain.linearRampToValueAtTime(0.08, t0 + i * 0.28 + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.28 + 0.26); o.connect(g); g.connect(AC.destination); o.start(t0 + i * 0.28); o.stop(t0 + i * 0.28 + 0.3); }); }
 
+/* =====================================================================
+   ЗАДАЧКИ: счёт, сложение, буквы, узоры, больше-меньше.
+   Сложность у каждой девочки своя (хранится на её планшете) и подстраивается:
+   3 верных подряд — уровень выше, 2 ошибки подряд — ниже.
+   ===================================================================== */
+var SKN = { count: 'Счёт', add: 'Примеры', abc: 'Буквы', pat: 'Узоры', more: 'Больше-меньше' };
+function ageLvl() { var a = store.age || 6; return a <= 5 ? 1 : a === 6 ? 1 : a === 7 ? 2 : 3; }
+function skLvl(k) { if (!store.sk) store.sk = {}; if (!store.sk[k]) store.sk[k] = { l: ageLvl() + (k === 'count' && (store.age || 6) >= 6 ? 1 : 0), s: 0, w: 0, ok: 0, n: 0 }; return store.sk[k]; }
+function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function numOpts(n, lo) { var o = [n], tries = 0; while (o.length < 3 && tries++ < 50) { var d = n + (Math.random() < 0.5 ? -1 : 1) * rnd(1, n > 10 ? 3 : 2); if (d >= (lo || 0) && o.indexOf(d) < 0) o.push(d); } shuf(o); return { opts: o.map(function (v) { return { t: String(v), v: String(v) }; }), a: o.indexOf(n) }; }
+var QEMO = [['🐟', 'рыбок'], ['⭐', 'звёздочек'], ['🍎', 'яблок'], ['🐚', 'ракушек'], ['🦋', 'бабочек'], ['🌸', 'цветочков'], ['🍓', 'клубничек'], ['🐞', 'божьих коровок'], ['🎈', 'шариков'], ['🧁', 'кексов']];
+var QWORDS = [['КОТ', '🐱'], ['ДОМ', '🏠'], ['СЛОН', '🐘'], ['РЫБА', '🐟'], ['МЯЧ', '⚽'], ['ЛУНА', '🌙'], ['ЖУК', '🐞'], ['ЁЖ', '🦔'], ['ЛИСА', '🦊'], ['ТОРТ', '🎂'], ['ЗАЯЦ', '🐰'], ['ГРИБ', '🍄'], ['СОВА', '🦉'], ['АРБУЗ', '🍉'], ['НОС', '👃'], ['УТКА', '🦆'], ['ВОЛК', '🐺'], ['ПЧЕЛА', '🐝'], ['КИТ', '🐋'], ['ЛЕВ', '🦁'], ['МЫШЬ', '🐭'], ['ПАНДА', '🐼'], ['ШАР', '🎈'], ['КРАБ', '🦀'], ['ЯБЛОКО', '🍎'], ['ДОЖДЬ', '🌧️'], ['СОЛНЦЕ', '☀️'], ['ЗВЕЗДА', '⭐'], ['МАШИНА', '🚗'], ['КОРОНА', '👑']];
+var ABC = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ';
+var QPAT = ['🔴', '🔵', '🟡', '🟢', '🟣', '⭐', '🌸', '🍓', '🐟'];
+function rowEmo(e, n) { var s = ''; for (var i = 0; i < n; i++) s += e + (i % 5 === 4 ? ' ' : ''); return s; }
+function genQ(k) {
+  var L = skLvl(k).l, q = { k: k, l: L };
+  if (k === 'count') {
+    var e = QEMO[rnd(0, QEMO.length - 1)], n = L === 1 ? rnd(1, 5) : L === 2 ? rnd(3, 10) : L === 3 ? rnd(8, 15) : rnd(12, 20), o = numOpts(n, 1);
+    q.show = '<div class="qrow">' + rowEmo(e[0], n) + '</div>'; q.say = 'Сколько тут ' + e[1] + '? Посчитай!'; q.opts = o.opts; q.a = o.a; q.ans = String(n);
+  } else if (k === 'add') {
+    var a, b, minus = false;
+    if (L === 1) { a = rnd(1, 3); b = rnd(1, 5 - a); }
+    else if (L === 2) { a = rnd(1, 7); b = rnd(1, 10 - a); minus = Math.random() < 0.3; if (minus) { a = rnd(4, 10); b = rnd(1, a - 1); } }
+    else if (L === 3) { a = rnd(5, 15); b = rnd(1, 20 - a); minus = Math.random() < 0.4; if (minus) { a = rnd(8, 20); b = rnd(2, a - 2); } }
+    else { a = rnd(10, 30); b = rnd(5, 20); minus = Math.random() < 0.5; if (minus && b > a) { var t = a; a = b; b = t; } }
+    var r = minus ? a - b : a + b, o2 = numOpts(r, 0), e2 = QEMO[rnd(0, QEMO.length - 1)][0];
+    q.show = (L <= 2 && !minus ? '<div class="qrow">' + rowEmo(e2, a) + ' <b>+</b> ' + rowEmo(e2, b) + '</div>' : '') + '<div class="qbig">' + a + (minus ? ' − ' : ' + ') + b + ' = ?</div>';
+    q.say = 'Сколько будет ' + a + (minus ? ' минус ' : ' плюс ') + b + '?'; q.opts = o2.opts; q.a = o2.a; q.ans = String(r);
+  } else if (k === 'abc') {
+    var W = QWORDS[rnd(0, QWORDS.length - 1)], w = W[0];
+    if (L === 1) {
+      var f = w.charAt(0), ls = [f]; while (ls.length < 3) { var c = ABC.charAt(rnd(0, ABC.length - 1)); if (ls.indexOf(c) < 0) ls.push(c); } shuf(ls);
+      q.show = '<div class="qpic">' + W[1] + '</div>'; q.say = 'С какой буквы начинается слово ' + w.toLowerCase() + '?'; q.opts = ls.map(function (c) { return { t: c, v: c }; }); q.a = ls.indexOf(f); q.ans = f;
+    } else if (L === 2 || L === 4) {
+      var ws = [w]; while (ws.length < 3) { var x = QWORDS[rnd(0, QWORDS.length - 1)][0]; if (ws.indexOf(x) < 0 && (L === 2 || x.charAt(0) === w.charAt(0) || Math.random() < 0.4)) ws.push(x); } shuf(ws);
+      q.show = '<div class="qpic">' + W[1] + '</div>'; q.say = L === 2 ? 'Найди, где написано: ' + w.toLowerCase() + '.' : 'Что нарисовано? Прочитай слова и выбери!'; q.opts = ws.map(function (x) { return { t: x, v: L === 2 ? '' : '' }; }); q.a = ws.indexOf(w); q.ans = w; q.small = 1;
+    } else {
+      var pi = rnd(0, w.length - 1), ch = w.charAt(pi), ls2 = [ch], vow = 'АОУЫЭЯЁЮИЕ'; while (ls2.length < 3) { var c2 = (vow.indexOf(ch) >= 0 ? vow : ABC).charAt(rnd(0, (vow.indexOf(ch) >= 0 ? vow : ABC).length - 1)); if (ls2.indexOf(c2) < 0) ls2.push(c2); } shuf(ls2);
+      q.show = '<div class="qpic">' + W[1] + '</div><div class="qbig">' + w.slice(0, pi) + '_' + w.slice(pi + 1) + '</div>'; q.say = 'Какой буквы не хватает в слове ' + w.toLowerCase() + '?'; q.opts = ls2.map(function (c) { return { t: c, v: c }; }); q.a = ls2.indexOf(ch); q.ans = ch;
+    }
+  } else if (k === 'pat') {
+    var p = shuf(QPAT.slice()).slice(0, 3), unit = L === 1 ? [p[0], p[1]] : L === 2 ? [p[0], p[1], p[2]] : L === 3 ? [p[0], p[0], p[1]] : [p[0], p[1], p[1], p[2]];
+    var seq = [], len = unit.length * 2 + rnd(1, unit.length - 1); for (var i = 0; i < len; i++) seq.push(unit[i % unit.length]);
+    var nx = unit[len % unit.length], os = [nx]; p.concat(QPAT).forEach(function (z) { if (os.length < 3 && os.indexOf(z) < 0) os.push(z); }); shuf(os);
+    q.show = '<div class="qrow">' + seq.join(' ') + ' ❓</div>'; q.say = 'Посмотри на узор. Что будет дальше?'; q.opts = os.map(function (z) { return { t: z, v: '' }; }); q.a = os.indexOf(nx); q.ans = nx;
+  } else {
+    if (L <= 2) {
+      var em = QEMO[rnd(0, QEMO.length - 1)], m1 = L === 1 ? rnd(1, 6) : rnd(3, 10), m2; do { m2 = L === 1 ? rnd(1, 6) : rnd(3, 10); } while (Math.abs(m1 - m2) < (L === 1 ? 2 : 1));
+      var less = L === 2 && Math.random() < 0.4;
+      q.show = ''; q.say = less ? 'Где ' + em[1] + ' меньше?' : 'Где ' + em[1] + ' больше?'; q.opts = [{ t: rowEmo(em[0], m1), v: '' }, { t: rowEmo(em[0], m2), v: '' }]; q.a = (less ? m1 < m2 : m1 > m2) ? 0 : 1; q.ans = q.opts[q.a].t; q.small = 2;
+    } else {
+      var hi = L === 3 ? 20 : 100, n1 = rnd(1, hi), n2; do { n2 = rnd(1, hi); } while (n2 === n1);
+      var less2 = Math.random() < 0.4;
+      q.show = '<div class="qbig">' + n1 + ' и ' + n2 + '</div>'; q.say = less2 ? 'Какое число меньше: ' + n1 + ' или ' + n2 + '?' : 'Какое число больше: ' + n1 + ' или ' + n2 + '?'; q.opts = [{ t: String(n1), v: String(n1) }, { t: String(n2), v: String(n2) }]; q.a = (less2 ? n1 < n2 : n1 > n2) ? 0 : 1; q.ans = q.opts[q.a].t;
+    }
+  }
+  return q;
+}
+var quiz = null, quizT = -99, QPRAISE = ['Молодец!', 'Умница!', 'Правильно!', 'Вот это да! Верно!', 'Супер!', 'Отлично!'];
+var QWHO = { count: ['🦔', 'Ёжик Тимоша'], add: ['🦉', 'Сова Софья'], abc: ['🦉', 'Сова Софья'], pat: ['🐰', 'Зайка Пуша'], more: ['🐻', 'Мишка Потап'] };
+function anyModal() { var any = false; Array.prototype.forEach.call(document.querySelectorAll('.modalbg'), function (el) { if (!el.classList.contains('hidden')) any = true; }); return any; }
+function quizLater(ks, delay) { // задачка после дела: не чаще раза в 45 секунд
+  if (!me || T - quizT < 45 || game || quiz) return;
+  quizT = T;
+  setTimeout(function () { if (!me || quiz || anyModal() || game) return; $('catch').classList.add('hidden'); startQuiz(ks, 1, 'Задачка'); }, delay || 2200);
+}
+function startQuiz(ks, count, title) { quiz = { ks: ks, left: count, all: count, good: 0, title: title }; nextQ(); $('quizm').classList.remove('hidden'); }
+function nextQ() {
+  var k = quiz.ks[Math.floor(Math.random() * quiz.ks.length)], q = genQ(k); quiz.q = q; quiz.miss = 0;
+  var who = QWHO[k];
+  $('qwho').textContent = who[0]; $('qtitle').textContent = quiz.title + (quiz.all > 1 ? ' ' + (quiz.all - quiz.left + 1) + ' из ' + quiz.all : '') + ' · ' + SKN[k] + ', уровень ' + q.l;
+  $('qshow').innerHTML = q.show; $('qshow').classList.toggle('hidden', !q.show);
+  var box = $('qopts'); box.innerHTML = ''; box.className = 'qopts' + (q.small === 1 ? ' words' : q.small === 2 ? ' groups' : '');
+  q.opts.forEach(function (o, i) { var b = document.createElement('button'); b.textContent = o.t; b.onclick = function () { answerQ(i, b); }; box.appendChild(b); });
+  say(q.say, true);
+}
+function answerQ(i, btn) {
+  var q = quiz.q, st = skLvl(q.k); if (quiz.lock) return; unlockAudio();
+  if (i === q.a) {
+    quiz.lock = true; btn.classList.add('ok'); st.ok++; st.n++;
+    if (!quiz.miss) { st.s++; st.w = 0; if (st.s >= 3 && st.l < 4) { st.l++; st.s = 0; toast('Ты молодец! Задачки «' + SKN[q.k] + '» теперь посложнее: уровень ' + st.l + '!', false, true); } }
+    saveStore(); quiz.good++;
+    if (!quiz.miss) send({ t: 'qz', s: q.k, l: q.l });
+    say(QPRAISE[Math.floor(Math.random() * QPRAISE.length)] + (quiz.miss ? '' : ' Плюс две звезды!'), true); beep([523, 659, 784], 0.08, 0.1); burstUI(btn);
+    setTimeout(function () { quiz.lock = false; quiz.left--; if (quiz.left > 0) nextQ(); else endQuiz(); }, 1400);
+  } else {
+    quiz.miss++; st.s = 0; st.n++; btn.classList.add('bad'); btn.disabled = true;
+    if (quiz.miss === 1) { st.w++; if (st.w >= 2 && st.l > 1) { st.l--; st.w = 0; } saveStore(); say('Почти! Подумай ещё разок.', true); beep([330, 262], 0.08, 0.08); }
+    else { quiz.lock = true; $('qopts').children[q.a].classList.add('ok'); say('Правильный ответ: ' + (q.opts[q.a].v || 'вот этот') + '. В следующий раз получится!', true); setTimeout(function () { quiz.lock = false; quiz.left--; if (quiz.left > 0) nextQ(); else endQuiz(); }, 2600); }
+  }
+}
+function burstUI(btn) { btn.animate && btn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 400 }); }
+function endQuiz() {
+  var q = quiz; quiz = null; $('quizm').classList.add('hidden');
+  if (q.all > 1) { var txt = 'Урок окончен! Правильно ' + q.good + ' из ' + q.all + '. ' + (q.good === q.all ? 'Ты лучшая ученица на острове!' : 'Ты здорово постаралась!'); say(txt, true); toast(txt, false, true); if (q.good >= 3) send({ t: 'qs' }); }
+}
+$('qsay').onclick = function () { unlockAudio(); if (quiz) say(quiz.q.say, true); };
+$('qskip').onclick = function () { if (quiz && quiz.all > 1 && quiz.left > 1) { quiz.left--; nextQ(); return; } quiz = null; $('quizm').classList.add('hidden'); };
+function schoolSpot() { return d2(me.x, me.y, SCHOOL.x, SCHOOL.y + 70) < 120 * 120 ? { key: 'school', ui: 'school', n: 'Урок в школе', e: '🏫' } : null; }
+function openSchool() { say('Добро пожаловать в лесную школу! Сова Софья приготовила пять задачек.', true); startQuiz(['count', 'add', 'abc', 'pat', 'more'], 5, 'Урок'); }
+function qzMsg(m) { total = m.total; bumpStars(); if (m.t === 'qq') toast((m.by === store.id ? 'За урок ' : nameOf(m.by) + ' закончила урок! ') + '+' + m.add + ' ⭐'); }
+function skillReport() { return Object.keys(SKN).map(function (k) { var s = skLvl(k); return SKN[k] + ': уровень ' + s.l + (s.n ? ', верно ' + s.ok + ' из ' + s.n : ''); }).join('\n'); }
+
 var shellHide = {};
 function hideShells() { shellHide = {}; got.s.forEach(function (i) { if (SHELLS[i] !== undefined) shellHide[SHELLS[i]] = 1; }); }
 function npcMsg(m) {
@@ -2754,7 +2926,7 @@ function npcMsg(m) {
     var gtxt = '';
     if (m.g) { if (m.g.f !== undefined) { inv[m.g.f] = m.n; drawTray(); gtxt = ' Подарок: ' + CAT[m.g.f].n + ' — лежит в запасе домика!'; } else if (m.g.w) { if (ward.indexOf(m.g.w) < 0) ward.push(m.g.w); gtxt = ' Подарок: ' + WARD[m.g.w.charAt(0)][+m.g.w.slice(1)].n + ' — уже в шкафу!'; } }
     var txt = N.n + ': Спасибо! Ты настоящий друг! +10 ⭐.' + gtxt + (m.s.h >= 10 ? ' Мы лучшие друзья!' : '');
-    if (m.by === store.id) say(txt, true); toast(txt, false, m.by === store.id); beep([523, 659, 784, 1047], 0.09, 0.13);
+    if (m.by === store.id) { say(txt, true); quizLater(['more', 'abc', 'pat'], 6000); } toast(txt, false, m.by === store.id); beep([523, 659, 784, 1047], 0.09, 0.13);
   }
   if (npcOpen === m.id) openNpc(m.id);
 }
@@ -2762,10 +2934,10 @@ function npcMsg(m) {
 /* =====================================================================
    ЖИВОЙ МИР: время суток, погода, дела на день, почта, товар дня, отдых
    ===================================================================== */
-var TNAME = { npc: 'Помогите жителю острова', wood: 'Потрясите {n} дерева', shell: 'Найдите {n} ракушки на пляже', build: 'Вложите что-нибудь в стройку', cook: 'Приготовьте блюдо в кафе', sing: 'Выступите на сцене', fish: 'Поймайте {n} рыбки', bug: SEASON === 'winter' ? 'Поймайте сачком {n} снежинки' : 'Поймайте сачком {n} жучка или бабочки', plant: 'Посадите что-нибудь на огороде', harvest: 'Соберите урожай на огороде', pet: 'Погладьте питомца', stars: 'Соберите {n} звёздочек', gems: 'Найдите {n} самоцвета в пещере', swing: 'Покачайтесь на качелях', tramp: 'Попрыгайте на батуте', slide: 'Скатитесь с горки',
+var TNAME = { quiz: 'Решите {n} задачек', school: 'Сходите на урок в школу', npc: 'Помогите жителю острова', wood: 'Потрясите {n} дерева', shell: 'Найдите {n} ракушки на пляже', build: 'Вложите что-нибудь в стройку', cook: 'Приготовьте блюдо в кафе', sing: 'Выступите на сцене', fish: 'Поймайте {n} рыбки', bug: SEASON === 'winter' ? 'Поймайте сачком {n} снежинки' : 'Поймайте сачком {n} жучка или бабочки', plant: 'Посадите что-нибудь на огороде', harvest: 'Соберите урожай на огороде', pet: 'Погладьте питомца', stars: 'Соберите {n} звёздочек', gems: 'Найдите {n} самоцвета в пещере', swing: 'Покачайтесь на качелях', tramp: 'Попрыгайте на батуте', slide: 'Скатитесь с горки',
   swim: SEASON === 'winter' ? 'Покатайтесь на льду' : 'Искупайтесь в пруду', dance: 'Потанцуйте', dig: 'Выкопайте клад по компасу', chest: 'Откройте сундук', bay: 'Сходите в тайную бухту',
   cave: 'Загляните в пещеру', tag: 'Сыграйте в догонялки', hide: 'Сыграйте в прятки', feed: 'Покормите питомца', buy: 'Купите что-нибудь в лавке' };
-var TICON = { npc: '💬', wood: '🪵', shell: '🐚', build: '🏗', cook: '🍰', sing: '🎤', fish: '🎣', bug: SEASON === 'winter' ? '❄️' : '🦋', plant: '🌱', harvest: '🥕', pet: '🤚', stars: '⭐', gems: '💎', swing: '🎠', tramp: '🤸', slide: '🎢', swim: SEASON === 'winter' ? '⛸' : '🏊', dance: '💃', dig: '⛏', chest: '🧰', bay: '🏝', cave: '🕯', tag: '🏃', hide: '🙈', feed: '🍖', buy: '🛍' };
+var TICON = { quiz: '🧠', school: '🏫', npc: '💬', wood: '🪵', shell: '🐚', build: '🏗', cook: '🍰', sing: '🎤', fish: '🎣', bug: SEASON === 'winter' ? '❄️' : '🦋', plant: '🌱', harvest: '🥕', pet: '🤚', stars: '⭐', gems: '💎', swing: '🎠', tramp: '🤸', slide: '🎢', swim: SEASON === 'winter' ? '⛸' : '🏊', dance: '💃', dig: '⛏', chest: '🧰', bay: '🏝', cave: '🕯', tag: '🏃', hide: '🙈', feed: '🍖', buy: '🛍' };
 var DAY_REWARD = 25;
 var LETTERS = [
   ['🦉', 'Сова Софья', 'Здравствуй! Ночью у пруда светятся светлячки. Загляни вечером — это очень красиво!'],
@@ -2842,6 +3014,7 @@ function greet() {
   toast(hello() + '! Сегодня ' + tasksLeft().length + ' дела — нажми 📋', false, true);
 }
 function openBoard(speak) {
+  $('skills').textContent = '🧠 Мои задачки:\n' + skillReport();
   var l = $('blist'); l.innerHTML = '';
   (day ? day.tasks : []).forEach(function (t) {
     var d = document.createElement('div'), ok = t.have >= t.need; d.className = 'task' + (ok ? ' done' : '');
@@ -2969,9 +3142,9 @@ function drawWeather(dt, a) {
 }
 function genDayLocal(seed) { // только для демо без сервера
   var R = rng(hashStr(seed)), pick = function (a) { return a[Math.floor(R() * a.length)]; };
-  var ks = [pick(['stars', 'gems', 'fish', 'bug', 'wood', 'shell']), pick(['swing', 'tramp', 'slide', 'swim', 'dance']), pick(['dig', 'chest', 'bay', 'cave', 'fish']), pick(['feed', 'pet', 'buy', 'plant', 'harvest', 'npc', 'build'])];
+  var ks = [pick(['stars', 'gems', 'fish', 'bug', 'wood', 'shell']), pick(['swing', 'tramp', 'slide', 'swim', 'dance']), pick(['dig', 'chest', 'bay', 'cave', 'fish']), pick(['feed', 'pet', 'buy', 'plant', 'harvest', 'npc', 'build', 'quiz', 'school'])];
   if (ks[2] === ks[0]) ks[2] = 'dig';
-  var need = { stars: 15, gems: 3, fish: 2, bug: 2, wood: 3, shell: 3 }, deals = [];
+  var need = { stars: 15, gems: 3, fish: 2, bug: 2, wood: 3, shell: 3, quiz: 5 }, deals = [];
   while (deals.length < 3) { var i = Math.floor(R() * CAT.length); if (deals.indexOf(i) < 0 && CAT[i].p >= 12) deals.push(i); }
   return { key: dayKeyOf(krasNow()), tasks: ks.map(function (k) { return { k: k, need: need[k] || 1, have: 0 }; }), done: false, deals: deals };
 }
@@ -3050,6 +3223,8 @@ function demoServer(o) {
   demoHook(o);
   if (o.t === 'wb') { var wi = WARD[o.k.charAt(0)][+o.k.slice(1)]; if (total < wi.p) onMsg({ t: 'no' }); else onMsg({ t: 'wb', by: store.id, k: o.k, total: total - wi.p }); return; }
   if (o.t === 'eg') { var free = []; PETS.forEach(function (q, i) { if (pets[i] === undefined) free.push(i); }); if (!free.length) onMsg({ t: 'nn' }); else if (total < EGG_PRICE) onMsg({ t: 'no' }); else onMsg({ t: 'eg', by: store.id, k: free[Math.floor(Math.random() * free.length)], total: total - EGG_PRICE }); return; }
+  if (o.t === 'qz') { onMsg({ t: 'qr', by: store.id, total: total + 2 }); demoProg('quiz'); return; }
+  if (o.t === 'qs') { onMsg({ t: 'qq', by: store.id, add: 5, total: total + 5 }); demoProg('school'); return; }
   if (o.t === 'mt') {
     var arr = o.o === 't' ? got.t : o.o === 'r' ? got.r : got.s; if (arr.indexOf(o.i) >= 0) { onMsg({ t: 'mx', o: o.o, i: o.i }); return; }
     var nm = { w: mat.w, r: mat.r, h: mat.h }, add = o.o === 't' && Math.random() < 0.25 ? 3 : 0; nm[o.o === 't' ? 'w' : o.o === 'r' ? 'r' : 'h']++;
