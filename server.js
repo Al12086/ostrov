@@ -8,6 +8,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
 
 const PORT = parseInt(process.env.PORT, 10) || 3210;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -41,6 +42,22 @@ const BUILD_SPEED = parseFloat(process.env.BUILD_SPEED) || 1;
 const PLAY_MIN = parseInt(process.env.PLAY_MIN, 10) || 0, BREAK_MIN = parseInt(process.env.BREAK_MIN, 10) || 60;
 function dayKey() { return new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10); }
 function hashStr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+/* тема недели: общая цель на всех, неделя с понедельника по Красноярску */
+const WEEKS = [{ k: 'fish', need: 25 }, { k: 'bug', need: 20 }, { k: 'quiz', need: 40 }, { k: 'harvest', need: 10 }, { k: 'npc', need: 12 }, { k: 'wood', need: 40 }];
+const WEEK_REWARD = 50;
+function krasDate() { return new Date(Date.now() + 7 * 3600000); }
+function isSaturday() { return krasDate().getUTCDay() === 6; }
+function weekInfo() {
+  const d = krasDate(), mon = new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * 86400000);
+  const key = mon.toISOString().slice(0, 10), n = Math.floor((Date.UTC(mon.getUTCFullYear(), mon.getUTCMonth(), mon.getUTCDate()) - Date.UTC(2026, 0, 5)) / (7 * 86400000));
+  return { key: key, i: ((n % WEEKS.length) + WEEKS.length) % WEEKS.length };
+}
+function ensureWeek(rc) {
+  const w = weekInfo();
+  if (!rc.week || rc.week.key !== w.key) rc.week = { key: w.key, i: w.i, k: WEEKS[w.i].k, need: WEEKS[w.i].need, have: 0, done: false };
+  if (!rc.medals) rc.medals = [];
+  return rc.week;
+}
 function seeded(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function newDay(code, key, hasPets, rc) {
   const R = seeded(hashStr(code + ':' + key));
@@ -69,6 +86,14 @@ function ensureDay(r) {
 }
 function prog(r, k, n) {
   const rc0 = rec(r.code), key0 = dayKey();
+  const wk = ensureWeek(rc0);
+  if (wk.k === k && !wk.done) {
+    wk.have = Math.min(wk.need, wk.have + (n || 1)); saveSoon();
+    if (wk.have >= wk.need) {
+      wk.done = true; rc0.total = (rc0.total || 0) + WEEK_REWARD; rc0.medals.push(wk.k);
+      broadcast(r, { t: 'wd', week: wk, medals: rc0.medals, total: rc0.total });
+    } else broadcast(r, { t: 'wk', week: wk });
+  }
   Object.keys(rc0.npc).forEach(function (i) {
     const s = rc0.npc[i], q = s.q;
     if (!q || q.d !== key0 || s.ok === key0 || CONSUME[q.k] || q.k !== k || q.have >= q.need) return;
@@ -87,8 +112,9 @@ function prog(r, k, n) {
   if (!d.done && d.tasks.every(function (t) { return t.have >= t.need; })) {
     d.done = true;
     const rc = rec(r.code);
-    rc.total = (rc.total || 0) + DAY_REWARD;
-    broadcast(r, { t: 'dd', total: rc.total });
+    const add = isSaturday() ? DAY_REWARD * 2 : DAY_REWARD;
+    rc.total = (rc.total || 0) + add;
+    broadcast(r, { t: 'dd', total: rc.total, add: add });
   }
 }
 function dealPrice(r, i) { const d = ensureDay(r); return d.deals.indexOf(i) >= 0 ? Math.ceil(PRICES[i] / 2) : PRICES[i]; }
@@ -111,6 +137,63 @@ const SPAWN0 = [[2187,501],[2348,483],[2459,492],[2801,472],[2946,494],[3084,496
 const SPAWN1 = [[2478,371],[2732,372],[1362,437],[1430,431],[1483,434],[2470,437],[2549,430],[2591,436],[2660,424],[2722,434],[1536,491],[2423,481],[2470,482],[2539,504],[2591,490],[2662,491],[1360,556],[1474,555],[1556,543],[1601,554],[2353,551],[2414,553],[1356,624],[1428,611],[1481,604],[1544,607],[1609,605],[1680,612],[1729,615],[1788,608],[1856,626],[2094,618],[2158,613],[2232,625],[2294,620],[2342,613],[1787,681],[1867,672],[1907,686],[1990,675],[2041,677],[2093,683],[2176,687],[2221,685],[2299,671],[1986,750],[2046,741],[2100,735],[2154,752],[2227,751],[2296,747],[2032,809],[2109,811],[2174,793],[2219,807],[2300,812],[1978,868],[2037,871],[2115,871],[2161,867],[2236,868],[1909,920],[1975,917],[796,978],[1542,993],[1617,985],[1662,983],[1720,999],[1795,996],[1853,992],[1929,982],[615,1045],[804,1058],[1482,1056],[1553,1044],[1600,1044],[1721,1039],[1790,1040],[614,1110],[673,1119],[744,1117],[798,1120],[1493,1106],[1798,1110],[731,1165],[810,1184],[869,1173],[1491,1176],[1802,1163],[863,1245],[918,1246],[1487,1231],[1550,1235],[1805,1232],[1849,1233],[936,1305],[993,1300],[1055,1300],[1122,1297],[1173,1293],[1305,1304],[1349,1304],[1424,1296],[1546,1299],[1618,1304],[1668,1294],[1740,1293],[1803,1291],[1846,1297],[1909,1305],[1977,1306],[995,1359],[1041,1357],[1119,1349],[1184,1359],[1246,1369],[1298,1371],[1917,1356],[1982,1358],[2050,1351],[936,1423],[994,1413],[1061,1432],[1106,1429],[1180,1426],[1228,1421],[2051,1433],[2102,1414],[2235,1411],[2291,1429],[2364,1428],[929,1480],[981,1488],[1055,1481],[1111,1492],[1179,1496],[1229,1479],[2105,1482],[2157,1493],[2364,1494],[808,1558],[857,1551],[935,1544],[996,1542],[1039,1556],[1101,1536],[1180,1540],[1226,1548],[2164,1544],[486,1599],[549,1614],[622,1597],[687,1602],[734,1614],[793,1610],[862,1613],[1054,1617],[1111,1609],[1177,1608],[2174,1607],[2228,1618],[2280,1598],[2352,1607],[484,1668],[553,1680],[626,1661],[675,1659],[734,1679],[481,1730],[739,1740]];
 const SPAWN0_MAIN = SPAWN0.filter(function (p) { return p[1] > 1250; }); // без тайной бухты
 
+/* ---------- озвучка: Яндекс SpeechKit, с запасом готовых фраз на диске ---------- */
+const TTS_KEY = process.env.YANDEX_TTS_KEY || '';
+const TTS_URL = process.env.TTS_URL || 'https://tts.api.cloud.yandex.net/tts/v3/utteranceSynthesis';
+const TTS_DAY_MAX = parseInt(process.env.TTS_DAY_MAX, 10) || 1500;   // новых фраз в день (≈ 0,2 ₽ за фразу)
+const TTS_DIR = path.join(DATA_DIR, 'tts');
+// голоса: рассказчица и жители
+const VOICES = {
+  n: ['masha', 'friendly'], owl: ['marina', 'friendly'], bear: ['anton', 'good'], hog: ['zahar', 'good'],
+  sq: ['dasha', 'friendly'], bun: ['lera', 'friendly'], oct: ['jane', 'good']
+};
+const ttsWait = new Map();
+let ttsDay = { d: '', n: 0 }, ttsFail = 0;
+function ttsCall(voice, text, cb) {
+  const v = VOICES[voice];
+  const body = JSON.stringify({ text: text, unsafeMode: true, hints: [{ voice: v[0] }, { role: v[1] }, { speed: 0.95 }], outputAudioSpec: { containerAudio: { containerAudioType: 'MP3' } } });
+  const u = new URL(TTS_URL);
+  const rq = (u.protocol === 'http:' ? http : https).request({ hostname: u.hostname, port: u.port || undefined, path: u.pathname, method: 'POST', timeout: 12000,
+    headers: { 'Authorization': 'Api-Key ' + TTS_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, function (rs) {
+    const parts = []; rs.on('data', function (d) { parts.push(d); });
+    rs.on('end', function () {
+      const txt = Buffer.concat(parts).toString('utf8');
+      if (rs.statusCode !== 200) return cb(new Error('SpeechKit ' + rs.statusCode + ': ' + txt.slice(0, 300)));
+      const bufs = []; const re = /"data"\s*:\s*"([A-Za-z0-9+/=]+)"/g; let m;
+      while ((m = re.exec(txt))) bufs.push(Buffer.from(m[1], 'base64'));
+      if (!bufs.length) return cb(new Error('SpeechKit: пустой ответ'));
+      cb(null, Buffer.concat(bufs));
+    });
+  });
+  rq.on('timeout', function () { rq.destroy(new Error('SpeechKit: долго не отвечает')); });
+  rq.on('error', function (e) { cb(e); });
+  rq.end(body);
+}
+function ttsServe(req, res) {
+  const q = new URL(req.url, 'http://x').searchParams;
+  const voice = VOICES[q.get('v')] ? q.get('v') : 'n';
+  const text = String(q.get('t') || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+  const fail = function (code) { res.writeHead(code, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); res.end('нет'); };
+  if (!TTS_KEY || !text) return fail(404);
+  const id = crypto.createHash('sha1').update(voice + '|' + text).digest('hex');
+  const file = path.join(TTS_DIR, id.slice(0, 2), id + '.mp3');
+  const send = function (buf) { res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Content-Length': buf.length, 'Cache-Control': 'public, max-age=31536000, immutable' }); res.end(req.method === 'HEAD' ? undefined : buf); };
+  fs.readFile(file, function (err, buf) {
+    if (!err && buf.length) return send(buf);
+    if (req.method === 'HEAD' || Date.now() < ttsFail) return fail(503);
+    const day = dayKey(); if (ttsDay.d !== day) ttsDay = { d: day, n: 0 };
+    if (ttsDay.n >= TTS_DAY_MAX) return fail(429);
+    if (ttsWait.has(id)) { ttsWait.get(id).push({ send: send, fail: fail }); return; }
+    ttsWait.set(id, [{ send: send, fail: fail }]); ttsDay.n++;
+    ttsCall(voice, text, function (e, audio) {
+      const list = ttsWait.get(id) || []; ttsWait.delete(id);
+      if (e) { console.error('Озвучка:', e.message); if (/40[13]/.test(e.message)) ttsFail = Date.now() + 600000; list.forEach(function (w) { w.fail(503); }); return; }
+      fs.mkdir(path.dirname(file), { recursive: true }, function () { fs.writeFile(file, audio, function () {}); });
+      list.forEach(function (w) { w.send(audio); });
+    });
+  });
+}
+
 /* ---------- раздача файлов ---------- */
 const FILES = {
   '/': ['index.html', 'text/html; charset=utf-8'],
@@ -125,9 +208,10 @@ const server = http.createServer(function (req, res) {
   const url = (req.url || '/').split('?')[0];
   if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: conns.size }));
+    res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: conns.size, voice: !!TTS_KEY }));
     return;
   }
+  if (url === '/tts' && (req.method === 'GET' || req.method === 'HEAD')) return ttsServe(req, res);
   const f = FILES[url];
   if (!f || (req.method !== 'GET' && req.method !== 'HEAD')) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -274,7 +358,7 @@ function pickTreasure(r, from) {
 
 /* звездопад: на 45 секунд в одном месте высыпается куча звёзд */
 function starfall(r) {
-  later(r, EVENT_EVERY_MS, function () { starfall(r); });
+  later(r, isSaturday() ? Math.round(EVENT_EVERY_MS / 2) : EVENT_EVERY_MS, function () { starfall(r); }); // в субботу звездопад чаще
   if (!r.players.size || !SPAWN0_MAIN.length) return;
   const c = SPAWN0_MAIN[crypto.randomInt(0, SPAWN0_MAIN.length)];
   const near = SPAWN0.filter(function (p) { const dx = p[0] - c[0], dy = p[1] - c[1]; return dx * dx + dy * dy < 430 * 430; });
@@ -418,7 +502,7 @@ function onMessage(c, m) {
       t: 'in', room: code, you: pubPlayer(c), players: others,
       stars: r.stars, total: rc.total || 0, album: rc.album, chests: open, tr: r.tr, furn: rc.furn, inv: rc.inv, ward: rc.ward, pets: rc.pets,
       mat: rc.mat, got: rc.got, npc: rc.npc, proj: rc.proj, cafe: rc.cafe, garden: rc.garden, food: rc.food, fish: rc.fish, bugs: rc.bugs, crops: rc.crops, petDay: rc.petDay, now: Date.now(),
-      day: ensureDay(r), mail: rc.mail[c.pid] !== dayKey(), lim: PLAY_MIN ? { p: PLAY_MIN, b: BREAK_MIN } : null,
+      day: ensureDay(r), week: ensureWeek(rc), medals: rc.medals, mail: rc.mail[c.pid] !== dayKey(), lim: PLAY_MIN ? { p: PLAY_MIN, b: BREAK_MIN } : null,
       game: r.game ? { g: r.game.g, it: r.game.it, d: Math.max(1, Math.round((r.game.until - now) / 1000)), c: Math.max(0, Math.round((r.game.seekAt - now) / 1000)), found: r.game.found } : null, ice: iceServers(c.pid)
     });
     broadcast(r, { t: 'pj', p: pubPlayer(c) }, c);

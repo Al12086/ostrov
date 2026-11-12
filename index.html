@@ -233,6 +233,7 @@
   #ages button { width: 64px; height: 64px; border-radius: 20px; background: #fff; font-size: 28px; font-weight: 900; color: #5b3f78; box-shadow: 0 4px 0 #d8c8ec; }
   #ages button.on { background: #ff8ec0; color: #fff; box-shadow: 0 4px 0 #d9417f; }
   #skills { white-space: pre-line; text-align: left; font-size: 15px; margin: 10px 4px 0; color: #6d5a88; }
+  .task.week { background: #e6f6ff; }
   .modalbg { position: fixed; inset: 0; background: rgba(40, 40, 80, .45); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; touch-action: pan-y; }
   #albumgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
   #albumgrid div { aspect-ratio: 1; border-radius: 18px; background: #f4eefb; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 38px; line-height: 1.1; }
@@ -591,7 +592,7 @@ function landmark(x, y) {
 }
 /* деревья: 0,1 — зелёные, 2 — цветущее, 3 — ёлка, 4 — пальма */
 /* время Красноярска (UTC+7): сезон, погода, время суток — у всех игроков одинаковые */
-var TEST = (function () { var q = {}; location.search.replace(/[?&](h|season|wx)=([\w.]+)/g, function (m, k, v) { q[k] = v; }); return q; })();
+var TEST = (function () { var q = {}; location.search.replace(/[?&](h|season|wx|sat)=([\w.]+)/g, function (m, k, v) { q[k] = v; }); return q; })();
 function krasNow() { var d = new Date(Date.now() + 7 * 3600000); if (TEST.h !== undefined) d.setUTCHours(+TEST.h); return d; }
 function dayKeyOf(d) { return d.toISOString().slice(0, 10); }
 function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -1710,22 +1711,46 @@ function speakable(t) {
     .replace(/[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}·]/gu, ' ').replace(/\s+/g, ' ').trim();
 }
 var sayQ = [], sayBusy = 0, sayImp = false, sayId = 0, sayTimer = null;
-function sayPump() {
-  if (sayBusy || !sayQ.length) return;
-  var it = sayQ.shift(), id = ++sayId; sayBusy = id; sayImp = it.imp;
-  function done() { if (sayBusy !== id) return; sayBusy = 0; sayImp = false; clearTimeout(sayTimer); sayPump(); }
+/* живой голос с сервера (Яндекс), а если его нет — голос самого планшета */
+var ttsOn = /^https?:$/.test(location.protocol) && !!location.host, ttsAudio = null, ttsBad = 0;
+var NPCV = ['hog', 'sq', 'owl', 'bear', 'bun', 'oct'];
+function whoVoice(t) { // «Сова Софья: ...» — говорит сама сова своим голосом
+  for (var i = 0; i < (window.NPCS ? NPCS.length : 0); i++) { var n = NPCS[i].n + ': '; if (t.indexOf(n) === 0) return { v: NPCV[i], t: t.slice(n.length) }; }
+  return { v: 'n', t: t };
+}
+function sayLocal(it, done) {
+  if (!window.speechSynthesis) { done(); return; }
   try {
     var u = new SpeechSynthesisUtterance(it.t); u.lang = 'ru-RU'; if (ruVoice) u.voice = ruVoice; u.rate = 1; u.pitch = 1.15; u.volume = 1;
     u.onend = done; u.onerror = done; sayTimer = setTimeout(done, 2500 + it.t.length * 120);
     speechSynthesis.speak(u);
   } catch (e) { done(); }
 }
+function sayPump() {
+  if (sayBusy || !sayQ.length) return;
+  var it = sayQ.shift(), id = ++sayId; sayBusy = id; sayImp = it.imp;
+  function done() { if (sayBusy !== id) return; sayBusy = 0; sayImp = false; clearTimeout(sayTimer); sayPump(); }
+  if (!ttsOn || ttsBad > 2) { sayLocal(it, done); return; }
+  if (!ttsAudio) ttsAudio = new Audio();
+  var A = ttsAudio, started = false, fb = false;
+  function fallback(code) { if (sayBusy !== id || fb) return; fb = true; if (code === 404) ttsOn = false; else ttsBad++; clearTimeout(sayTimer); sayLocal(it, done); }
+  A.onplaying = function () { started = true; ttsBad = 0; clearTimeout(sayTimer); sayTimer = setTimeout(done, 4000 + it.t.length * 150); };
+  A.onended = done;
+  A.onerror = function () { if (started) { done(); return; } fetch(A.src, { method: 'HEAD' }).then(function (r) { fallback(r.status); }, function () { fallback(0); }); };
+  A.src = '/tts?v=' + it.v + '&t=' + encodeURIComponent(it.t);
+  sayTimer = setTimeout(function () { if (!started) { try { A.pause(); } catch (e) { /* */ } fallback(0); } }, 6000);
+  var pr = A.play(); if (pr && pr.catch) pr.catch(function (e) { if (e && e.name === 'NotAllowedError') { ttsBad = 9; } if (!started) fallback(0); });
+}
+function sayStop() { sayQ = []; sayBusy = 0; sayImp = false; clearTimeout(sayTimer); try { speechSynthesis.cancel(); } catch (e) { /* не страшно */ } if (ttsAudio) { try { ttsAudio.pause(); } catch (e) { /* */ } ttsAudio.onended = ttsAudio.onerror = ttsAudio.onplaying = null; } }
 /* imp = важное (приветствие, письмо, дела): перебивает всё; обычные подсказки встают в очередь за важным */
-function say(text, imp) {
-  if (store.voice === false || !window.speechSynthesis || !text) return;
-  var t = speakable(text); if (!t) return; lastSaid = t;
-  if (imp || !sayImp) { sayQ = []; sayBusy = 0; sayImp = false; try { speechSynthesis.cancel(); } catch (e) { /* не страшно */ } }
-  sayQ.push({ t: t, imp: !!imp }); if (sayQ.length > 3) sayQ.splice(0, sayQ.length - 3);
+function say(text, imp, voice) {
+  if (store.voice === false || !text) return;
+  var w = whoVoice(String(text)), t = speakable(w.t); if (!t) return; lastSaid = t;
+  if (imp || !sayImp) sayStop();
+  var v = voice || w.v, parts = t.match(/[^.!?]+[.!?]*\s*/g) || [t], cur = '';
+  parts.forEach(function (p) { if (cur && (cur + p).length > 220) { sayQ.push({ t: cur.trim(), imp: !!imp, v: v }); cur = ''; } cur += p; }); // длинное — кусочками по фразам
+  if (cur.trim()) sayQ.push({ t: cur.trim(), imp: !!imp, v: v });
+  if (sayQ.length > 8) sayQ.splice(0, sayQ.length - 8);
   sayPump();
 }
 
@@ -1775,6 +1800,7 @@ function onMsg(m) {
     stars = m.stars.map(function (s) { return { id: s.id, x: s.x, y: s.y, m: s.m | 0, k: s.k | 0, born: T }; });
     total = m.total; $('starn').textContent = total;
     ward = m.ward || []; pets = m.pets || {};
+    week = m.week || null; medals = m.medals || [];
     mat = m.mat || { w: 0, r: 0, h: 0 }; got = m.got || { t: [], r: [], s: [] }; npcs = m.npc || {}; proj = m.proj || {}; cafe = m.cafe || [-1, -1]; matChip(); hideShells();
     garden = m.garden || [null, null, null, null, null, null]; food = m.food || 0; fishA = m.fish || []; bugsA = m.bugs || []; cropsA = m.crops || []; petDay = m.petDay || {}; SOFF = m.now ? m.now - Date.now() : 0;
     day = m.day || null; mailReady = !!m.mail; lim = m.lim || null; updatePlanBadge();
@@ -1832,6 +1858,7 @@ function onMsg(m) {
   else if (m.t === 'pg') projMsg(m);
   else if (m.t === 'pz') say('Пока нечего вложить. Соберите звёзды, брёвна, камни и ракушки!', true);
   else if (m.t === 'cf') cafeMsg(m);
+  else if (m.t === 'wk' || m.t === 'wd') weekMsg(m);
   else if (m.t === 'qr' || m.t === 'qq') qzMsg(m);
   else if (m.t === 'fc' || m.t === 'bc') catchMsg(m);
   else if (m.t === 'pn') toast(PETS[m.k].n + (m.a === 'f' ? ' уже сытый.' : m.a === 'p' ? ' уже наглажен сегодня.' : ' уже наигрался сегодня.') + ' Приходи завтра!');
@@ -2038,7 +2065,7 @@ $('enter').onclick = function () {
 };
 $('demo').onclick = function () { audioInit(); startDemo(); };
 function voiceLabel() { $('voicebtn').textContent = store.voice === false ? '🔇 подсказки голосом: выключены' : '🔊 подсказки голосом: включены'; }
-$('voicebtn').onclick = function () { store.voice = store.voice === false; saveStore(); voiceLabel(); if (store.voice !== false) say('Подсказки голосом включены'); else if (window.speechSynthesis) speechSynthesis.cancel(); };
+$('voicebtn').onclick = function () { store.voice = store.voice === false; saveStore(); voiceLabel(); if (store.voice !== false) say('Подсказки голосом включены'); else sayStop(); };
 voiceLabel();
 
 function enterGame(code) {
@@ -2870,7 +2897,7 @@ function genQ(k) {
   return q;
 }
 var quiz = null, quizT = -99, QPRAISE = ['Молодец!', 'Умница!', 'Правильно!', 'Вот это да! Верно!', 'Супер!', 'Отлично!'];
-var QWHO = { count: ['🦔', 'Ёжик Тимоша'], add: ['🦉', 'Сова Софья'], abc: ['🦉', 'Сова Софья'], pat: ['🐰', 'Зайка Пуша'], more: ['🐻', 'Мишка Потап'] };
+var QWHO = { count: ['🦔', 'Ёжик Тимоша', 'hog'], add: ['🦉', 'Сова Софья', 'owl'], abc: ['🦉', 'Сова Софья', 'owl'], pat: ['🐰', 'Зайка Пуша', 'bun'], more: ['🐻', 'Мишка Потап', 'bear'] };
 function anyModal() { var any = false; Array.prototype.forEach.call(document.querySelectorAll('.modalbg'), function (el) { if (!el.classList.contains('hidden')) any = true; }); return any; }
 function quizLater(ks, delay) { // задачка после дела: не чаще раза в 45 секунд
   if (!me || T - quizT < 45 || game || quiz) return;
@@ -2885,7 +2912,7 @@ function nextQ() {
   $('qshow').innerHTML = q.show; $('qshow').classList.toggle('hidden', !q.show);
   var box = $('qopts'); box.innerHTML = ''; box.className = 'qopts' + (q.small === 1 ? ' words' : q.small === 2 ? ' groups' : '');
   q.opts.forEach(function (o, i) { var b = document.createElement('button'); b.textContent = o.t; b.onclick = function () { answerQ(i, b); }; box.appendChild(b); });
-  say(q.say, true);
+  say(q.say, true, QWHO[k][2]);
 }
 function answerQ(i, btn) {
   var q = quiz.q, st = skLvl(q.k); if (quiz.lock) return; unlockAudio();
@@ -2907,13 +2934,44 @@ function endQuiz() {
   var q = quiz; quiz = null; $('quizm').classList.add('hidden');
   if (q.all > 1) { var txt = 'Урок окончен! Правильно ' + q.good + ' из ' + q.all + '. ' + (q.good === q.all ? 'Ты лучшая ученица на острове!' : 'Ты здорово постаралась!'); say(txt, true); toast(txt, false, true); if (q.good >= 3) send({ t: 'qs' }); }
 }
-$('qsay').onclick = function () { unlockAudio(); if (quiz) say(quiz.q.say, true); };
+$('qsay').onclick = function () { unlockAudio(); if (quiz) say(quiz.q.say, true, QWHO[quiz.q.k][2]); };
 $('qskip').onclick = function () { if (quiz && quiz.all > 1 && quiz.left > 1) { quiz.left--; nextQ(); return; } quiz = null; $('quizm').classList.add('hidden'); };
 function schoolSpot() { return d2(me.x, me.y, SCHOOL.x, SCHOOL.y + 70) < 120 * 120 ? { key: 'school', ui: 'school', n: 'Урок в школе', e: '🏫' } : null; }
 function openSchool() { say('Добро пожаловать в лесную школу! Сова Софья приготовила пять задачек.', true); startQuiz(['count', 'add', 'abc', 'pat', 'more'], 5, 'Урок'); }
 function qzMsg(m) { total = m.total; bumpStars(); if (m.t === 'qq') toast((m.by === store.id ? 'За урок ' : nameOf(m.by) + ' закончила урок! ') + '+' + m.add + ' ⭐'); }
 function skillReport() { return Object.keys(SKN).map(function (k) { var s = skLvl(k); return SKN[k] + ': уровень ' + s.l + (s.n ? ', верно ' + s.ok + ' из ' + s.n : ''); }).join('\n'); }
 
+/* ===== неделя, суббота, Новый год ===== */
+var week = null, medals = [];
+var WNAME = { fish: ['Неделя рыбалки', '🎣', 'Вместе поймайте {n} рыбок'], bug: ['Неделя бабочек', '🦋', 'Вместе поймайте сачком {n} жучков и бабочек'], quiz: ['Неделя умников', '🧠', 'Вместе решите {n} задачек'], harvest: ['Неделя урожая', '🥕', 'Вместе соберите {n} урожаев'], npc: ['Неделя добрых дел', '💛', 'Помогите жителям {n} раз'], wood: ['Неделя строителей', '🪵', 'Вместе соберите {n} брёвен'] };
+if (SEASON === 'winter') WNAME.bug = ['Неделя снежинок', '❄️', 'Вместе поймайте сачком {n} снежинок'];
+function isSat() { return TEST.sat !== undefined ? !!TEST.sat : krasNow().getUTCDay() === 6; }
+function nyDays() { var d = krasNow(), y = d.getUTCFullYear(), ny = Date.UTC(y + (d.getUTCMonth() === 0 && d.getUTCDate() <= 1 ? 0 : 1), 0, 1); return Math.ceil((ny - Date.UTC(y, d.getUTCMonth(), d.getUTCDate())) / 86400000); }
+function daysWord(n) { var a = n % 100, k = n % 10; return a > 10 && a < 20 ? 'дней' : k === 1 ? 'день' : k >= 2 && k <= 4 ? 'дня' : 'дней'; }
+function weekText() { if (!week) return ''; var W = WNAME[week.k]; return W[0] + '! ' + W[2].replace('{n}', week.need) + ' — и получите медаль и ' + WEEK_REWARD + ' ⭐.'; }
+var WEEK_REWARD = 50;
+function weekMsg(m) {
+  week = m.week; if (m.medals) medals = m.medals;
+  if (m.t === 'wd') { total = m.total; bumpStars(); var txt = 'Ура! Цель недели выполнена! Вы получили медаль «' + WNAME[week.k][0] + '» и ' + WEEK_REWARD + ' ⭐!'; say(txt, true); toast('🏅 ' + txt, false, true); if (me) burst(me.x, me.y - 80, 40); beep([523, 659, 784, 1047, 1319, 1568, 2093], 0.1, 0.14); }
+  else if (week.have === Math.floor(week.need / 2)) toast(WNAME[week.k][1] + ' ' + WNAME[week.k][0] + ': уже половина — ' + week.have + ' из ' + week.need + '!');
+}
+function drawFest(x0, y0, vw, vh) { // субботние флажки и шарики у домика
+  if (!isSat()) return;
+  var lines = [[HOUSE.x - 330, HOUSE.y - 230, BOARD.x - 40, BOARD.y - 150], [HOUSE.x + 330, HOUSE.y - 230, MAILBOX.x + 120, MAILBOX.y - 160], [HOUSE.x - 330, HOUSE.y - 230, HOUSE.x + 330, HOUSE.y - 230]];
+  if (built(2)) lines.push([STAGE.x - 230, STAGE.y - 330, STAGE.x + 230, STAGE.y - 330]);
+  var cols = ['#ff6fa8', '#ffd257', '#7ed48a', '#7ab8ff', '#b98cff'];
+  lines.forEach(function (L) {
+    if (Math.max(L[0], L[2]) < x0 - 50 || Math.min(L[0], L[2]) > x0 + vw + 50 || Math.max(L[1], L[3]) < y0 - 100 || Math.min(L[1], L[3]) > y0 + vh + 100) return;
+    var n = Math.max(4, Math.round(Math.hypot(L[2] - L[0], L[3] - L[1]) / 46));
+    ctx.strokeStyle = '#8a5a3a'; ctx.lineWidth = 2; ctx.beginPath();
+    for (var i = 0; i <= n; i++) { var f = i / n, x = L[0] + (L[2] - L[0]) * f, y = L[1] + (L[3] - L[1]) * f + Math.sin(f * Math.PI) * 40; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+    ctx.stroke();
+    for (var j = 0; j < n; j++) { var g = (j + 0.5) / n, fx = L[0] + (L[2] - L[0]) * g, fy = L[1] + (L[3] - L[1]) * g + Math.sin(g * Math.PI) * 40, sw = Math.sin(T * 3 + j) * 3; ctx.fillStyle = cols[j % cols.length]; ctx.beginPath(); ctx.moveTo(fx - 13, fy); ctx.lineTo(fx + 13, fy); ctx.lineTo(fx + sw, fy + 26); ctx.closePath(); ctx.fill(); }
+  });
+  [[HOUSE.x - 380, HOUSE.y + 10], [HOUSE.x + 380, HOUSE.y + 10]].forEach(function (b, k) {
+    for (var i = 0; i < 3; i++) { var bx = b[0] + (i - 1) * 30, by = b[1] - 190 - i % 2 * 26 + Math.sin(T * 2 + i + k) * 6; ctx.strokeStyle = 'rgba(90,70,110,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(bx, by + 30); ctx.stroke(); ctx.fillStyle = cols[(i + k * 2) % cols.length]; ell(ctx, bx, by, 24, 30); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.5)'; ell(ctx, bx - 8, by - 10, 6, 9); ctx.fill(); }
+  });
+}
 var shellHide = {};
 function hideShells() { shellHide = {}; got.s.forEach(function (i) { if (SHELLS[i] !== undefined) shellHide[SHELLS[i]] = 1; }); }
 function npcMsg(m) {
@@ -3009,6 +3067,9 @@ function greet() {
   var pj = -1; PROJ.forEach(function (P, i) { if (pj < 0 && !built(i) && !building(i)) pj = i; });
   if (pj >= 0) parts.push('А ещё мы строим: ' + PROJ[pj].n.toLowerCase() + '. Тряси деревья, собирай камешки и ракушки — и неси на стройку!');
   else PROJ.forEach(function (P, i) { if (building(i)) parts.push(P.n + ' строится, скоро будет готово!'); });
+  if (week && !week.done) parts.push('А ещё сейчас ' + weekText().charAt(0).toLowerCase() + weekText().slice(1) + ' Уже ' + week.have + ' из ' + week.need + '.');
+  if (isSat()) parts.push('Сегодня суббота — праздник на острове! Звездопады чаще, а сундучок дня в два раза больше!');
+  if (SEASON === 'winter' && nyDays() <= 31 && nyDays() > 0) parts.push('До Нового года осталось ' + nyDays() + ' ' + daysWord(nyDays()) + '!');
   if (day && day.deals && day.deals.length) parts.push('А в лавке сегодня товар дня со скидкой: ' + day.deals.map(function (i) { return CAT[i].n.toLowerCase(); }).join(', ') + '.');
   say(parts.join(' '), true);
   toast(hello() + '! Сегодня ' + tasksLeft().length + ' дела — нажми 📋', false, true);
@@ -3029,7 +3090,15 @@ function openBoard(speak) {
     d.onclick = function () { say('Товар дня в лавке: ' + CAT[i].n + ', всего ' + dealPrice(i) + ' ⭐.', true); };
     l.appendChild(d);
   });
-  $('breward').textContent = day && day.done ? 'Сундучок дня уже получен 🎁' : 'Все дела — сундучок дня: ' + DAY_REWARD + ' ⭐';
+  if (week) {
+    var wd = document.createElement('div'), W = WNAME[week.k]; wd.className = 'task week' + (week.done ? ' done' : '');
+    wd.innerHTML = '<i>' + (week.done ? '🏅' : W[1]) + '</i><span></span><small>' + Math.min(week.have, week.need) + ' / ' + week.need + '</small>';
+    wd.querySelector('span').textContent = W[0] + ': ' + W[2].replace('{n}', week.need).toLowerCase();
+    wd.onclick = function () { say(week.done ? 'Цель недели выполнена! Медаль уже ваша.' : weekText() + ' Сделано ' + week.have + ' из ' + week.need + '.', true); };
+    l.appendChild(wd);
+  }
+  var bonus = isSat() ? DAY_REWARD * 2 : DAY_REWARD;
+  $('breward').textContent = (day && day.done ? 'Сундучок дня уже получен 🎁' : 'Все дела — сундучок дня: ' + bonus + ' ⭐' + (isSat() ? ' (суббота — вдвойне!)' : '')) + (medals.length ? '   Медали: ' + medals.map(function (k) { return WNAME[k] ? WNAME[k][1] : '🏅'; }).join(' ') : '') + (SEASON === 'winter' && nyDays() <= 31 ? '   🎄 До Нового года: ' + nyDays() + ' ' + daysWord(nyDays()) : '');
   $('boardm').classList.remove('hidden');
   if (speak) say(planWords(), true);
 }
@@ -3053,7 +3122,7 @@ function dayMsg(m) {
     var t = day && day.tasks[m.i]; if (!t) return; t.have = m.have; updatePlanBadge();
     if (m.done) { var n = tasksLeft().length; toast('Дело сделано: ' + taskText(t) + '! ✅' + (n ? ' Осталось ' + n + '.' : '')); beep([784, 988, 1175], 0.08, 0.12); }
   }
-  else if (m.t === 'dd') { day.done = true; total = m.total; bumpStars(); updatePlanBadge(); burst(me.x, me.y - 80, 30); say('Ура! Все дела на сегодня сделаны! Сундучок дня: +' + DAY_REWARD + ' ⭐. Завтра будут новые дела!', true); toast('🎁 Сундучок дня: +' + DAY_REWARD + ' ⭐', false, true); beep([523, 659, 784, 1047, 1319, 1568], 0.1, 0.14); }
+  else if (m.t === 'dd') { day.done = true; total = m.total; bumpStars(); updatePlanBadge(); burst(me.x, me.y - 80, 30); var dr = m.add || DAY_REWARD; say('Ура! Все дела на сегодня сделаны! Сундучок дня: +' + dr + ' ⭐. Завтра будут новые дела!', true); toast('🎁 Сундучок дня: +' + dr + ' ⭐', false, true); beep([523, 659, 784, 1047, 1319, 1568], 0.1, 0.14); }
   else if (m.t === 'ml') {
     total = m.total; bumpStars();
     if (m.g.f !== undefined) { inv[m.g.f] = m.n; drawTray(); }
@@ -3644,6 +3713,7 @@ function frame(ts) {
   if (curMap === 2 && cw > ch) { cam.x = HW / 2; cam.y = HH / 2; }
   var x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
   if (curMap === 1) drawCave(dt, x0, y0, vw, vh); else if (curMap === 2) drawHouse(dt, x0, y0, vw, vh); else drawIsland(dt, x0, y0, vw, vh);
+  if (curMap === 0) drawFest(x0, y0, vw, vh);
   drawParts(dt, curMap);
   if (curMap === 0) { var na = nightLevel(krasHour()); if (na > 0.02) drawNight(na); drawWeather(dt, na); ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale); }
   if (curMap === 1) { drawDark(); ctx.setTransform(scale, 0, 0, scale, cw / 2 - cam.x * scale, ch / 2 - cam.y * scale); }
